@@ -156,10 +156,9 @@ export const T3Reels: React.FC = () => (
     {/* HIDDEN SIDEQUEST — plant a secret against the clock. The capture is
         app/hidden_sidequest_demo.mp4 (20.2 s): Leo names it, slides it
         hidden, sets the reveal to 23:30, leaves the teaser, saves, and the
-        trip feed shows it sealed from ~16.4 s. videoSeconds 19.5 holds the
-        sealed card for ~3.1 s. That makes the reel 21.9 s — over qa.py's
-        20 s cap, set so on request; videoSeconds 17.6 is the 20.0 s version
-        (~1.2 s of the card). */}
+        trip feed shows it sealed from ~16.4 s. videoSeconds 17.6 + the 2.4 s
+        CTA is exactly qa.py's 20.0 s cap, so the sealed card holds ~1.2 s
+        before the CTA (19.5 held it ~3.1 s but ran 21.9 s). */}
     <Composition
       id="T3-Speedrun-HiddenSideQuest"
       component={T3Speedrun}
@@ -211,13 +210,13 @@ export const T3Reels: React.FC = () => (
         ctaLogoSize: 104,
 
         hookSeconds: 2.0,
-        videoSeconds: 19.5,
+        videoSeconds: 17.6,
         ctaSeconds: 2.4,
       }}
       fps={CANVAS.fps}
       width={CANVAS.width}
       height={CANVAS.height}
-      durationInFrames={t3SpeedrunDuration({ videoSeconds: 19.5, ctaSeconds: 2.4 }, CANVAS.fps)}
+      durationInFrames={t3SpeedrunDuration({ videoSeconds: 17.6, ctaSeconds: 2.4 }, CANVAS.fps)}
       calculateMetadata={({ props }) => ({
         durationInFrames: t3SpeedrunDuration(props, CANVAS.fps),
       })}

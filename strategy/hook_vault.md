@@ -119,8 +119,8 @@ Cliff Jump", slides it hidden, sets the reveal to 23:30, leaves the teaser
 | Midnight cliff jump | the title Leo types |
 
 "They think it's a normal dinner" and T4's group-chat lines are narrative,
-not fixture figures. T3 runs 21.9 s — over qa.py's 20 s cap, set so on
-request (videoSeconds 17.6 is the 20.0 s version).
+not fixture figures. T3 runs exactly 20.0 s, qa.py's cap (videoSeconds
+17.6), so the sealed card holds ~1.2 s before the CTA.
 
 ---
 
