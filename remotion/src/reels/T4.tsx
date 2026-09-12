@@ -142,5 +142,68 @@ export const T4Reels: React.FC = () => (
         durationInFrames: t4CalloutDuration(props, CANVAS.fps),
       })}
     />
+
+    {/* HIDDEN SIDEQUEST — why a surprise dies in the group chat. No phone
+        and no capture: the hook is the advice, the lines are what every
+        group chat does to a secret, the punchline is where to put it
+        instead. Group-trip truths, not fixture figures. */}
+    <Composition
+      id="T4-Callout-HiddenSideQuest"
+      component={T4Callout}
+      schema={t4CalloutSchema}
+      defaultProps={{
+        hookLine1: "Don't tell the group chat",
+        hookLine2: "where you're going.",
+        hookSubtext: "",
+        lines: [
+          { text: "Someone screenshots it.", accent: false },
+          { text: "Someone guesses in one.", accent: false },
+          { text: "Someone tells their partner.", accent: false },
+          { text: "Surprise over by lunch.", accent: true },
+        ],
+        punchline: "Lock it in SideQuest instead.",
+        kicker: "",
+        launchLine: "First 50 get lifetime access — free.",
+
+        showCounter: false,
+
+        showSafeArea: false,
+        safeTop: 220,
+        safeBottom: 450,
+        safeLeft: 65,
+        safeRight: 120,
+
+        topBandFrac: 0.2,
+        bottomBandFrac: 0.18,
+        bandGutter: 28,
+
+        bgIntensity: 1.1,
+        bgSpeed: 1.1,
+        bgBlur: 135,
+        bgVignette: 0.64,
+        bgPulse: true,
+
+        hookFontSize: 66,
+        lineFontSize: 72,
+        // 62, not 72: at 72 "instead." broke onto a line of its own.
+        punchFontSize: 62,
+        kickerFontSize: 40,
+
+        ctaVariant: "standard",
+        ctaLogoSize: 104,
+
+        hookSeconds: 1.8,
+        lineSeconds: 1.0,
+        punchSeconds: 1.6,
+        ctaSeconds: 2.4,
+      }}
+      fps={CANVAS.fps}
+      width={CANVAS.width}
+      height={CANVAS.height}
+      durationInFrames={294}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: t4CalloutDuration(props, CANVAS.fps),
+      })}
+    />
   </>
 );

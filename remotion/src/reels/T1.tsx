@@ -188,5 +188,93 @@ export const T1Reels: React.FC = () => (
         ),
       })}
     />
+
+    {/* HIDDEN SIDEQUEST — the receipt for a secret. The figure is the one
+        plan; the rows are who knows it, and they add up to it: Leo 1, the
+        other eight 0 — he made the trip's only hidden SideQuest
+        (configs/fixtures/hidden_sidequest_demo.json + the journey). The
+        phone plays app/hidden_sidequest_demo.mp4 from 14.0 s (frame 420):
+        the teaser, the save, and from ~16.4 s the sealed card reading
+        "Reveals in 2d 5h 56m" — the rowNote rounds it down, never up. */}
+    <Composition
+      id="T1-Receipt-HiddenSideQuest"
+      component={T1Receipt}
+      schema={t1ReceiptSchema}
+      defaultProps={{
+        appVideo: "app/hidden_sidequest_demo.mp4",
+        currency: "",
+        total: 1,
+        totalDecimals: 0,
+        thousandsSeparator: ",",
+        stakeLine: "One secret plan.",
+        // 1 + 8 × 0 = 1
+        rows: [
+          { name: "Leo", amount: 1, flagged: true },
+          { name: "Ana", amount: 0, flagged: false },
+          { name: "Jo", amount: 0, flagged: false },
+          { name: "Sam", amount: 0, flagged: false },
+          { name: "Marcus", amount: 0, flagged: false },
+          { name: "Ines", amount: 0, flagged: false },
+          { name: "Mia", amount: 0, flagged: false },
+          { name: "Ravi", amount: 0, flagged: false },
+          { name: "Ella", amount: 0, flagged: false },
+        ],
+        rowNote: "Reveals in 2 days, 5 hours.",
+        caption: "The other eight get a countdown.",
+        launchLine: "First 50 get lifetime access — free.",
+
+        showSafeArea: false,
+        safeTop: 220,
+        safeBottom: 450,
+        safeLeft: 65,
+        safeRight: 120,
+
+        topBandFrac: 0.14,
+        bottomBandFrac: 0.16,
+        bandGutter: 44,
+        phoneFill: 0.95,
+
+        bgIntensity: 0.7,
+        bgSpeed: 0.6,
+        bgBlur: 160,
+        bgVignette: 0.82,
+
+        totalFontSize: 220,
+        runningTotalFontSize: 60,
+        stakeFontSize: 36,
+        rowFontSize: 44,
+        rowGap: 12,
+        rowStagger: 5,
+        captionFontSize: 40,
+
+        screenRotDeg: 0,
+        screenFlipY: false,
+        phoneOffsetY: 0,
+        swingDeg: 12,
+        dollyIn: 0.45,
+        videoStartFrom: 420,
+
+        ctaVariant: "standard",
+        ctaLogoSize: 104,
+
+        totalSeconds: 2.4,
+        rowsSeconds: 4.6,
+        phoneSeconds: 6.0,
+        ctaSeconds: 2.4,
+      }}
+      fps={CANVAS.fps}
+      width={CANVAS.width}
+      height={CANVAS.height}
+      durationInFrames={t1ReceiptDuration(2.4, 4.6, 6.0, 2.4, CANVAS.fps)}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: t1ReceiptDuration(
+          props.totalSeconds,
+          props.rowsSeconds,
+          props.phoneSeconds,
+          props.ctaSeconds,
+          CANVAS.fps
+        ),
+      })}
+    />
   </>
 );

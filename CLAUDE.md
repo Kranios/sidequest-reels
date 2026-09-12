@@ -51,7 +51,13 @@ Registered reels — the Cost Split A/B test: `T1-Receipt-CostSplit`,
 `T5-Atlas-CostSplit`; and the Packing List batch (capture
 `app/packing_list_demo.mp4`, fixture `packing_list_demo.json`):
 `T1-Receipt-PackingList`, `T2-Reveal-PackingList`, `T3-Speedrun-PackingList`,
-`T4-Callout-PackingList`, `T5-Atlas-PackingList`. The first fifteen template reels were removed for it;
+`T4-Callout-PackingList`, `T5-Atlas-PackingList`; and the Hidden SideQuest
+batch (capture `app/hidden_sidequest_demo.mp4`, fixture
+`hidden_sidequest_demo.json`): `T1-Receipt-HiddenSideQuest`,
+`T2-Reveal-HiddenSideQuest`, `T3-Speedrun-HiddenSideQuest`,
+`T4-Callout-HiddenSideQuest`, `T5-Atlas-HiddenSideQuest`. `videoStartFrom` is
+in frames (30 fps); T1, T2 and T5 allow up to 600, so a phone beat can start
+late in a take. The first fifteen template reels were removed for it;
 they are recoverable from commit `1ff4ffd` and their hooks are in the retired
 list in `strategy/hook_vault.md`.
 
