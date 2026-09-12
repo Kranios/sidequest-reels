@@ -153,6 +153,9 @@ export const T3Speedrun: React.FC<T3SpeedrunProps> = (p) => {
             <AbsoluteFill>
               <Phone
                 videoSrc={staticFile(src)}
+                // Only the first screen makes an entrance; every later step
+                // cuts in hard, which is the whole tempo of this template.
+                entry={i === 0}
                 swingDeg={p.swingDeg}
                 dollyIn={p.dollyIn}
                 band={bands.stage}

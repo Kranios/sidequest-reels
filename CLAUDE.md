@@ -13,7 +13,9 @@ Output format: 9:16, 1080x1920, H.264, 30fps, no audio baked in.
 **`remotion/`** is the live system. Everything else is legacy.
 
 ```
-capture/record_video.py   Playwright -> smooth-scrolling app video (mp4)
+capture/record_video.py   Playwright -> smooth-scrolling app video (mp4),
+                          API calls answered from configs/fixtures/
+configs/fixtures/         mock API data per screen (see WORKFLOW below)
 remotion/                 React/Remotion: phone, animation, text, render
   src/brand.ts            colours + logo geometry (SINGLE source of truth)
   src/safe-areas.ts       SAFE_INSETS — Instagram safe zone, ONE constant
@@ -26,6 +28,8 @@ remotion/                 React/Remotion: phone, animation, text, render
   src/reels/              ONE <Composition> PER REEL, grouped by template
 strategy/                 themes, feature map, Higgsfield budget, analytics
                           templates_spec.md — the researched spec for T1..T5
+                          hook_vault.md — every hook used + tone rule
+docs/archive/             one-off GLB diagnostics (diagnose-screen, inspect-glb)
 ```
 
 ### Templates, and how you make reel #12
@@ -42,11 +46,11 @@ component and schema, differing only in `defaultProps`.
 | T4 Callout | `T4Callout.tsx` | comments/shares | punchy | absent | **none** |
 | T5 Atlas | `T5Atlas.tsx` | saves | slowest | the object | travel-tracker |
 
-Registered reels: `T1-Receipt-{Villa,Flights,Tokyo}`,
-`T2-Reveal-{ThreeWeeks,Morning,GroupChat}`,
-`T3-Speedrun-{FiveDay,SixPeople,Packing}`,
-`T4-Callout-{Planner,FivePeople,Friendships}`,
-`T5-Atlas-{Countries,BeenVsGoing,Manifesting}`.
+Registered reels — the Cost Split A/B test: `T1-Receipt-CostSplit`,
+`T2-Reveal-CostSplit`, `T3-Speedrun-CostSplit`, `T4-Callout-CostSplit`,
+`T5-Atlas-CostSplit`. The first fifteen template reels were removed for it;
+they are recoverable from commit `1ff4ffd` and their hooks are in the retired
+list in `strategy/hook_vault.md`.
 
 **A new reel is a new `<Composition>` block in `src/reels/T*.tsx`** — copy the
 nearest one, rewrite the props, done. If it needs a change inside
@@ -67,7 +71,7 @@ real hard cuts, one `<Sequence>` per screen (T3).
 **Legacy (do not extend):** `compose/`, `render/`, `qa/`, `make_reel.ps1`,
 `render_plate.ps1`. These were the PIL + Blender pipeline. Superseded because
 each reel needed a 9-minute Blender render and had no real animation. Kept only
-for reference.
+for reference. (`qa/qa.py check` is still the delivery gate — see WORKFLOW.)
 
 ---
 
@@ -76,8 +80,9 @@ for reference.
 These cost hours to find. Trust them.
 
 ### The phone GLB (`remotion/public/iphone17pro.glb`)
-Re-dump any of this with `node diagnose-screen.mjs` (the display mesh in
-detail) or `node inspect-glb.mjs` (every mesh), from `remotion/`.
+Re-dump any of this with `node docs/archive/diagnose-screen.mjs` (the display
+mesh in detail) or `node docs/archive/inspect-glb.mjs` (every mesh), from the
+repo root.
 
 - Display mesh is **`Cube.010_screen.001_0`** (material `screen.001`): local
   bbox flat on X (thickness `0.0013`), spans `Y 0.776 × Z 1.663`; world AABB
@@ -85,8 +90,8 @@ detail) or `node inspect-glb.mjs` (every mesh), from `remotion/`.
   `(-90°, 0, 0)`. 206 triangles, **4 boundary loops ⇒ 3 cutouts**, rounded
   outline (corner radius ≈ `0.1213`, 15.6 % of the width).
 - **Its shipped UVs are unusable.** They sit in **seven disjoint islands**
-  across `u [-0.953 … 0.992]` (94 verts at `u < 0`), and the mesh is two
-  shells (113 verts with −X normals, 100 with +X) at five X depths.
+  across `u [-0.953 … 0.992]` (94 verts at `u < 0`), and the mesh is two shells
+  (113 verts with −X normals, 100 with +X) at five X depths.
   `texture.repeat`/`offset` is a single linear transform — it can never gather
   seven islands into one picture. **Do not try to fix this with repeat/offset;
   five attempts each produced a different wrong result.**
@@ -107,6 +112,31 @@ detail) or `node inspect-glb.mjs` (every mesh), from `remotion/`.
   plane**. Orbiting in X/Y swings the camera over the phone and looks broken.
 - If the screen renders **magenta**, the video never reached the texture
   (wrong path or the Video element didn't decode). That's a deliberate signal.
+
+### The phone look — `Phone.tsx`
+- Screen material is a **MeshPhysicalMaterial** with the video as
+  `emissiveMap`, base colour black and `toneMapped: false` — the app's colours
+  come through exactly. Clearcoat 1 / roughness 0 is the glass;
+  `envMapIntensity` 0.45 — at 1.0 the studio softbox lays a milky haze over
+  the UI (rule 3).
+- The recording's aspect is reconciled with the display (0.7761 / 1.6631) by a
+  centred **cover crop** — `texture.repeat` on top of the regenerated planar
+  UVs. This is NOT the forbidden repeat/offset attempt to fix the GLB's UV
+  islands; those UVs are gone.
+- **drei's `ContactShadows` only works lying flat.** Its blur pass renders a
+  helper plane that sits fixed in the world XZ plane at y = 0, outside the
+  scene graph. Stood upright, the shadow camera sees it edge-on and the shadow
+  comes out empty. So the whole shot is laid on its back (`STAGE_ROTATION`,
+  −90° about Z): model, camera position **and up vector**, lights and
+  `environmentRotation` are built in the documented upright frame and rotated
+  into the world. Lighting and reflections are unchanged. Pass its `scale` as
+  a module-level constant — an inline array rebuilds two render targets every
+  frame.
+- The entrance is a Remotion `spring` (damping 11, stiffness 40, mass 1.8)
+  from a 45° tilt on two axes and 0.88 zoom, settled in ~1.3 s. A stiff spring
+  stretched with `durationInFrames` still snaps — the stretch includes its
+  long tail. T3 plays the entrance on its first step only (`entry={i === 0}`).
+- The canvas renders at `dpr={2}` for crisp UI text — see memory below.
 
 ### Text hierarchy — one definition, five templates
 - `src/type.ts` holds exactly three styles: **hook**, **support**, **caption**.
@@ -131,10 +161,20 @@ detail) or `node inspect-glb.mjs` (every mesh), from `remotion/`.
   or caption looks like it is touching the phone.
 
 ### Rendering the 3D phone — memory
+- **At `dpr={2}` a phone reel renders at ~2.6 s per frame with
+  `--concurrency=1`** (T1, 402 frames: ~18 min). `--concurrency=2` ran a 16 GB
+  machine out of memory with a browser open, and took the Expo server with it.
+  Render phone reels at concurrency 1; if that is too slow, lower `PHONE_DPR`
+  in `Phone.tsx` to 1.5.
+- For stills, **bundle once** (`npx remotion bundle src/index.ts
+  --out-dir=<dir>`) and pass the bundle dir to `npx remotion still` — every
+  `still src/index.ts …` re-bundles.
+- `remotion.config.ts` sets CRF 16. Don't also pass `--video-bitrate` — the
+  renderer refuses both.
 - A reel with the phone in it renders at roughly 40 s per 100 frames and holds
   ~4 GB. **Render them one at a time**, and use `--concurrency=2` if anything
   else is open — four in a chain alongside a browser will run a 16 GB machine
-  out of memory and the OS will kill the job.
+  out of memory and the OS will kill the job. (Those figures pre-date dpr 2.)
 - **A killed Remotion render does not clean up after itself on Windows.** It
   leaves `chrome-headless-shell.exe`, `remotion.exe` and `ffmpeg.exe` behind,
   several GB each, and the next attempt then dies faster than the last. They
@@ -144,8 +184,7 @@ detail) or `node inspect-glb.mjs` (every mesh), from `remotion/`.
 
   ```powershell
   Get-CimInstance Win32_Process |
-    Where-Object { $_.ExecutablePath -like '*reel_factory_v2emotion
-ode_modules*' } |
+    Where-Object { $_.ExecutablePath -like '*reel_factory_v2\remotion\node_modules*' } |
     ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
   ```
 
@@ -171,6 +210,11 @@ ode_modules*' } |
 ### App capture
 - App runs locally: `cd <mobile-master> && npx expo start --web` (port 8081).
   Needs `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` set.
+  For capture, placeholders work (`https://placeholder.supabase.co` /
+  `placeholder`), plus `EXPO_PUBLIC_API_URL=http://localhost:5079` — a dead
+  base, so an un-mocked call fails locally instead of reaching production (a
+  401 from production signs the app out mid-capture). `CI=1` stops Expo
+  opening a browser. The app lives in `C:\Users\osgr1\Downloads\mobile-master`.
 - Routes use **hyphens**: `travel-tracker`, not `travel_tracker`. Getting this
   wrong renders Expo's "Unmatched Route" page into the reel.
 - The travel-tracker globe reads countries from **localStorage**, key
@@ -200,6 +244,24 @@ ode_modules*' } |
   implemented as `<Sequence from={-n}>` in `Phone.tsx`, **not**
   `<Video startFrom>` — `<Video>` only exists on the preview path, so a
   `startFrom` there fixes Studio and silently does nothing to the render.
+- **API mocking.** `record_video.py` answers every `**/api/**` request that is
+  not for the app's own origin from the `routes` object of
+  `configs/fixtures/*.json` (path → exact response body). `{id}` matches any
+  one path segment, so `trip/demo/split` works for any id; matching is exact,
+  so `/expenses` never swallows `/expenses/balances`. Unmatched calls get a
+  404 and are listed after the run — check that list.
+- **There are no app class names.** RN Web emits `css-view-…`, so a selector
+  like `.expense-list` never matches. Use a text selector on something the
+  fixture puts on screen: `--selector "text=Villa Sóller"`.
+- **Language follows the device locale** (this machine is Swedish). Capture
+  pins `locale="en-US"` and the light scheme, so reels get the English UI.
+- **Desktop Chromium has no safe area**, so the app laid its header where the
+  3D phone's Dynamic Island covers it ("Cost S▮"). Capture sets real insets
+  with CDP `Emulation.setSafeAreaInsetsOverride` (59/34 px, iPhone 17 Pro) and
+  the app pads itself — nothing is injected into the page. `--safe-area 0,0`
+  turns it off.
+- Playwright records at **25 fps**; Remotion samples by time, so that's fine.
+  Past the end of a capture the phone holds the last frame.
 
 ---
 
@@ -228,16 +290,19 @@ Responses: concise, technically precise, minimal hedging.
 # 1. app running on :8081, then record the screen as smooth video
 #    (T4 needs no capture at all — start there if you just want a reel out)
 python capture/record_video.py travel-tracker travel_tracker 6 --scroll-to 0.2
+python capture/record_video.py trip/demo/split cost_split 6 --scroll-to 0.2 \
+    --selector "text=Villa Sóller"
 
 # 2. iterate live (safe-area overlay + every prop in the Props panel)
 cd remotion && npm run dev
 
-# 3. render one reel by its composition id
-npx remotion render src/index.ts T4-Callout-Planner out/templates/T4-Planner.mp4
+# 3. render one reel by its composition id (phone reels: concurrency 1)
+npx remotion render src/index.ts T4-Callout-CostSplit out/templates/T4-CostSplit.mp4
+npx remotion render src/index.ts T1-Receipt-CostSplit ../output/T1.mp4 --concurrency=1
 
 # 4. before delivering: typecheck and eyeball a few frames
 npx tsc --noEmit
-npx remotion still src/index.ts T1-Receipt-Villa out/check.png --frame=250
+npx remotion still src/index.ts T1-Receipt-CostSplit out/check.png --frame=250
 ```
 
 Pick the template from the table above, copy the closest reel block in
@@ -250,6 +315,63 @@ Save button writes your slider tweaks back into the source and can only do that
 for a literal — referencing a constant gives *"Can't save default props"* in the
 Props panel. That also means the safe-area numbers are spelled out there rather
 than read from `SAFE_INSETS`; re-sync them by hand if you change the constant.
+
+---
+
+## WORKFLOW: Creating Reels for a New Feature
+
+Proven on Cost Split (2026-09-12): one feature, one reel per template, and the
+template's psychology is the variable under test.
+
+1. **Pick a shipped feature** from `strategy/feature_map.md`. Never Gluno —
+   it is `__DEV__` until it ships.
+2. **Mock data — a fixture, not a login.**
+   - Read the screen in the app source (read-only, rule 10) for the
+     `/api/**` calls it makes and the types they return (`lib/types.ts`).
+   - Write `configs/fixtures/<feature>_demo.json` with a `routes` object:
+     path → exact response body. Put in enough rows that the screen overflows
+     by **more than 200 px** — the capture waits for scrollable content and
+     needs something to scroll.
+   - Compute every derived figure (totals, balances, debts) from the raw rows
+     with a script; never type them. Then re-check independently: each item's
+     parts equal its total, nets sum to zero, debts clear the nets exactly.
+3. **Dynamic IDs.** Record a route like `trip/demo/split`; the fixture key
+   `/api/trips/{id}/expenses` serves it. `{name}` is one path segment, matched
+   exactly. Keep the app pointed at the dead API base (see App capture).
+4. **Record** with `record_video.py <route> <name> 6 --scroll-to 0.2
+   --selector "text=<on-screen text>"`. Check the log — every route served,
+   nothing unmatched — and look at the first, middle and last frames.
+5. **One `<Composition>` per template** in `src/reels/T*.tsx`, id
+   `T<n>-<Template>-<Feature>`:
+   - T1, T2, T5: `appVideo: "app/<name>.mp4"`.
+   - **T3 exception:** no `appVideo` — a `steps` array, each step with its own
+     `video`. One capture per step reads as a real flow; the same file in every
+     step cuts to the same screen.
+   - **T4 exception:** no phone and no video prop at all — only the copy
+     (`hookLine1/2`, `lines`, `punchline`).
+   - `videoStartFrom: 0` — the capture already trims the splash.
+   - T2's lock and countdown imply a timed unlock. Turn them off
+     (`showLock`, `showCountdown`) for any feature that doesn't have one.
+6. **Duration limit: 8–20 s** — `qa.py` fails anything outside it; aim for
+   10–15 s. Check with `npx remotion compositions <bundle>`.
+7. **The numbers must add up on screen.** Every figure comes from the fixture.
+   A total shown above rows means the rows sum to that total; a claim about
+   who paid must match the payer in the fixture. (The first T1 cut put
+   €9,584.85 over five debts that summed to €3,713.07.) Log where each figure
+   comes from in `strategy/hook_vault.md`.
+8. **Tone of Voice** (`strategy/hook_vault.md`): cynical, observant, specific.
+   No emojis, no rhetorical questions, no generic sales talk ("Discover
+   SideQuest"). Hooks are 6–8 words at most; size them so each hook line
+   fits on one line. Check the vault's retired list — never reuse a hook —
+   and log the new ones.
+9. **Tracking:** add each reel id to `strategy/analytics_template.csv`
+   (`reel_id`, `theme`, `category`).
+10. **Review and QA** (rule 7): `npx tsc --noEmit`; bundle once and render
+    stills of each reel's beats; render one reel and run
+    `python qa/qa.py check output/<file>.mp4`; look at
+    `output/qa/contact_sheet.jpg`. Stop for Oskar's OK before committing.
+    If Playwright or Remotion crashes, run the kill-by-path command above
+    before retrying.
 
 ---
 
@@ -274,16 +396,23 @@ Higgsfield is for b-roll and hooks only — never for faking app UI. Draft at
 
 ## Known open items
 
-- **Captures missing for T1, T2 and T3.** Every reel in those three points at
-  `app/travel_tracker.mp4` as a placeholder, so the timing and the cuts are
-  real but the screen is wrong. Record and swap `appVideo` / `steps[].video`:
-  - T1 — the cost-split screen with **real data** in it (rule 9).
-  - T2 — the hidden sidequest card, in its hidden state.
-  - T3 — one capture per step: create trip, add activities, invite, split.
+- **QA bitrate floor.** `qa.py`'s floor is 4.0 Mbps (lowered from 6 on
+  2026-09-12): flat app graphics compress hard at CRF 16 — the T1 test
+  measured 4.3 Mbps at CRF 16 and 5.6 Mbps at CRF 12. A darker, stiller reel
+  could still dip under 4.0; render it with `--crf=12` rather than lowering
+  the floor again.
+- **T3 Cost Split uses one capture for all three steps.** Record the trip
+  picker and the add-expense sheet and swap the first two `steps[].video`.
+- **Still to capture:** the hidden sidequest card in its hidden state (T2's
+  intended screen) and a per-step flow for T3 (create trip, add activities,
+  invite, split).
+- T1's first frame is empty background (the counter fades in from frame 4) —
+  a weak cover if Instagram picks frame 0.
 - `backdrop-filter` on chips may render differently than the preview.
 - WebGL lighting won't match Blender's path tracing — tune `Environment` in
   `Phone.tsx` if the phone looks flat.
 
 Closed: chips/caption overlapping the phone in `ShowcaseReel` (bands, see
-above), and the missing compositions for themes 1 and 4 (T2 Reveal and
-T1 Receipt).
+above), the missing compositions for themes 1 and 4 (T2 Reveal and T1
+Receipt), the cost-split capture with real data (`app/cost_split.mp4`), and the
+Dynamic Island covering the app header (safe-area emulation).

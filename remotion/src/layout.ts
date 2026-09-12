@@ -110,7 +110,7 @@ export const boxStyle = (
 /* ------------------------------------------------------------------ *
  * PHONE FIT MATHS
  *
- * Measured, not guessed — `node inspect-glb.mjs` from remotion/:
+ * Measured, not guessed — `node docs/archive/inspect-glb.mjs` from the repo root:
  *   body height (world Y, metalframe/basecolor)  1.6838
  *   body centre (world Y)                        0.0226
  * The camera in Phone.tsx is a 30 deg vertical-FOV perspective aimed at the

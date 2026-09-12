@@ -1,0 +1,1282 @@
+{
+  "_about": "Cost Split demo trip: 9 friends, 7 nights in Mallorca, July 2026. Served by capture/record_video.py for GET /api/** while recording. {id} matches any single path segment, so trip/demo/split and any other trip id both resolve. Balances and debts are computed from the expenses - keep them consistent if you edit amounts (rule 9).",
+  "summary": {
+    "currency": "EUR",
+    "total": 9584.85,
+    "expenseCount": 17,
+    "people": 9,
+    "paid": {
+      "Ana": 4788.0,
+      "Jo": 329.35,
+      "Sam": 1143.2,
+      "Marcus": 1218.5,
+      "Leo": 742.6,
+      "Ines": 350.4,
+      "Mia": 360.0,
+      "Ravi": 427.8,
+      "Ella": 225.0
+    },
+    "share": {
+      "Ana": 1062.38,
+      "Jo": 1021.87,
+      "Sam": 1062.36,
+      "Marcus": 1004.75,
+      "Leo": 1049.74,
+      "Ines": 1063.34,
+      "Mia": 1117.38,
+      "Ravi": 1049.72,
+      "Ella": 1153.31
+    },
+    "net": {
+      "Ana": 3725.62,
+      "Jo": -692.52,
+      "Sam": 80.84,
+      "Marcus": 213.75,
+      "Leo": -307.14,
+      "Ines": -712.94,
+      "Mia": -757.38,
+      "Ravi": -621.92,
+      "Ella": -928.31
+    }
+  },
+  "routes": {
+    "/api/trips/{id}/members": [
+      {
+        "id": "u1",
+        "name": "Ana",
+        "avatarUrl": null,
+        "isOwner": true,
+        "joinedAt": "2026-05-02T18:00:00Z"
+      },
+      {
+        "id": "u2",
+        "name": "Jo",
+        "avatarUrl": null,
+        "isOwner": false,
+        "joinedAt": "2026-05-03T18:00:00Z"
+      },
+      {
+        "id": "u3",
+        "name": "Sam",
+        "avatarUrl": null,
+        "isOwner": false,
+        "joinedAt": "2026-05-04T18:00:00Z"
+      },
+      {
+        "id": "u4",
+        "name": "Marcus",
+        "avatarUrl": null,
+        "isOwner": false,
+        "joinedAt": "2026-05-05T18:00:00Z"
+      },
+      {
+        "id": "u5",
+        "name": "Leo",
+        "avatarUrl": null,
+        "isOwner": false,
+        "joinedAt": "2026-05-06T18:00:00Z"
+      },
+      {
+        "id": "u6",
+        "name": "Ines",
+        "avatarUrl": null,
+        "isOwner": false,
+        "joinedAt": "2026-05-07T18:00:00Z"
+      },
+      {
+        "id": "u7",
+        "name": "Mia",
+        "avatarUrl": null,
+        "isOwner": false,
+        "joinedAt": "2026-05-08T18:00:00Z"
+      },
+      {
+        "id": "u8",
+        "name": "Ravi",
+        "avatarUrl": null,
+        "isOwner": false,
+        "joinedAt": "2026-05-09T18:00:00Z"
+      },
+      {
+        "id": "u9",
+        "name": "Ella",
+        "avatarUrl": null,
+        "isOwner": false,
+        "joinedAt": "2026-05-10T18:00:00Z"
+      }
+    ],
+    "/api/trips/{id}/expenses": [
+      {
+        "id": "exp-01",
+        "tripId": "demo",
+        "description": "Villa Sóller · 7 nights",
+        "totalAmount": 4284.0,
+        "date": "2026-07-19",
+        "splitMode": "equal",
+        "currency": "EUR",
+        "receiptUrl": null,
+        "createdAt": "2026-07-19T20:01:00Z",
+        "createdByUserId": "u1",
+        "createdByName": "Ana",
+        "payers": [
+          {
+            "userId": "u1",
+            "userName": "Ana",
+            "amount": 4284.0
+          }
+        ],
+        "participants": [
+          {
+            "userId": "u1",
+            "userName": "Ana",
+            "amount": 476.0
+          },
+          {
+            "userId": "u2",
+            "userName": "Jo",
+            "amount": 476.0
+          },
+          {
+            "userId": "u3",
+            "userName": "Sam",
+            "amount": 476.0
+          },
+          {
+            "userId": "u4",
+            "userName": "Marcus",
+            "amount": 476.0
+          },
+          {
+            "userId": "u5",
+            "userName": "Leo",
+            "amount": 476.0
+          },
+          {
+            "userId": "u6",
+            "userName": "Ines",
+            "amount": 476.0
+          },
+          {
+            "userId": "u7",
+            "userName": "Mia",
+            "amount": 476.0
+          },
+          {
+            "userId": "u8",
+            "userName": "Ravi",
+            "amount": 476.0
+          },
+          {
+            "userId": "u9",
+            "userName": "Ella",
+            "amount": 476.0
+          }
+        ]
+      },
+      {
+        "id": "exp-02",
+        "tripId": "demo",
+        "description": "Final cleaning fee",
+        "totalAmount": 180.0,
+        "date": "2026-07-19",
+        "splitMode": "equal",
+        "currency": "EUR",
+        "receiptUrl": null,
+        "createdAt": "2026-07-19T20:02:00Z",
+        "createdByUserId": "u1",
+        "createdByName": "Ana",
+        "payers": [
+          {
+            "userId": "u1",
+            "userName": "Ana",
+            "amount": 180.0
+          }
+        ],
+        "participants": [
+          {
+            "userId": "u1",
+            "userName": "Ana",
+            "amount": 20.0
+          },
+          {
+            "userId": "u2",
+            "userName": "Jo",
+            "amount": 20.0
+          },
+          {
+            "userId": "u3",
+            "userName": "Sam",
+            "amount": 20.0
+          },
+          {
+            "userId": "u4",
+            "userName": "Marcus",
+            "amount": 20.0
+          },
+          {
+            "userId": "u5",
+            "userName": "Leo",
+            "amount": 20.0
+          },
+          {
+            "userId": "u6",
+            "userName": "Ines",
+            "amount": 20.0
+          },
+          {
+            "userId": "u7",
+            "userName": "Mia",
+            "amount": 20.0
+          },
+          {
+            "userId": "u8",
+            "userName": "Ravi",
+            "amount": 20.0
+          },
+          {
+            "userId": "u9",
+            "userName": "Ella",
+            "amount": 20.0
+          }
+        ]
+      },
+      {
+        "id": "exp-03",
+        "tripId": "demo",
+        "description": "Coffee + ensaïmadas",
+        "totalAmount": 48.5,
+        "date": "2026-07-19",
+        "splitMode": "equal",
+        "currency": "EUR",
+        "receiptUrl": null,
+        "createdAt": "2026-07-19T20:03:00Z",
+        "createdByUserId": "u4",
+        "createdByName": "Marcus",
+        "payers": [
+          {
+            "userId": "u4",
+            "userName": "Marcus",
+            "amount": 48.5
+          }
+        ],
+        "participants": [
+          {
+            "userId": "u1",
+            "userName": "Ana",
+            "amount": 5.39
+          },
+          {
+            "userId": "u2",
+            "userName": "Jo",
+            "amount": 5.39
+          },
+          {
+            "userId": "u3",
+            "userName": "Sam",
+            "amount": 5.39
+          },
+          {
+            "userId": "u4",
+            "userName": "Marcus",
+            "amount": 5.39
+          },
+          {
+            "userId": "u5",
+            "userName": "Leo",
+            "amount": 5.39
+          },
+          {
+            "userId": "u6",
+            "userName": "Ines",
+            "amount": 5.39
+          },
+          {
+            "userId": "u7",
+            "userName": "Mia",
+            "amount": 5.39
+          },
+          {
+            "userId": "u8",
+            "userName": "Ravi",
+            "amount": 5.39
+          },
+          {
+            "userId": "u9",
+            "userName": "Ella",
+            "amount": 5.38
+          }
+        ]
+      },
+      {
+        "id": "exp-04",
+        "tripId": "demo",
+        "description": "Boat day · Cala Deià",
+        "totalAmount": 1170.0,
+        "date": "2026-07-18",
+        "splitMode": "equal",
+        "currency": "EUR",
+        "receiptUrl": null,
+        "createdAt": "2026-07-18T20:04:00Z",
+        "createdByUserId": "u4",
+        "createdByName": "Marcus",
+        "payers": [
+          {
+            "userId": "u4",
+            "userName": "Marcus",
+            "amount": 1170.0
+          }
+        ],
+        "participants": [
+          {
+            "userId": "u1",
+            "userName": "Ana",
+            "amount": 130.0
+          },
+          {
+            "userId": "u2",
+            "userName": "Jo",
+            "amount": 130.0
+          },
+          {
+            "userId": "u3",
+            "userName": "Sam",
+            "amount": 130.0
+          },
+          {
+            "userId": "u4",
+            "userName": "Marcus",
+            "amount": 130.0
+          },
+          {
+            "userId": "u5",
+            "userName": "Leo",
+            "amount": 130.0
+          },
+          {
+            "userId": "u6",
+            "userName": "Ines",
+            "amount": 130.0
+          },
+          {
+            "userId": "u7",
+            "userName": "Mia",
+            "amount": 130.0
+          },
+          {
+            "userId": "u8",
+            "userName": "Ravi",
+            "amount": 130.0
+          },
+          {
+            "userId": "u9",
+            "userName": "Ella",
+            "amount": 130.0
+          }
+        ]
+      },
+      {
+        "id": "exp-05",
+        "tripId": "demo",
+        "description": "Birthday cake for Mia",
+        "totalAmount": 42.9,
+        "date": "2026-07-18",
+        "splitMode": "equal",
+        "currency": "EUR",
+        "receiptUrl": null,
+        "createdAt": "2026-07-18T20:05:00Z",
+        "createdByUserId": "u2",
+        "createdByName": "Jo",
+        "payers": [
+          {
+            "userId": "u2",
+            "userName": "Jo",
+            "amount": 42.9
+          }
+        ],
+        "participants": [
+          {
+            "userId": "u1",
+            "userName": "Ana",
+            "amount": 5.37
+          },
+          {
+            "userId": "u2",
+            "userName": "Jo",
+            "amount": 5.37
+          },
+          {
+            "userId": "u3",
+            "userName": "Sam",
+            "amount": 5.36
+          },
+          {
+            "userId": "u4",
+            "userName": "Marcus",
+            "amount": 5.36
+          },
+          {
+            "userId": "u5",
+            "userName": "Leo",
+            "amount": 5.36
+          },
+          {
+            "userId": "u6",
+            "userName": "Ines",
+            "amount": 5.36
+          },
+          {
+            "userId": "u8",
+            "userName": "Ravi",
+            "amount": 5.36
+          },
+          {
+            "userId": "u9",
+            "userName": "Ella",
+            "amount": 5.36
+          }
+        ]
+      },
+      {
+        "id": "exp-06",
+        "tripId": "demo",
+        "description": "Late dinner, Palma old town",
+        "totalAmount": 612.4,
+        "date": "2026-07-17",
+        "splitMode": "equal",
+        "currency": "EUR",
+        "receiptUrl": null,
+        "createdAt": "2026-07-17T20:06:00Z",
+        "createdByUserId": "u3",
+        "createdByName": "Sam",
+        "payers": [
+          {
+            "userId": "u3",
+            "userName": "Sam",
+            "amount": 400.0
+          },
+          {
+            "userId": "u6",
+            "userName": "Ines",
+            "amount": 212.4
+          }
+        ],
+        "participants": [
+          {
+            "userId": "u1",
+            "userName": "Ana",
+            "amount": 68.05
+          },
+          {
+            "userId": "u2",
+            "userName": "Jo",
+            "amount": 68.05
+          },
+          {
+            "userId": "u3",
+            "userName": "Sam",
+            "amount": 68.05
+          },
+          {
+            "userId": "u4",
+            "userName": "Marcus",
+            "amount": 68.05
+          },
+          {
+            "userId": "u5",
+            "userName": "Leo",
+            "amount": 68.04
+          },
+          {
+            "userId": "u6",
+            "userName": "Ines",
+            "amount": 68.04
+          },
+          {
+            "userId": "u7",
+            "userName": "Mia",
+            "amount": 68.04
+          },
+          {
+            "userId": "u8",
+            "userName": "Ravi",
+            "amount": 68.04
+          },
+          {
+            "userId": "u9",
+            "userName": "Ella",
+            "amount": 68.04
+          }
+        ]
+      },
+      {
+        "id": "exp-07",
+        "tripId": "demo",
+        "description": "Tramuntana hiking guide",
+        "totalAmount": 270.0,
+        "date": "2026-07-17",
+        "splitMode": "equal",
+        "currency": "EUR",
+        "receiptUrl": null,
+        "createdAt": "2026-07-17T20:07:00Z",
+        "createdByUserId": "u8",
+        "createdByName": "Ravi",
+        "payers": [
+          {
+            "userId": "u8",
+            "userName": "Ravi",
+            "amount": 270.0
+          }
+        ],
+        "participants": [
+          {
+            "userId": "u8",
+            "userName": "Ravi",
+            "amount": 45.0
+          },
+          {
+            "userId": "u9",
+            "userName": "Ella",
+            "amount": 45.0
+          },
+          {
+            "userId": "u5",
+            "userName": "Leo",
+            "amount": 45.0
+          },
+          {
+            "userId": "u3",
+            "userName": "Sam",
+            "amount": 45.0
+          },
+          {
+            "userId": "u7",
+            "userName": "Mia",
+            "amount": 45.0
+          },
+          {
+            "userId": "u1",
+            "userName": "Ana",
+            "amount": 45.0
+          }
+        ]
+      },
+      {
+        "id": "exp-08",
+        "tripId": "demo",
+        "description": "Wine tasting, Binissalem",
+        "totalAmount": 324.0,
+        "date": "2026-07-16",
+        "splitMode": "equal",
+        "currency": "EUR",
+        "receiptUrl": null,
+        "createdAt": "2026-07-16T20:08:00Z",
+        "createdByUserId": "u1",
+        "createdByName": "Ana",
+        "payers": [
+          {
+            "userId": "u1",
+            "userName": "Ana",
+            "amount": 324.0
+          }
+        ],
+        "participants": [
+          {
+            "userId": "u1",
+            "userName": "Ana",
+            "amount": 40.5
+          },
+          {
+            "userId": "u3",
+            "userName": "Sam",
+            "amount": 40.5
+          },
+          {
+            "userId": "u4",
+            "userName": "Marcus",
+            "amount": 40.5
+          },
+          {
+            "userId": "u5",
+            "userName": "Leo",
+            "amount": 40.5
+          },
+          {
+            "userId": "u6",
+            "userName": "Ines",
+            "amount": 40.5
+          },
+          {
+            "userId": "u7",
+            "userName": "Mia",
+            "amount": 40.5
+          },
+          {
+            "userId": "u8",
+            "userName": "Ravi",
+            "amount": 40.5
+          },
+          {
+            "userId": "u9",
+            "userName": "Ella",
+            "amount": 40.5
+          }
+        ]
+      },
+      {
+        "id": "exp-09",
+        "tripId": "demo",
+        "description": "Kayak rental",
+        "totalAmount": 225.0,
+        "date": "2026-07-16",
+        "splitMode": "equal",
+        "currency": "EUR",
+        "receiptUrl": null,
+        "createdAt": "2026-07-16T20:09:00Z",
+        "createdByUserId": "u9",
+        "createdByName": "Ella",
+        "payers": [
+          {
+            "userId": "u9",
+            "userName": "Ella",
+            "amount": 225.0
+          }
+        ],
+        "participants": [
+          {
+            "userId": "u9",
+            "userName": "Ella",
+            "amount": 45.0
+          },
+          {
+            "userId": "u5",
+            "userName": "Leo",
+            "amount": 45.0
+          },
+          {
+            "userId": "u8",
+            "userName": "Ravi",
+            "amount": 45.0
+          },
+          {
+            "userId": "u4",
+            "userName": "Marcus",
+            "amount": 45.0
+          },
+          {
+            "userId": "u2",
+            "userName": "Jo",
+            "amount": 45.0
+          }
+        ]
+      },
+      {
+        "id": "exp-10",
+        "tripId": "demo",
+        "description": "Beach club day beds",
+        "totalAmount": 360.0,
+        "date": "2026-07-15",
+        "splitMode": "percentage",
+        "currency": "EUR",
+        "receiptUrl": null,
+        "createdAt": "2026-07-15T20:10:00Z",
+        "createdByUserId": "u7",
+        "createdByName": "Mia",
+        "payers": [
+          {
+            "userId": "u7",
+            "userName": "Mia",
+            "amount": 360.0
+          }
+        ],
+        "participants": [
+          {
+            "userId": "u7",
+            "userName": "Mia",
+            "amount": 72.0
+          },
+          {
+            "userId": "u1",
+            "userName": "Ana",
+            "amount": 57.6
+          },
+          {
+            "userId": "u2",
+            "userName": "Jo",
+            "amount": 57.6
+          },
+          {
+            "userId": "u3",
+            "userName": "Sam",
+            "amount": 57.6
+          },
+          {
+            "userId": "u6",
+            "userName": "Ines",
+            "amount": 57.6
+          },
+          {
+            "userId": "u9",
+            "userName": "Ella",
+            "amount": 57.6
+          }
+        ]
+      },
+      {
+        "id": "exp-11",
+        "tripId": "demo",
+        "description": "Paella night groceries",
+        "totalAmount": 157.8,
+        "date": "2026-07-15",
+        "splitMode": "equal",
+        "currency": "EUR",
+        "receiptUrl": null,
+        "createdAt": "2026-07-15T20:11:00Z",
+        "createdByUserId": "u8",
+        "createdByName": "Ravi",
+        "payers": [
+          {
+            "userId": "u8",
+            "userName": "Ravi",
+            "amount": 157.8
+          }
+        ],
+        "participants": [
+          {
+            "userId": "u1",
+            "userName": "Ana",
+            "amount": 17.54
+          },
+          {
+            "userId": "u2",
+            "userName": "Jo",
+            "amount": 17.54
+          },
+          {
+            "userId": "u3",
+            "userName": "Sam",
+            "amount": 17.54
+          },
+          {
+            "userId": "u4",
+            "userName": "Marcus",
+            "amount": 17.53
+          },
+          {
+            "userId": "u5",
+            "userName": "Leo",
+            "amount": 17.53
+          },
+          {
+            "userId": "u6",
+            "userName": "Ines",
+            "amount": 17.53
+          },
+          {
+            "userId": "u7",
+            "userName": "Mia",
+            "amount": 17.53
+          },
+          {
+            "userId": "u8",
+            "userName": "Ravi",
+            "amount": 17.53
+          },
+          {
+            "userId": "u9",
+            "userName": "Ella",
+            "amount": 17.53
+          }
+        ]
+      },
+      {
+        "id": "exp-12",
+        "tripId": "demo",
+        "description": "Fuel + tolls",
+        "totalAmount": 94.6,
+        "date": "2026-07-14",
+        "splitMode": "equal",
+        "currency": "EUR",
+        "receiptUrl": null,
+        "createdAt": "2026-07-14T20:12:00Z",
+        "createdByUserId": "u5",
+        "createdByName": "Leo",
+        "payers": [
+          {
+            "userId": "u5",
+            "userName": "Leo",
+            "amount": 94.6
+          }
+        ],
+        "participants": [
+          {
+            "userId": "u1",
+            "userName": "Ana",
+            "amount": 10.52
+          },
+          {
+            "userId": "u2",
+            "userName": "Jo",
+            "amount": 10.51
+          },
+          {
+            "userId": "u3",
+            "userName": "Sam",
+            "amount": 10.51
+          },
+          {
+            "userId": "u4",
+            "userName": "Marcus",
+            "amount": 10.51
+          },
+          {
+            "userId": "u5",
+            "userName": "Leo",
+            "amount": 10.51
+          },
+          {
+            "userId": "u6",
+            "userName": "Ines",
+            "amount": 10.51
+          },
+          {
+            "userId": "u7",
+            "userName": "Mia",
+            "amount": 10.51
+          },
+          {
+            "userId": "u8",
+            "userName": "Ravi",
+            "amount": 10.51
+          },
+          {
+            "userId": "u9",
+            "userName": "Ella",
+            "amount": 10.51
+          }
+        ]
+      },
+      {
+        "id": "exp-13",
+        "tripId": "demo",
+        "description": "Sóller port parking",
+        "totalAmount": 36.0,
+        "date": "2026-07-14",
+        "splitMode": "equal",
+        "currency": "EUR",
+        "receiptUrl": null,
+        "createdAt": "2026-07-14T20:13:00Z",
+        "createdByUserId": "u5",
+        "createdByName": "Leo",
+        "payers": [
+          {
+            "userId": "u5",
+            "userName": "Leo",
+            "amount": 36.0
+          }
+        ],
+        "participants": [
+          {
+            "userId": "u1",
+            "userName": "Ana",
+            "amount": 4.0
+          },
+          {
+            "userId": "u2",
+            "userName": "Jo",
+            "amount": 4.0
+          },
+          {
+            "userId": "u3",
+            "userName": "Sam",
+            "amount": 4.0
+          },
+          {
+            "userId": "u4",
+            "userName": "Marcus",
+            "amount": 4.0
+          },
+          {
+            "userId": "u5",
+            "userName": "Leo",
+            "amount": 4.0
+          },
+          {
+            "userId": "u6",
+            "userName": "Ines",
+            "amount": 4.0
+          },
+          {
+            "userId": "u7",
+            "userName": "Mia",
+            "amount": 4.0
+          },
+          {
+            "userId": "u8",
+            "userName": "Ravi",
+            "amount": 4.0
+          },
+          {
+            "userId": "u9",
+            "userName": "Ella",
+            "amount": 4.0
+          }
+        ]
+      },
+      {
+        "id": "exp-14",
+        "tripId": "demo",
+        "description": "Dinner at Es Racó",
+        "totalAmount": 743.2,
+        "date": "2026-07-13",
+        "splitMode": "equal",
+        "currency": "EUR",
+        "receiptUrl": null,
+        "createdAt": "2026-07-13T20:14:00Z",
+        "createdByUserId": "u3",
+        "createdByName": "Sam",
+        "payers": [
+          {
+            "userId": "u3",
+            "userName": "Sam",
+            "amount": 743.2
+          }
+        ],
+        "participants": [
+          {
+            "userId": "u1",
+            "userName": "Ana",
+            "amount": 82.58
+          },
+          {
+            "userId": "u2",
+            "userName": "Jo",
+            "amount": 82.58
+          },
+          {
+            "userId": "u3",
+            "userName": "Sam",
+            "amount": 82.58
+          },
+          {
+            "userId": "u4",
+            "userName": "Marcus",
+            "amount": 82.58
+          },
+          {
+            "userId": "u5",
+            "userName": "Leo",
+            "amount": 82.58
+          },
+          {
+            "userId": "u6",
+            "userName": "Ines",
+            "amount": 82.58
+          },
+          {
+            "userId": "u7",
+            "userName": "Mia",
+            "amount": 82.58
+          },
+          {
+            "userId": "u8",
+            "userName": "Ravi",
+            "amount": 82.57
+          },
+          {
+            "userId": "u9",
+            "userName": "Ella",
+            "amount": 82.57
+          }
+        ]
+      },
+      {
+        "id": "exp-15",
+        "tripId": "demo",
+        "description": "Eroski supermarket run",
+        "totalAmount": 286.45,
+        "date": "2026-07-13",
+        "splitMode": "equal",
+        "currency": "EUR",
+        "receiptUrl": null,
+        "createdAt": "2026-07-13T20:15:00Z",
+        "createdByUserId": "u2",
+        "createdByName": "Jo",
+        "payers": [
+          {
+            "userId": "u2",
+            "userName": "Jo",
+            "amount": 286.45
+          }
+        ],
+        "participants": [
+          {
+            "userId": "u1",
+            "userName": "Ana",
+            "amount": 31.83
+          },
+          {
+            "userId": "u2",
+            "userName": "Jo",
+            "amount": 31.83
+          },
+          {
+            "userId": "u3",
+            "userName": "Sam",
+            "amount": 31.83
+          },
+          {
+            "userId": "u4",
+            "userName": "Marcus",
+            "amount": 31.83
+          },
+          {
+            "userId": "u5",
+            "userName": "Leo",
+            "amount": 31.83
+          },
+          {
+            "userId": "u6",
+            "userName": "Ines",
+            "amount": 31.83
+          },
+          {
+            "userId": "u7",
+            "userName": "Mia",
+            "amount": 31.83
+          },
+          {
+            "userId": "u8",
+            "userName": "Ravi",
+            "amount": 31.82
+          },
+          {
+            "userId": "u9",
+            "userName": "Ella",
+            "amount": 31.82
+          }
+        ]
+      },
+      {
+        "id": "exp-16",
+        "tripId": "demo",
+        "description": "9-seat van rental",
+        "totalAmount": 612.0,
+        "date": "2026-07-12",
+        "splitMode": "equal",
+        "currency": "EUR",
+        "receiptUrl": null,
+        "createdAt": "2026-07-12T20:16:00Z",
+        "createdByUserId": "u5",
+        "createdByName": "Leo",
+        "payers": [
+          {
+            "userId": "u5",
+            "userName": "Leo",
+            "amount": 612.0
+          }
+        ],
+        "participants": [
+          {
+            "userId": "u1",
+            "userName": "Ana",
+            "amount": 68.0
+          },
+          {
+            "userId": "u2",
+            "userName": "Jo",
+            "amount": 68.0
+          },
+          {
+            "userId": "u3",
+            "userName": "Sam",
+            "amount": 68.0
+          },
+          {
+            "userId": "u4",
+            "userName": "Marcus",
+            "amount": 68.0
+          },
+          {
+            "userId": "u5",
+            "userName": "Leo",
+            "amount": 68.0
+          },
+          {
+            "userId": "u6",
+            "userName": "Ines",
+            "amount": 68.0
+          },
+          {
+            "userId": "u7",
+            "userName": "Mia",
+            "amount": 68.0
+          },
+          {
+            "userId": "u8",
+            "userName": "Ravi",
+            "amount": 68.0
+          },
+          {
+            "userId": "u9",
+            "userName": "Ella",
+            "amount": 68.0
+          }
+        ]
+      },
+      {
+        "id": "exp-17",
+        "tripId": "demo",
+        "description": "Airport taxis PMI",
+        "totalAmount": 138.0,
+        "date": "2026-07-12",
+        "splitMode": "exact",
+        "currency": "EUR",
+        "receiptUrl": null,
+        "createdAt": "2026-07-12T20:17:00Z",
+        "createdByUserId": "u6",
+        "createdByName": "Ines",
+        "payers": [
+          {
+            "userId": "u6",
+            "userName": "Ines",
+            "amount": 138.0
+          }
+        ],
+        "participants": [
+          {
+            "userId": "u6",
+            "userName": "Ines",
+            "amount": 46.0
+          },
+          {
+            "userId": "u7",
+            "userName": "Mia",
+            "amount": 46.0
+          },
+          {
+            "userId": "u9",
+            "userName": "Ella",
+            "amount": 46.0
+          }
+        ]
+      }
+    ],
+    "/api/trips/{id}/expenses/balances": {
+      "balances": [
+        {
+          "userId": "u1",
+          "userName": "Ana",
+          "avatarUrl": null,
+          "net": 3725.62
+        },
+        {
+          "userId": "u2",
+          "userName": "Jo",
+          "avatarUrl": null,
+          "net": -692.52
+        },
+        {
+          "userId": "u3",
+          "userName": "Sam",
+          "avatarUrl": null,
+          "net": 80.84
+        },
+        {
+          "userId": "u4",
+          "userName": "Marcus",
+          "avatarUrl": null,
+          "net": 213.75
+        },
+        {
+          "userId": "u5",
+          "userName": "Leo",
+          "avatarUrl": null,
+          "net": -307.14
+        },
+        {
+          "userId": "u6",
+          "userName": "Ines",
+          "avatarUrl": null,
+          "net": -712.94
+        },
+        {
+          "userId": "u7",
+          "userName": "Mia",
+          "avatarUrl": null,
+          "net": -757.38
+        },
+        {
+          "userId": "u8",
+          "userName": "Ravi",
+          "avatarUrl": null,
+          "net": -621.92
+        },
+        {
+          "userId": "u9",
+          "userName": "Ella",
+          "avatarUrl": null,
+          "net": -928.31
+        }
+      ],
+      "simplifiedDebts": [
+        {
+          "fromUserId": "u9",
+          "fromUserName": "Ella",
+          "toUserId": "u1",
+          "toUserName": "Ana",
+          "amount": 928.31
+        },
+        {
+          "fromUserId": "u7",
+          "fromUserName": "Mia",
+          "toUserId": "u1",
+          "toUserName": "Ana",
+          "amount": 757.38
+        },
+        {
+          "fromUserId": "u6",
+          "fromUserName": "Ines",
+          "toUserId": "u1",
+          "toUserName": "Ana",
+          "amount": 712.94
+        },
+        {
+          "fromUserId": "u2",
+          "fromUserName": "Jo",
+          "toUserId": "u1",
+          "toUserName": "Ana",
+          "amount": 692.52
+        },
+        {
+          "fromUserId": "u8",
+          "fromUserName": "Ravi",
+          "toUserId": "u1",
+          "toUserName": "Ana",
+          "amount": 621.92
+        },
+        {
+          "fromUserId": "u5",
+          "fromUserName": "Leo",
+          "toUserId": "u4",
+          "toUserName": "Marcus",
+          "amount": 213.75
+        },
+        {
+          "fromUserId": "u5",
+          "fromUserName": "Leo",
+          "toUserId": "u3",
+          "toUserName": "Sam",
+          "amount": 80.84
+        },
+        {
+          "fromUserId": "u5",
+          "fromUserName": "Leo",
+          "toUserId": "u1",
+          "toUserName": "Ana",
+          "amount": 12.55
+        }
+      ]
+    },
+    "/api/trips/{id}/expenses/settlements": []
+  }
+}

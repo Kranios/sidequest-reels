@@ -40,8 +40,12 @@
  *    opacity) — NOT the camera lenses. The lenses are "lensinglass". We hide
  *    both glass shells; never put the video on either.
  *
- * Re-dump with `node diagnose-screen.mjs` (screen mesh) or `node
- * inspect-glb.mjs` (every mesh), from remotion/.
+ * Every "world" direction above is in the SHOT FRAME. The shot is then laid on
+ * its back by STAGE_ROTATION (below) so drei's ContactShadows can work — see
+ * there. Nothing in the facts changes; they are simply one rotation away.
+ *
+ * Re-dump with `node docs/archive/diagnose-screen.mjs` (screen mesh) or
+ * `node docs/archive/inspect-glb.mjs` (every mesh), from the repo root.
  *
  * VIDEO TEXTURE: `useVideoTexture()` is the Studio/Player path
  * (requestVideoFrameCallback) and is unreliable in `remotion render`. The
@@ -49,12 +53,21 @@
  * getRemotionEnvironment().isRendering. Exactly one of the two is called — the
  * other would throw (offthread in preview) or hang a delayRender (video texture
  * with no <Video> mounted during render).
+ *
+ * LOOK: the display is a MeshPhysicalMaterial lit by its own emissive map (the
+ * app video), with a zero-roughness clearcoat over it — the glass. The emissive
+ * term is not tone-mapped, so the app's colours come through exactly; the
+ * clearcoat picks up the studio environment as thin highlights on top. A
+ * ContactShadows plane sits behind the phone for a soft occlusion shadow on
+ * the background, and the phone makes a sprung entrance (tilted 45deg on two
+ * axes, slightly zoomed) before settling into its framed position.
  */
 import React, { useMemo, useRef } from "react";
 import {
   useCurrentFrame,
   useVideoConfig,
   interpolate,
+  spring,
   staticFile,
   Video,
   Sequence,
@@ -63,7 +76,7 @@ import {
 import { ThreeCanvas, useVideoTexture, useOffthreadVideoTexture } from "@remotion/three";
 import { getSafeArea, SafeInsets } from "../safe-areas";
 import { Box, phoneShiftForBox, radiusForPhoneHeight } from "../layout";
-import { useGLTF, Environment } from "@react-three/drei";
+import { useGLTF, Environment, ContactShadows } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -71,6 +84,76 @@ import * as THREE from "three";
 export const SCREEN_MESH = "Cube.010_screen.001_0";
 /** glTF material on that mesh — three keeps material names verbatim. */
 export const SCREEN_MATERIAL = "screen.001";
+
+/**
+ * Physical size of the display, width / height (fact 1). Used only until the
+ * mesh has been measured at load — the measured value then wins.
+ */
+const SCREEN_ASPECT_FALLBACK = 0.7761 / 1.6631;
+
+/**
+ * Supersampling for the 3D canvas. 2 renders the phone at twice the frame's
+ * resolution and lets the browser downsample: crisp body edges and legible UI
+ * text on the screen, for roughly 2x the GPU fill of dpr 1.
+ */
+const PHONE_DPR = 2;
+
+/** The entrance: both tilts start here and spring to 0. */
+const ENTRY_TILT_DEG = 45;
+/** Camera distance multiplier at frame 0 (<1 = starts zoomed in). */
+const ENTRY_ZOOM = 0.88;
+/**
+ * A soft, heavy spring: first peak at ~0.9 s with ~7% overshoot (~3deg past
+ * rest), settled by ~1.3 s. Stiffer settings snap in ~10 frames, and
+ * stretching one with durationInFrames does not help — Remotion stretches the
+ * whole curve including its long tail, so the visible motion stays up front.
+ */
+const ENTRY_SPRING = { damping: 11, stiffness: 40, mass: 1.8 };
+
+/**
+ * THE STAGE ROTATION — why the whole shot is lying on its back.
+ *
+ * drei's ContactShadows only works flat. Its blur pass draws a helper plane
+ * that is NOT in the scene graph and sits fixed in the world XZ plane at y=0,
+ * through the shadow camera. Stand the component upright and that camera sees
+ * the helper edge-on, both blur passes clear the target, and the shadow comes
+ * out empty — which is what an upright ContactShadows actually rendered.
+ *
+ * So instead of standing the shadow up, we lay the shot down. Model, camera,
+ * lights and environment are all built in the SHOT FRAME the file header
+ * documents (screen faces -X, up is +Y), then rotated -90deg about Z into the
+ * world: (x, y, z) -> (y, -x, z). There the screen faces +Y and "behind the
+ * phone" is -Y — the floor, exactly where ContactShadows wants to be.
+ * projectPlanarUV and the orbit maths never see the difference: they run in
+ * the shot frame, and toStage() carries their results across.
+ */
+const STAGE_ROTATION = new THREE.Euler(0, 0, -Math.PI / 2);
+const STAGE_QUATERNION = new THREE.Quaternion().setFromEuler(STAGE_ROTATION);
+/** A point or direction in the shot frame, expressed in world space. */
+const toStage = (x: number, y: number, z: number) =>
+  new THREE.Vector3(x, y, z).applyQuaternion(STAGE_QUATERNION);
+
+/**
+ * The backdrop shadow's distance behind the phone (shot-frame +X). It starts
+ * far enough back that the phone's top corner clears it at a 45deg pitch
+ * (~0.6 back), then closes in with the entrance. The shadow's alpha falls off
+ * with distance over SHADOW_FAR, so close = dark.
+ */
+const SHADOW_GAP_ENTRY = 0.8;
+const SHADOW_GAP_REST = 0.16;
+/**
+ * Depth range of the shadow camera. Must exceed SHADOW_GAP_ENTRY: the blur
+ * helper plane sits at world y=0 — the phone's centre — and has to fall
+ * inside it.
+ */
+const SHADOW_FAR = 1.0;
+/**
+ * Plane size [world X = the phone's height, world Z = its width], with room
+ * for the blur. A module-level reference ON PURPOSE: ContactShadows rebuilds
+ * its render targets whenever `scale` changes identity, so an inline literal
+ * would allocate two new targets every frame.
+ */
+const SHADOW_SCALE: [number, number] = [2.9, 1.9];
 
 /** Drop the characters three's sanitizeNodeName removes, lowercase the rest. */
 const canon = (s: string | null | undefined) =>
@@ -85,10 +168,10 @@ const isScreenMesh = (mesh: THREE.Mesh) =>
   canon(materialName(mesh.material)) === canon(SCREEN_MATERIAL);
 
 /**
- * World directions the video's own axes must line up with. The camera in this
- * file orbits the -X side in the X/Z plane with up = +Y, so it looks along +X;
- * a three.js camera looks down its local -Z, which puts its local +X (screen
- * right) on world +Z.
+ * Shot-frame directions the video's own axes must line up with. The camera in
+ * this file orbits the -X side in the X/Z plane with up = +Y, so it looks
+ * along +X; a three.js camera looks down its local -Z, which puts its local +X
+ * (screen right) on +Z.
  */
 const SCREEN_RIGHT = new THREE.Vector3(0, 0, 1);
 const SCREEN_UP = new THREE.Vector3(0, 1, 0);
@@ -102,25 +185,28 @@ const SCREEN_UP = new THREE.Vector3(0, 1, 0);
  * rescue them — but the geometry itself is exactly the right shape.
  *
  * Which local axis becomes U vs V, and each one's direction, is DERIVED from
- * the mesh's world orientation: whichever in-plane axis points along
- * SCREEN_RIGHT becomes U (increasing rightwards), the other becomes V
+ * the mesh's orientation in the model hierarchy: whichever in-plane axis points
+ * along SCREEN_RIGHT becomes U (increasing rightwards), the other becomes V
  * (increasing upwards). No hardcoded flips, so a re-export with different axes
- * still maps correctly.
+ * still maps correctly. It runs before the model is mounted under the stage
+ * rotation, so the matrix it reads is in the shot frame.
+ *
+ * Returns the display's measured aspect (U span / V span), or null.
  */
 const projectPlanarUV = (geometry: THREE.BufferGeometry, worldMatrix: THREE.Matrix4) => {
   const pos = geometry.getAttribute("position");
-  if (!pos) return;
+  if (!pos) return null;
   geometry.computeBoundingBox();
   const bb = geometry.boundingBox;
-  if (!bb) return;
+  if (!bb) return null;
 
   const size = bb.getSize(new THREE.Vector3());
   const dims = [size.x, size.y, size.z];
   const flat = dims.indexOf(Math.min(...dims)); // the near-zero-thickness axis
   const inPlane = [0, 1, 2].filter((i) => i !== flat);
 
-  // World direction of each in-plane local axis (rotation only — translation
-  // and uniform scale don't change which way an axis points).
+  // Direction of each in-plane local axis (rotation only — translation and
+  // uniform scale don't change which way an axis points).
   const rot = new THREE.Matrix3().setFromMatrix4(worldMatrix);
   const worldDir = (axis: number) =>
     new THREE.Vector3().setComponent(axis, 1).applyMatrix3(rot).normalize();
@@ -149,6 +235,17 @@ const projectPlanarUV = (geometry: THREE.BufferGeometry, worldMatrix: THREE.Matr
   }
   geometry.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
   geometry.attributes.uv.needsUpdate = true;
+  return uSpan / vSpan;
+};
+
+/** Pixel size of whatever the texture currently holds (video or still frame). */
+const textureAspect = (texture: THREE.Texture) => {
+  const img = texture.image as
+    | { videoWidth?: number; videoHeight?: number; width?: number; height?: number }
+    | undefined;
+  const w = img?.videoWidth || img?.width || 0;
+  const h = img?.videoHeight || img?.height || 0;
+  return w > 0 && h > 0 ? w / h : null;
 };
 
 type PhoneProps = {
@@ -164,6 +261,12 @@ type PhoneProps = {
    * preview and the render (see the Sequence in Phone below).
    */
   videoStartFrom?: number;
+  /**
+   * Play the sprung entrance (45deg tilt + slight zoom -> rest). On by default;
+   * turn it off where the phone must cut in hard, e.g. every T3 step after the
+   * first.
+   */
+  entry?: boolean;
 
   /**
    * THREE TIERS OF FRAMING — this is the rule that makes reels look designed:
@@ -197,12 +300,13 @@ type PhoneProps = {
 const PhoneModel: React.FC<{
   texture: THREE.Texture | null;
   progress: number;
+  entryProgress: number;
   swingDeg: number;
   dollyIn: number;
   radius: number;
   screenRotDeg: number;
   screenFlipY: boolean;
-}> = ({ texture, progress, swingDeg, dollyIn, radius, screenRotDeg, screenFlipY }) => {
+}> = ({ texture, progress, entryProgress, swingDeg, dollyIn, radius, screenRotDeg, screenFlipY }) => {
   const { scene } = useGLTF(staticFile("iphone17pro.glb"));
 
   // Clone once so re-renders don't mutate the cached GLTF.
@@ -210,14 +314,15 @@ const PhoneModel: React.FC<{
 
   // Prep the GLB once:
   //  - screen mesh: keep it, clone its geometry (drei caches the original),
-  //    regenerate its UVs as a planar 0-1 projection, and give it an unlit
-  //    material we drive. The mesh already IS the display: exact footprint,
-  //    rounded corners, cutouts, rigid in the hierarchy.
+  //    regenerate its UVs as a planar 0-1 projection, and give it the
+  //    emissive glass material we drive. The mesh already IS the display:
+  //    exact footprint, rounded corners, cutouts, rigid in the hierarchy.
   //  - hide the two glass shells ("glass.002" back panel, "lensinglass" lenses).
   //  - tame the body metals: the GLB ships them at metalness ~0.77, which with
   //    an HDR env + key light blows the orange frame out to a glowing look.
-  const screenMat = useMemo(() => {
-    let mat: THREE.MeshBasicMaterial | null = null;
+  const { screenMat, screenAspect } = useMemo(() => {
+    let mat: THREE.MeshPhysicalMaterial | null = null;
+    let aspect: number | null = null;
 
     model.traverse((obj) => {
       const mesh = obj as THREE.Mesh;
@@ -227,13 +332,28 @@ const PhoneModel: React.FC<{
       if (isScreenMesh(mesh)) {
         mesh.updateWorldMatrix(true, false); // rotation only; independent of mount
         mesh.geometry = mesh.geometry.clone(); // drei caches the original
-        projectPlanarUV(mesh.geometry, mesh.matrixWorld);
-        mat = new THREE.MeshBasicMaterial({
-          toneMapped: false, // unlit: keep the app UI's real colours
+        aspect = projectPlanarUV(mesh.geometry, mesh.matrixWorld);
+        mat = new THREE.MeshPhysicalMaterial({
+          // The picture is the EMISSIVE term, so it glows at its own colours
+          // whatever the lights do. Base colour black keeps the lights from
+          // washing it out; only the glass layer below reacts to them.
+          color: 0x000000,
+          emissive: 0xff00ff, // magenta until the first video frame lands
+          emissiveIntensity: 1, // 1 + toneMapped:false = the app's exact colours
+          roughness: 0,
+          metalness: 0,
+          // The cover glass: a mirror-smooth coat that reflects the studio
+          // environment as thin highlights over the UI.
+          clearcoat: 1,
+          clearcoatRoughness: 0,
+          // Glint, not glare: at full strength the studio softbox laid a
+          // milky haze over the top of the UI (rule 3: the screen must look
+          // exactly like the app).
+          envMapIntensity: 0.45,
+          toneMapped: false,
           // Two shells at five X depths; DoubleSide draws both and the -X one
           // (nearest the camera) wins the depth test with the same UVs.
           side: THREE.DoubleSide,
-          color: 0xff00ff, // magenta until the first video frame lands
         });
         mesh.material = mat;
         mesh.visible = true;
@@ -263,21 +383,30 @@ const PhoneModel: React.FC<{
     // RECENTRE THE MODEL ON THE ORIGIN.
     // The GLB's body is not centred on its own origin — its bounding box sits
     // at roughly (0.02, 0.02, -0.12). The camera aims at the origin, and with
-    // the camera on -X looking along +X, world +Z is screen-right, so that
-    // -0.12 on Z pushed the phone ~60px left of frame centre at a typical
-    // radius (visible in any still before this fix). Correcting it in 3D
-    // rather than with a CSS nudge keeps it exact at every camera angle.
+    // the camera on -X looking along +X, +Z is screen-right, so that -0.12 on
+    // Z pushed the phone ~60px left of frame centre at a typical radius
+    // (visible in any still before this fix). Correcting it in 3D rather than
+    // with a CSS nudge keeps it exact at every camera angle.
     model.updateMatrixWorld(true);
     const bounds = new THREE.Box3().setFromObject(model);
     const centre = bounds.getCenter(new THREE.Vector3());
     model.position.sub(centre);
 
-    return mat as THREE.MeshBasicMaterial | null;
+    return {
+      screenMat: mat as THREE.MeshPhysicalMaterial | null,
+      screenAspect: (aspect as number | null) ?? SCREEN_ASPECT_FALLBACK,
+    };
   }, [model]);
 
-  // Per-frame: point the material at the current video frame. The regenerated
-  // UVs already span a clean 0-1 across the display, so repeat stays (1,1) and
-  // offset (0,0) — no fitting maths, nothing that can drift.
+  // Per-frame: point the material at the current video frame.
+  //
+  // ASPECT: the planar UVs span a clean 0-1 across the display, so this is a
+  // plain centred COVER crop on top of them — the recording is scaled to fill
+  // the display and the sliver that doesn't fit is trimmed from the longer
+  // side. This is NOT the forbidden repeat/offset attempt to fix the GLB's own
+  // UV islands (fact 2): those UVs are gone; this only reconciles the
+  // recording's proportions (e.g. 390x844) with the display's (0.776 / 1.663).
+  // `center` is 0.5, so repeat scales about the middle and offset stays 0.
   if (screenMat && texture) {
     texture.center.set(0.5, 0.5);
     texture.rotation = THREE.MathUtils.degToRad(screenRotDeg);
@@ -285,19 +414,32 @@ const PhoneModel: React.FC<{
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.wrapS = THREE.ClampToEdgeWrapping; // never tile / spill
     texture.wrapT = THREE.ClampToEdgeWrapping;
-    texture.repeat.set(1, 1);
+    // Edge sharpness: the frame is minified ~3x onto the display, so it needs
+    // mipmaps, and anisotropy keeps it crisp as the camera swings off-axis.
+    // three clamps anisotropy to what the GPU supports.
+    texture.generateMipmaps = true;
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.anisotropy = 16;
+
+    const videoAspect = textureAspect(texture);
+    // A quarter turn swaps which display axis the video's width runs along.
+    const quarterTurn = Math.round(screenRotDeg / 90) % 2 === 1;
+    const displayAspect = quarterTurn ? 1 / screenAspect : screenAspect;
+    const ratio = videoAspect ? videoAspect / displayAspect : 1;
+    if (ratio > 1) texture.repeat.set(1 / ratio, 1); // video wider: trim the sides
+    else texture.repeat.set(1, ratio); // video taller: trim top and bottom
     texture.offset.set(0, 0);
     texture.needsUpdate = true;
 
-    if (screenMat.map !== texture) {
-      screenMat.map = texture;
-      screenMat.color.set(0xffffff);
+    if (screenMat.emissiveMap !== texture) {
+      screenMat.emissiveMap = texture;
+      screenMat.emissive.set(0xffffff);
       screenMat.needsUpdate = true;
     }
-  } else if (screenMat && screenMat.map !== null) {
+  } else if (screenMat && screenMat.emissiveMap !== null) {
     // Magenta = no texture reached the screen (bad path / didn't decode).
-    screenMat.map = null;
-    screenMat.color.set(0xff00ff);
+    screenMat.emissiveMap = null;
+    screenMat.emissive.set(0xff00ff);
     screenMat.needsUpdate = true;
   }
 
@@ -305,30 +447,68 @@ const PhoneModel: React.FC<{
   // aimed at the phone's centre. Driving the default camera directly keeps the
   // aim exact every frame, so the phone never drifts off-centre.
   // AXES: Blender is Z-up, three.js Y-up. This GLB's long axis is Y, so the
-  // phone stands upright here and the camera orbits the X/Z plane at a fixed
-  // height. Orbiting X/Y swings the camera over the top and looks broken.
+  // phone stands upright in the shot frame and the camera orbits its X/Z plane
+  // at a fixed height. Orbiting X/Y swings the camera over the top and looks
+  // broken. The orbit is worked out in the shot frame and carried into the
+  // world by toStage() — position AND up vector, or the laid-down shot would
+  // roll 90deg.
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
   // Narrow FOV = a product-shot look: the phone reads big without the camera
   // getting close enough to distort it. `radius` then sets apparent size.
   camera.fov = 30;
   const ang = THREE.MathUtils.degToRad(-swingDeg / 2 + swingDeg * progress);
-  const r = radius - dollyIn * progress;
-  camera.position.set(-Math.cos(ang) * r, 0, Math.sin(ang) * r);
+  // The entrance starts a touch closer and springs back out to the framed
+  // distance; the spring's overshoot reads as the phone settling.
+  const zoom = interpolate(entryProgress, [0, 1], [ENTRY_ZOOM, 1]);
+  const r = (radius - dollyIn * progress) * zoom;
+  camera.position.copy(toStage(-Math.cos(ang) * r, 0, Math.sin(ang) * r));
+  camera.up.copy(toStage(0, 1, 0));
   camera.lookAt(0, 0, 0);
   camera.updateProjectionMatrix();
 
+  // The entrance tilt rotates the PHONE (not the camera), so the shadow behind
+  // it changes shape as it lands. Shot frame: pitch is about Z (the screen's
+  // left-right axis), negative leans the top away from the camera; yaw is
+  // about Y. Both spring from ENTRY_TILT_DEG to 0.
+  const tilt = THREE.MathUtils.degToRad(ENTRY_TILT_DEG * (1 - entryProgress));
+  const shadowGap = interpolate(entryProgress, [0, 1], [SHADOW_GAP_ENTRY, SHADOW_GAP_REST]);
+
   return (
     <>
-      <Environment preset="studio" environmentIntensity={0.22} />
+      {/* Rotated with the stage so reflections sit where they did upright. */}
+      <Environment
+        preset="studio"
+        environmentIntensity={0.22}
+        environmentRotation={STAGE_ROTATION}
+      />
       <ambientLight intensity={0.85} />
-      {/* Key + fill on the -X (screen) side, matching the camera. Kept gentle —
-          a hot key light turns the GLB's metallic frame into an orange glow. */}
-      <directionalLight position={[-4, 2, 3]} intensity={1.0} />
-      <directionalLight position={[-2, -3, 2]} intensity={0.35} />
+      {/* Key + fill on the screen side, matching the camera (shot-frame
+          positions, carried into the world). Kept gentle — a hot key light
+          turns the GLB's metallic frame into an orange glow. */}
+      <directionalLight position={toStage(-4, 2, 3)} intensity={1.0} />
+      <directionalLight position={toStage(-2, -3, 2)} intensity={0.35} />
       {/* The display is the GLB's own screen mesh, re-UV'd and re-materialled
           in the useMemo above — so it rides the model's transform exactly and
           can never drift, rescale or lose its rounded outline. */}
-      <primitive object={model} />
+      <group rotation={STAGE_ROTATION}>
+        <group rotation={[0, tilt, -tilt]}>
+          <primitive object={model} />
+        </group>
+      </group>
+      {/* Soft occlusion shadow on the background, in ContactShadows' native
+          orientation: flat, below the laid-down phone, looking up at it — which
+          in the shot is an upright backdrop just behind the phone. Seen near
+          head-on the phone hides most of its own shadow, so what reads is the
+          blurred rim and the parallax as the camera swings. */}
+      <ContactShadows
+        position={toStage(shadowGap, 0, 0)}
+        scale={SHADOW_SCALE}
+        far={SHADOW_FAR}
+        blur={3.2}
+        opacity={0.85}
+        resolution={512}
+        color="#000000"
+      />
     </>
   );
 };
@@ -344,24 +524,29 @@ const PhoneModel: React.FC<{
  * the Sequence is the one lever that moves BOTH paths together; a startFrom on
  * <Video> would fix the preview and silently do nothing to the render.
  *
- * `progress` (the camera swing) is computed OUTSIDE the Sequence and passed in,
- * so shifting the video can never drift the animation timing.
+ * `progress` (the camera swing) and `entryProgress` (the entrance spring) are
+ * computed OUTSIDE the Sequence and passed in, so shifting the video can never
+ * drift the animation timing.
  */
-export const Phone: React.FC<PhoneProps> = ({ videoStartFrom = 10, ...props }) => {
+export const Phone: React.FC<PhoneProps> = ({ videoStartFrom = 10, entry = true, ...props }) => {
   const frame = useCurrentFrame();
-  const { durationInFrames } = useVideoConfig();
+  const { durationInFrames, fps } = useVideoConfig();
   const progress = interpolate(frame, [0, Math.max(durationInFrames - 1, 1)], [0, 1]);
+  const entryProgress = entry ? spring({ frame, fps, config: ENTRY_SPRING }) : 1;
 
   return (
     <Sequence from={-Math.max(0, Math.round(videoStartFrom))} layout="none">
-      <PhoneCanvas {...props} progress={progress} />
+      <PhoneCanvas {...props} progress={progress} entryProgress={entryProgress} />
     </Sequence>
   );
 };
 
-const PhoneCanvas: React.FC<Omit<PhoneProps, "videoStartFrom"> & { progress: number }> = ({
+const PhoneCanvas: React.FC<
+  Omit<PhoneProps, "videoStartFrom" | "entry"> & { progress: number; entryProgress: number }
+> = ({
   videoSrc,
   progress,
+  entryProgress,
   swingDeg = 18,
   dollyIn = 0.8,
   radius = 4.2,
@@ -425,10 +610,11 @@ const PhoneCanvas: React.FC<Omit<PhoneProps, "videoStartFrom"> & { progress: num
           style={{ position: "absolute", opacity: 0, pointerEvents: "none" }}
         />
       ) : null}
-      <ThreeCanvas width={width} height={height} style={canvasStyle}>
+      <ThreeCanvas width={width} height={height} style={canvasStyle} dpr={PHONE_DPR}>
         <PhoneModel
           texture={texture}
           progress={progress}
+          entryProgress={entryProgress}
           swingDeg={swingDeg}
           dollyIn={dollyIn}
           radius={effectiveRadius}
