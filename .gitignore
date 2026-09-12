@@ -1,0 +1,21 @@
+# dependencies
+node_modules/
+
+# generated media and intermediates
+remotion/out/
+output/
+cache/
+*.mp4
+*.webm
+
+# python
+__pycache__/
+*.pyc
+
+# tooling state and dumps
+.claude-flow/
+repomix-output.xml
+
+# secrets
+.env
+.env.*

@@ -1,0 +1,38 @@
+{
+  "reel_id": "theme01_reveal",
+  "title": "POV: your friend planned a secret sidequest",
+  "theme": 1,
+  "category": "A-reveal",
+  "fps": 30,
+  "resolution": [1080, 1920],
+  "background": "#0A0908",
+  "sections": [
+    {
+      "type": "hook",
+      "duration_s": 2.0,
+      "broll": "friends_group.jpg",
+      "text_lines": [
+        { "text": "Your friend planned", "color": "#FFFFFF" },
+        { "text": "a secret sidequest.", "color": "#F4A7B0" }
+      ],
+      "subtext": "You don't know what it is. Yet."
+    },
+    {
+      "type": "reveal",
+      "duration_s": 3.5,
+      "screen": "hidden_sidequest",
+      "label": "Reveals in 2 days"
+    },
+    {
+      "type": "phone_screen",
+      "duration_s": 2.5,
+      "screen": "hidden_sidequest_revealed",
+      "subtitle": "Revealed at the perfect moment."
+    },
+    {
+      "type": "cta",
+      "duration_s": 2.5,
+      "launch_line": "First 50 get lifetime access — free."
+    }
+  ]
+}

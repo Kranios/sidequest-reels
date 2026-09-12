@@ -1,0 +1,23 @@
+# .claudesignore — keep heavy binaries and generated media out of Claude's
+# context. gitignore syntax.
+
+# 3D models and fonts
+assets/*.glb
+assets/fonts/*.ttf
+
+# generated media and intermediates
+cache/
+output/
+remotion/public/app/*.mp4
+*.mp4
+*.png
+*.jpg
+
+# strategy: only the working docs are relevant
+strategy/*
+!strategy/templates_spec.md
+!strategy/feature_map.md
+!strategy/analytics_template.csv
+
+# archived one-off diagnostics
+docs/archive/

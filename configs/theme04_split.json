@@ -1,0 +1,31 @@
+{
+  "reel_id": "theme04_split",
+  "title": "Who owes who after the trip?",
+  "theme": 4,
+  "category": "B-problem",
+  "fps": 30,
+  "resolution": [1080, 1920],
+  "background": "#0A0908",
+  "sections": [
+    {
+      "type": "hook",
+      "duration_s": 2.0,
+      "text_lines": [
+        { "text": "The trip's over.", "color": "#FFFFFF" },
+        { "text": "Now who owes who?", "color": "#F4A7B0" }
+      ],
+      "subtext": "No spreadsheet. No arguments."
+    },
+    {
+      "type": "phone_screen",
+      "duration_s": 4.0,
+      "screen": "split_balances",
+      "subtitle": "It's already worked out."
+    },
+    {
+      "type": "cta",
+      "duration_s": 2.5,
+      "launch_line": "First 50 get lifetime access — free."
+    }
+  ]
+}

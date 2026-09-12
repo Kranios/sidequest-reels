@@ -1,0 +1,28 @@
+{
+  "name": "sidequest-reels",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "remotion studio",
+    "render": "remotion render",
+    "still": "remotion still",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-three/drei": "9.114.3",
+    "@react-three/fiber": "8.17.10",
+    "@remotion/cli": "4.0.239",
+    "@remotion/google-fonts": "4.0.239",
+    "@remotion/three": "4.0.239",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.239",
+    "three": "0.169.0",
+    "zod": "^3.22.3"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.1",
+    "@types/three": "0.169.0",
+    "typescript": "5.6.3"
+  }
+}

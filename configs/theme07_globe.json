@@ -1,0 +1,31 @@
+{
+  "reel_id": "theme07_globe",
+  "title": "Countries visited vs planned",
+  "theme": 7,
+  "category": "C-tracker",
+  "fps": 30,
+  "resolution": [1080, 1920],
+  "background": "#0A0908",
+  "sections": [
+    {
+      "type": "hook",
+      "duration_s": 2.0,
+      "text_lines": [
+        { "text": "Where you've been.", "color": "#FFFFFF" },
+        { "text": "Where you're going.", "color": "#F4A7B0" }
+      ],
+      "subtext": "One map. Your whole world."
+    },
+    {
+      "type": "phone_screen",
+      "duration_s": 4.0,
+      "screen": "travel_tracker",
+      "subtitle": "Watch your world fill in."
+    },
+    {
+      "type": "cta",
+      "duration_s": 2.5,
+      "launch_line": "First 50 get lifetime access — free."
+    }
+  ]
+}

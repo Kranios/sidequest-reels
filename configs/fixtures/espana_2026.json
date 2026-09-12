@@ -1,0 +1,11 @@
+{
+  "trip": { "title": "España 2026", "destination": "Málaga, España", "dates": "Aug 5 – Aug 7", "travelers": 2 },
+  "expenses": [
+    { "who": "Pontus", "what": "Flights CPH→AGP", "amount": 1840, "currency": "EUR" },
+    { "who": "Oskar", "what": "Apartment", "amount": 620, "currency": "EUR" },
+    { "who": "Pontus", "what": "Rental car", "amount": 240, "currency": "EUR" },
+    { "who": "Oskar", "what": "Groceries + dining", "amount": 147, "currency": "EUR" }
+  ],
+  "balances": { "Oskar": -416.5, "Pontus": 416.5 },
+  "note": "Real amounts so on-screen data is genuine (rule #9). Adjust before capture."
+}
