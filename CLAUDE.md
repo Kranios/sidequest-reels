@@ -305,13 +305,36 @@ repo root.
   the mock answers `POST /api/auth/sync` with that profile. supabase-js only
   needs `access_token`, `refresh_token` and a future `expires_at`, and decodes
   the token as a JWT — so it is a well-formed, unsigned one.
-- **Saves are stateful.** A POST to `/api/trips/{id}/expenses` is applied to
-  an in-memory copy of the fixture and the balances are recomputed to the cent
-  with the fixture's own rules, so the saved row comes back when the app
-  reloads the list (rule 9). The fixture file is never changed. Recomputing
-  the untouched fixture reproduces its balances and debts exactly.
+- **Saves are stateful.** A journey's writes are applied to an in-memory copy
+  of the fixture, so what it saves comes back when the app reloads (rule 9);
+  the fixture file is never changed. Expenses: a POST to
+  `/api/trips/{id}/expenses`, balances recomputed to the cent with the
+  fixture's own rules (recomputing the untouched fixture reproduces its
+  balances and debts exactly). Packing list: POST items and categories, PATCH
+  items (`isChecked`, `text`, `assignedToUserId` — the name is looked up from
+  `/members` — or `clearAssignment`), DELETE items and categories.
+- **`--scenario packing_list_demo`** (`trip/demo/packing-list`, fixture
+  `packing_list_demo.json`: the same Mallorca trip and nine friends, Leo
+  signed in). Leo ticks off "Sunscreen SPF 50" and "Snorkel masks ×4", taps
+  "Add item…", types "Portable speaker" + Return, taps the person icon on the
+  new row and picks "Mia". 15.3 s; header 6/15 → 8/16, and Mia's avatar sits
+  on the new row from ~12.0 s — put `videoSeconds` around 14.5 in T3.
+  ```bash
+  python capture/record_video.py trip/demo/packing-list packing_list_demo --scenario packing_list_demo
+  ```
+- **Icon-only controls: `human_click_row_control(page, text, pick)`.** A
+  checkbox or an assign button has no text to aim at, but its row does. From
+  the row's text, the helper climbs to the nearest flex-row container and taps
+  a sibling: `"first"` = the checkbox, `"after"` = the control right after the
+  text (the assign button). DOM shape, never class names. "Add item…" is both
+  the category's tap target and the draft input's placeholder — tap
+  `get_by_text(…).first`, type into `get_by_placeholder(…)`.
 - A new scenario is an async function built from the helpers plus one entry
-  in `SCENARIOS` (name → function, fixture member id).
+  in `SCENARIOS`: name → (function, fixture member id, fixture file). A
+  scenario loads ONLY its own fixture unless `--fixture` says otherwise, so
+  two fixtures that share a route (both define `/members`) can't cross wires;
+  when several are loaded, the first file wins for GETs and for the in-memory
+  copy alike.
 
 ---
 

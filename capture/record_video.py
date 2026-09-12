@@ -44,13 +44,18 @@ get_by_placeholder — never CSS, so nobody has to dig React Native Web class
 names out of the DOM. For a scenario the script also:
   - signs in a demo user (a fixture member) by seeding a Supabase session in
     localStorage — screens like Add Expense do nothing without a user;
-  - applies a POST to the expenses route to an in-memory copy of the fixture,
-    so what the demo saves comes back in the list, with the balances
-    recomputed to the cent. The fixture file is never modified.
+  - applies the journey's writes to an in-memory copy of the fixture, so what
+    the demo saves comes back when the app reloads: an expense POST (balances
+    recomputed to the cent), packing-list POST / PATCH / DELETE (add, tick,
+    rename, assign, delete). The fixture file is never modified.
+  - loads only the scenario's own fixture (see SCENARIOS) unless --fixture
+    says otherwise.
 The positional `seconds` (scroll duration) is ignored by scenarios.
 
   cost_split_demo   Leo opens Add Expense, types "Farewell dinner" and 850,
                     saves; the new row lands at the top of the list.
+  packing_list_demo Leo ticks off sunscreen and snorkel masks, adds
+                    "Portable speaker" and assigns it to Mia.
 
 FOUR THINGS THIS APP DOES THAT BREAK NAIVE CAPTURE
 --------------------------------------------------
@@ -276,16 +281,101 @@ def _post_expense(state, trip_id, body, user):
     return expense
 
 
+# The packing list, as the backend keeps it: one shared list for the whole
+# group and one private list per user (the fixture's is the signed-in user's).
+# The screen updates optimistically and only reads the response when it
+# creates something, so every write just has to leave the in-memory copy
+# matching what the screen already shows — then a reload agrees with it.
+PACKING = "/api/trips/{id}/packing-list"
+PACKING_CATEGORIES = _route_regex("/api/trips/{id}/packing-list/categories")
+PACKING_CATEGORY = _route_regex("/api/trips/{id}/packing-list/categories/{cid}")
+PACKING_CATEGORY_ITEMS = _route_regex("/api/trips/{id}/packing-list/categories/{cid}/items")
+PACKING_ITEM = _route_regex("/api/trips/{id}/packing-list/items/{iid}")
+
+
+def _packing_categories(state):
+    return [c for scope in ("shared", "private") for c in state[PACKING].get(scope, [])]
+
+
+def _next_id(state, prefix):
+    state["_seq"] = state.get("_seq", 0) + 1
+    return f"{prefix}-new-{state['_seq']:02d}"
+
+
+def _packing_apply(state, method, path, body, user):
+    """Apply one packing-list write the way the backend would. Returns
+    (status, response body), or None when the request isn't a packing write.
+    /api/trips/<id>/packing-list/<kind>/<target>: the target id is segment 6."""
+    members = {m["id"]: m for m in state.get(MEMBERS, [])}
+    target = path.rstrip("/").split("/")[6] if path.count("/") >= 6 else None
+
+    if method == "POST" and PACKING_CATEGORY_ITEMS.match(path):
+        cat = next((c for c in _packing_categories(state) if c["id"] == target), None)
+        if cat is None:
+            return 404, {"error": "no such category"}
+        item = {"id": _next_id(state, "it"), "text": body["text"], "isChecked": False,
+                "sortOrder": max([i["sortOrder"] for i in cat["items"]] or [0]) + 1,
+                "createdByUserId": user["id"], "assignedToUserId": None,
+                "assignedToName": None, "assignedToAvatarUrl": None}
+        cat["items"].append(item)
+        return 201, item
+
+    if method == "POST" and PACKING_CATEGORIES.match(path):
+        scope = body.get("scope", "shared")
+        cats = state[PACKING].setdefault(scope, [])
+        cat = {"id": _next_id(state, "cat"), "name": body["name"], "scope": scope,
+               "sortOrder": max([c["sortOrder"] for c in cats] or [0]) + 1,
+               "createdByUserId": user["id"], "items": []}
+        cats.append(cat)
+        return 201, cat
+
+    if method in ("PATCH", "DELETE") and PACKING_ITEM.match(path):
+        for cat in _packing_categories(state):
+            for item in cat["items"]:
+                if item["id"] != target:
+                    continue
+                if method == "DELETE":
+                    cat["items"].remove(item)
+                    return 200, {"ok": True}
+                if "isChecked" in body:
+                    item["isChecked"] = bool(body["isChecked"])
+                if "text" in body:
+                    item["text"] = body["text"]
+                if body.get("clearAssignment"):
+                    item.update(assignedToUserId=None, assignedToName=None,
+                                assignedToAvatarUrl=None)
+                elif body.get("assignedToUserId"):
+                    who = members.get(body["assignedToUserId"], {})
+                    item.update(assignedToUserId=body["assignedToUserId"],
+                                assignedToName=who.get("name"),
+                                assignedToAvatarUrl=who.get("avatarUrl"))
+                return 200, item
+        return 404, {"error": "no such item"}
+
+    if method == "DELETE" and PACKING_CATEGORY.match(path):
+        for scope in ("shared", "private"):
+            cats = state[PACKING].get(scope, [])
+            state[PACKING][scope] = [c for c in cats if c["id"] != target]
+        return 200, {"ok": True}
+    return None
+
+
 async def install_api_mocks(page, routes, user=None):
     """Answer **/api/** from the fixtures. Returns (served, missed) for the log.
 
-    Bodies are served from a deep copy, so a scenario's POST can change what
+    Bodies are served from a deep copy, so a scenario's writes can change what
     later GETs see without touching the fixture on disk. With a `user`, the
-    profile sync returns them and POSTs to the expenses route are applied."""
+    profile sync returns them, POSTs to the expenses route are applied, and so
+    are packing-list writes (add, tick, rename, assign, delete). When two
+    fixtures define the same route, the first loaded wins — for GETs and for
+    the in-memory copy alike."""
     app_host = urlparse(APP_URL).netloc
-    state = {pattern: copy.deepcopy(body) for pattern, _rx, body, _src in routes}
+    state = {}
+    for pattern, _rx, body, _src in routes:
+        state.setdefault(pattern, copy.deepcopy(body))
     served, missed = {}, []
     can_post = user is not None and all(k in state for k in (EXPENSES, BALANCES, MEMBERS))
+    can_pack = user is not None and PACKING in state
 
     async def fulfill_json(route, body, status=200):
         await route.fulfill(status=status, content_type="application/json",
@@ -317,6 +407,14 @@ async def install_api_mocks(page, routes, user=None):
                 expense = _post_expense(state, trip_id, req.post_data_json, user)
                 served[f"POST {EXPENSES}"] = served.get(f"POST {EXPENSES}", 0) + 1
                 await fulfill_json(route, expense, status=201)
+                return
+        if can_pack and req.method in ("POST", "PATCH", "DELETE"):
+            body = req.post_data_json if req.post_data else {}
+            result = _packing_apply(state, req.method, url.path, body, user)
+            if result is not None:
+                key = f"{req.method} packing-list"
+                served[key] = served.get(key, 0) + 1
+                await fulfill_json(route, result[1], status=result[0])
                 return
         missed.append(f"{req.method} {url.path}")
         await route.fulfill(status=404, content_type="application/json",
@@ -608,6 +706,43 @@ async def lift_finger(page):
     )
 
 
+# Icon-only controls (a checkbox, an assign button) have no text to aim at,
+# but they sit in the same row as text that does. From that text, climb to
+# the nearest flex-row container and take a sibling: 'first' is the row's
+# first control (the checkbox), 'after' the one right after the text (the
+# assign button). DOM shape, never class names — so a restyle can't break it.
+_ROW_CONTROL_JS = """
+(el, pick) => {
+  let node = el;
+  while (node && node.parentElement) {
+    const row = node.parentElement;
+    if (getComputedStyle(row).flexDirection === 'row' && row.children.length >= 3) {
+      const kids = Array.from(row.children);
+      const target = pick === 'first' ? kids[0] : kids[kids.indexOf(node) + 1];
+      if (!target) return null;
+      const r = target.getBoundingClientRect();
+      return { x: r.x, y: r.y, width: r.width, height: r.height };
+    }
+    node = row;
+  }
+  return null;
+}
+"""
+
+
+async def human_click_row_control(page, text_locator, pick):
+    """Glide to and tap an icon-only control in the row holding text_locator
+    (see _ROW_CONTROL_JS for `pick`)."""
+    await _bring_into_view(page, text_locator)
+    box = await text_locator.evaluate(_ROW_CONTROL_JS, pick)
+    if box is None:
+        raise RuntimeError(f"human_click_row_control: no '{pick}' control in the row of {text_locator}")
+    x, y = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
+    await _glide_to(page, x, y)
+    await page.wait_for_timeout(HUMAN_CLICK_PAUSE_MS)
+    await page.mouse.click(x, y)
+
+
 # ------------------------------------------------------------ scenarios
 # Every locator is text the app itself renders (the capture pins en-US), so a
 # scenario survives any restyle that keeps the words.
@@ -645,9 +780,41 @@ async def scenario_cost_split_demo(page):
     await page.wait_for_timeout(FINAL_HOLD_MS)
 
 
-# name -> (the journey, the fixture member it runs as)
+async def scenario_packing_list_demo(page):
+    """Pack for the group: tick two things off, add one, hand it to a friend
+    — and stay on the list where the new, assigned row sits."""
+    await page.wait_for_timeout(OPENING_BEAT_MS)
+    # Tick two shared items off. Checkboxes are icon-only: found from the
+    # text in their row.
+    await human_click_row_control(page, page.get_by_text("Sunscreen SPF 50", exact=True), "first")
+    await page.wait_for_timeout(500)
+    await human_click_row_control(page, page.get_by_text("Snorkel masks ×4", exact=True), "first")
+    await page.wait_for_timeout(STEP_PAUSE_MS)
+
+    # Add one: "Add item…" under the first category opens a draft row (an
+    # input with the same text as its placeholder); Return saves it.
+    await human_click(page, page.get_by_text("Add item…", exact=True).first)
+    await human_type(page, page.get_by_placeholder("Add item…", exact=True).first,
+                     "Portable speaker")
+    await page.keyboard.press("Enter")
+    await page.wait_for_timeout(STEP_PAUSE_MS)
+
+    # Hand it to Mia: the person icon right after the new row's text opens
+    # the picker; the picker is the last thing on the page, so .last.
+    await human_click_row_control(page, page.get_by_text("Portable speaker", exact=True), "after")
+    await page.wait_for_timeout(900)  # the picker slides up
+    await human_click(page, page.get_by_text("Mia", exact=True).last)
+    await page.wait_for_timeout(400)
+    await lift_finger(page)
+    await page.wait_for_timeout(FINAL_HOLD_MS)
+
+
+# name -> (the journey, the fixture member it runs as, its fixture). A
+# scenario loads only its own fixture unless --fixture says otherwise, so two
+# fixtures that share a route (both define /members) can't cross wires.
 SCENARIOS = {
-    "cost_split_demo": (scenario_cost_split_demo, "u5"),
+    "cost_split_demo": (scenario_cost_split_demo, "u5", "cost_split_demo.json"),
+    "packing_list_demo": (scenario_packing_list_demo, "u5", "packing_list_demo.json"),
 }
 
 
@@ -655,10 +822,12 @@ async def record(route, name, seconds=6.0, warmup_ms=DEFAULT_WARMUP_MS,
                  selector=None, keep_splash=False, scroll_to=1.0, fixtures=None,
                  safe_area=DEFAULT_SAFE_AREA, scenario="scroll"):
     from playwright.async_api import async_playwright
-    api_routes = load_fixture_routes(fixtures)
-    journey, user = None, None
+    journey, member_id, user = None, None, None
     if scenario != "scroll":
-        journey, member_id = SCENARIOS[scenario]
+        journey, member_id, fixture = SCENARIOS[scenario]
+        fixtures = fixtures or [FIXTURE_DIR / fixture]
+    api_routes = load_fixture_routes(fixtures)
+    if journey:
         user = demo_user(api_routes, member_id)
 
     p = await async_playwright().start()
