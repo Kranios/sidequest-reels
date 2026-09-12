@@ -85,5 +85,72 @@ export const T3Reels: React.FC = () => (
         durationInFrames: t3SpeedrunDuration(props, CANVAS.fps),
       })}
     />
+
+    {/* PACKING LIST — tick, add, assign against the clock. The capture is
+        app/packing_list_demo.mp4 (15.3 s); Mia's avatar lands on the new row
+        and the header reads 8/16 from ~12.0 s, so videoSeconds 14.5 shows
+        the result for ~2.5 s without a frozen tail. 16.9 s in all. */}
+    <Composition
+      id="T3-Speedrun-PackingList"
+      component={T3Speedrun}
+      schema={t3SpeedrunSchema}
+      defaultProps={{
+        appVideo: "app/packing_list_demo.mp4",
+        hookLine1: "How we stop",
+        hookLine2: "double-packing.",
+        hookSubtext: "Shared packing list.",
+        runCaption: "Two ticked. One added. One handed to Mia.",
+        caption: "Nobody brings two umbrellas again.",
+        launchLine: "First 50 get lifetime access — free.",
+
+        showTimer: true,
+        timerLabel: "elapsed",
+        timerFormat: "s.t",
+        timerRate: 1,
+        timerAlign: "end",
+
+        showSafeArea: false,
+        safeTop: 220,
+        safeBottom: 450,
+        safeLeft: 65,
+        safeRight: 120,
+
+        topBandFrac: 0.18,
+        bottomBandFrac: 0.14,
+        bandGutter: 28,
+        phoneFill: 0.95,
+
+        bgIntensity: 1.1,
+        bgSpeed: 1.7,
+        bgBlur: 140,
+        bgVignette: 0.72,
+
+        hookFontSize: 64,
+        runCaptionFontSize: 40,
+        timerFontSize: 48,
+        captionFontSize: 40,
+
+        screenRotDeg: 0,
+        screenFlipY: false,
+        phoneOffsetY: 0,
+        swingDeg: 10,
+        dollyIn: 0.3,
+        videoStartFrom: 0,
+
+        ctaVariant: "urgent",
+        ctaLogoSize: 104,
+
+        hookSeconds: 2.0,
+        videoSeconds: 14.5,
+        ctaSeconds: 2.4,
+      }}
+      fps={CANVAS.fps}
+      width={CANVAS.width}
+      height={CANVAS.height}
+      durationInFrames={t3SpeedrunDuration({ videoSeconds: 14.5, ctaSeconds: 2.4 }, CANVAS.fps)}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: t3SpeedrunDuration(props, CANVAS.fps),
+      })}
+    />
   </>
 );

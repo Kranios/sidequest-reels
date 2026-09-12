@@ -89,5 +89,82 @@ export const T5Reels: React.FC = () => (
         ),
       })}
     />
+
+    {/* PACKING LIST — the slow version of the same list. globeSeconds 12.5
+        lets app/packing_list_demo.mp4 reach its end state (8/16, the speaker
+        with Mia). The two stats are ones that hold the whole way through —
+        9 people, 1 shared list — because the counts on screen move from 6/15
+        to 8/16 while it plays (configs/fixtures/packing_list_demo.json). */}
+    <Composition
+      id="T5-Atlas-PackingList"
+      component={T5Atlas}
+      schema={t5AtlasSchema}
+      defaultProps={{
+        appVideo: "app/packing_list_demo.mp4",
+
+        hookLine1: "Seven nights. Nine bags.",
+        hookLine2: "Packed as a group.",
+        hookSubtext: "",
+        caption: "Packed before the group chat woke up.",
+
+        showStats: true,
+        statAValue: 9,
+        statADecimals: 0,
+        statASuffix: "",
+        statALabel: "people",
+        statBValue: 1,
+        statBDecimals: 0,
+        statBSuffix: "",
+        statBLabel: "shared list",
+
+        showSafeArea: false,
+        safeTop: 220,
+        safeBottom: 450,
+        safeLeft: 65,
+        safeRight: 120,
+
+        topBandFrac: 0.2,
+        bottomBandFrac: 0.12,
+        bandGutter: 28,
+        phoneFill: 1,
+
+        bgIntensity: 0.3,
+        bgSpeed: 0.15,
+        bgBlur: 210,
+        bgVignette: 0.9,
+
+        hookFontSize: 64,
+        statFontSize: 76,
+        statLabelFontSize: 22,
+        captionFontSize: 40,
+
+        screenRotDeg: 0,
+        screenFlipY: false,
+        phoneOffsetY: 0,
+        swingDeg: 5,
+        dollyIn: 0.25,
+        videoStartFrom: 0,
+
+        ctaVariant: "quiet",
+        ctaLogoSize: 112,
+        launchLine: "",
+
+        introSeconds: 2.4,
+        globeSeconds: 12.5,
+        ctaSeconds: 2.6,
+      }}
+      fps={CANVAS.fps}
+      width={CANVAS.width}
+      height={CANVAS.height}
+      durationInFrames={t5AtlasDuration(2.4, 12.5, 2.6, CANVAS.fps)}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: t5AtlasDuration(
+          props.introSeconds,
+          props.globeSeconds,
+          props.ctaSeconds,
+          CANVAS.fps
+        ),
+      })}
+    />
   </>
 );

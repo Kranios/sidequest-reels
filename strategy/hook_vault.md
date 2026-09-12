@@ -56,6 +56,39 @@ Tracking rows: `strategy/analytics_template.csv`.
 
 ---
 
+## 2026-09-12 — Packing List batch (theme 6, B-problem)
+
+Same five templates, a second feature: the shared packing list. Same trip and
+nine friends as the Cost Split test, so the two batches read as one story.
+Figures come from `configs/fixtures/packing_list_demo.json` as it stands at
+the end of the `packing_list_demo` journey in `app/packing_list_demo.mp4`
+(Leo ticks two items, adds "Portable speaker", assigns it to Mia).
+
+| Reel ID | Driver | Hook (≤ 8 words) | Supporting lines |
+|---|---|---|---|
+| `T1-Receipt-PackingList` | recognition | **16** — "16 items. 9 people. One list." | rows: who has what assigned (sum = 16) / "Four unclaimed. Including the chargers." / "Two ticks. The whole group sees them." |
+| `T2-Reveal-PackingList` | curiosity | "Sixteen things to pack. / Four have no owner." | "Every tick shows up on nine phones." |
+| `T3-Speedrun-PackingList` | competence | "How we stop / double-packing." | "Shared packing list." / over the take: "Two ticked. One added. One handed to Mia." / "Nobody brings two umbrellas again." |
+| `T4-Callout-PackingList` | humour | "Three umbrellas. / Zero sunscreen." | "Four chargers. No adapter. Two speakers. Zero snorkels." / "Put it on the list. With a name." |
+| `T5-Atlas-PackingList` | aspiration | "Seven nights. Nine bags. / Packed as a group." | "Packed before the group chat woke up." / stats: 9 people · 1 shared list |
+
+### Where every figure comes from
+
+| Figure | Source |
+|---|---|
+| 16 items | the shared list after the journey: 15 in the fixture + "Portable speaker" |
+| 9 people | members |
+| T1 rows | shared items per assignee after the journey: Ines 2 · Jo 2 · Marcus 2 · Mia 2 (towels, speaker) · Sam 2 · Ella 1 · Ravi 1 · nobody 4 = 16 |
+| four have no owner / "including the chargers" | unassigned: Cooler bag, Olive oil, Dish soap, Phone chargers |
+| "Two ticked. One added. One handed to Mia." / "Two ticks" | the journey: Sunscreen SPF 50 and Snorkel masks ×4 ticked, speaker added, assigned to Mia (header 6/15 → 8/16) |
+| "nine phones" / "1 shared list" | the shared list is visible to all nine members |
+
+T4 is text-only: its lines are group-trip truths, not fixture figures. T5's
+stats are the two that hold for the whole take — the on-screen counts move
+from 6/15 to 8/16 while it plays.
+
+---
+
 ## Retired — used before 2026-09-12
 
 The first template reels (removed from `src/reels/` for this test; recoverable

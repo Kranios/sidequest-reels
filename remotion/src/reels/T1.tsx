@@ -102,5 +102,91 @@ export const T1Reels: React.FC = () => (
         ),
       })}
     />
+
+    {/* PACKING LIST — the receipt, for stuff. The figure is the shared list's
+        16 items once the demo has added the speaker; the rows are who has
+        what assigned, and they add up to it: 2+2+2+2+2+1+1 plus the 4 nobody
+        claimed (Cooler bag, Olive oil, Dish soap, Phone chargers) = 16 —
+        configs/fixtures/packing_list_demo.json. The phone plays the first
+        4.2 s of app/packing_list_demo.mp4: the two ticks. */}
+    <Composition
+      id="T1-Receipt-PackingList"
+      component={T1Receipt}
+      schema={t1ReceiptSchema}
+      defaultProps={{
+        appVideo: "app/packing_list_demo.mp4",
+        currency: "",
+        total: 16,
+        totalDecimals: 0,
+        thousandsSeparator: ",",
+        stakeLine: "16 items. 9 people. One list.",
+        // 2 + 2 + 2 + 2 + 2 + 1 + 1 + 4 = 16
+        rows: [
+          { name: "Ines", amount: 2, flagged: false },
+          { name: "Jo", amount: 2, flagged: false },
+          { name: "Marcus", amount: 2, flagged: false },
+          { name: "Mia", amount: 2, flagged: false },
+          { name: "Sam", amount: 2, flagged: false },
+          { name: "Ella", amount: 1, flagged: false },
+          { name: "Ravi", amount: 1, flagged: false },
+          { name: "Nobody", amount: 4, flagged: true },
+        ],
+        rowNote: "Four unclaimed. Including the chargers.",
+        caption: "Two ticks. The whole group sees them.",
+        launchLine: "First 50 get lifetime access — free.",
+
+        showSafeArea: false,
+        safeTop: 220,
+        safeBottom: 450,
+        safeLeft: 65,
+        safeRight: 120,
+
+        topBandFrac: 0.14,
+        bottomBandFrac: 0.16,
+        bandGutter: 44,
+        phoneFill: 0.95,
+
+        bgIntensity: 0.8,
+        bgSpeed: 0.7,
+        bgBlur: 150,
+        bgVignette: 0.78,
+
+        totalFontSize: 180,
+        runningTotalFontSize: 60,
+        stakeFontSize: 36,
+        rowFontSize: 44,
+        rowGap: 12,
+        rowStagger: 5,
+        captionFontSize: 40,
+
+        screenRotDeg: 0,
+        screenFlipY: false,
+        phoneOffsetY: 0,
+        swingDeg: 12,
+        dollyIn: 0.45,
+        videoStartFrom: 0,
+
+        ctaVariant: "standard",
+        ctaLogoSize: 104,
+
+        totalSeconds: 2.4,
+        rowsSeconds: 4.4,
+        phoneSeconds: 4.2,
+        ctaSeconds: 2.4,
+      }}
+      fps={CANVAS.fps}
+      width={CANVAS.width}
+      height={CANVAS.height}
+      durationInFrames={t1ReceiptDuration(2.4, 4.4, 4.2, 2.4, CANVAS.fps)}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: t1ReceiptDuration(
+          props.totalSeconds,
+          props.rowsSeconds,
+          props.phoneSeconds,
+          props.ctaSeconds,
+          CANVAS.fps
+        ),
+      })}
+    />
   </>
 );

@@ -48,7 +48,10 @@ component and schema, differing only in `defaultProps`.
 
 Registered reels — the Cost Split A/B test: `T1-Receipt-CostSplit`,
 `T2-Reveal-CostSplit`, `T3-Speedrun-CostSplit`, `T4-Callout-CostSplit`,
-`T5-Atlas-CostSplit`. The first fifteen template reels were removed for it;
+`T5-Atlas-CostSplit`; and the Packing List batch (capture
+`app/packing_list_demo.mp4`, fixture `packing_list_demo.json`):
+`T1-Receipt-PackingList`, `T2-Reveal-PackingList`, `T3-Speedrun-PackingList`,
+`T4-Callout-PackingList`, `T5-Atlas-PackingList`. The first fifteen template reels were removed for it;
 they are recoverable from commit `1ff4ffd` and their hooks are in the retired
 list in `strategy/hook_vault.md`.
 
