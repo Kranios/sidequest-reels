@@ -33,6 +33,10 @@ trip/demo/split (-> /api/trips/demo/expenses) resolve against the same entry
 whatever the id is. Matching is exact on the path, so /expenses never swallows
 /expenses/balances. Unmatched calls get a 404 and are listed after the run.
 By default every fixture with a "routes" key is loaded; --fixture narrows it.
+A fixture for an upcoming trip writes its dates relative to the day of
+recording — "{today+2}" anywhere in a body becomes that ISO date — because
+the app refuses activities in the past and reveals that have already passed,
+so fixed dates would stop working a week later.
 
 SCENARIOS (--scenario)
 ----------------------
@@ -47,7 +51,8 @@ names out of the DOM. For a scenario the script also:
   - applies the journey's writes to an in-memory copy of the fixture, so what
     the demo saves comes back when the app reloads: an expense POST (balances
     recomputed to the cent), packing-list POST / PATCH / DELETE (add, tick,
-    rename, assign, delete). The fixture file is never modified.
+    rename, assign, delete), an activity POST (and opening it by id). The
+    fixture file is never modified.
   - loads only the scenario's own fixture (see SCENARIOS) unless --fixture
     says otherwise.
 The positional `seconds` (scroll duration) is ignored by scenarios.
@@ -56,6 +61,12 @@ The positional `seconds` (scroll duration) is ignored by scenarios.
                     saves; the new row lands at the top of the list.
   packing_list_demo Leo ticks off sunscreen and snorkel masks, adds
                     "Portable speaker" and assigns it to Mia.
+  hidden_sidequest_demo
+                    Route trip/demo: Leo opens Add activity from the trip
+                    (before the cut), names it "Midnight Cliff Jump", slides
+                    it into a hidden SideQuest, sets the reveal to 23:30,
+                    leaves a teaser and saves; back on the trip it sits
+                    sealed in its day, counting down to the reveal.
 
 FOUR THINGS THIS APP DOES THAT BREAK NAIVE CAPTURE
 --------------------------------------------------
@@ -90,6 +101,7 @@ FOUR THINGS THIS APP DOES THAT BREAK NAIVE CAPTURE
 import argparse
 import asyncio
 import base64
+import contextlib
 import copy
 import json
 import os
@@ -98,7 +110,7 @@ import re
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -171,14 +183,32 @@ def _route_regex(pattern):
     return re.compile("^" + "/".join(segs) + "$")
 
 
+# "{today+N}" / "{today-N}" / "{today}" inside any string of a fixture body
+# is replaced with that ISO date, counted from the day of recording.
+_DATE_TOKEN = re.compile(r"\{today([+-]\d+)?\}")
+
+
+def _resolve_dates(value, today):
+    if isinstance(value, str):
+        return _DATE_TOKEN.sub(
+            lambda m: (today + timedelta(days=int(m.group(1) or 0))).isoformat(), value)
+    if isinstance(value, list):
+        return [_resolve_dates(v, today) for v in value]
+    if isinstance(value, dict):
+        return {k: _resolve_dates(v, today) for k, v in value.items()}
+    return value
+
+
 def load_fixture_routes(paths=None):
-    """[(pattern, regex, body, source)] from every fixture with a "routes" key."""
+    """[(pattern, regex, body, source)] from every fixture with a "routes" key,
+    relative dates resolved."""
     files = [Path(p) for p in paths] if paths else sorted(FIXTURE_DIR.glob("*.json"))
+    today = date.today()
     routes = []
     for f in files:
         data = json.loads(f.read_text(encoding="utf-8"))
         for pattern, body in (data.get("routes") or {}).items():
-            routes.append((pattern, _route_regex(pattern), body, f.name))
+            routes.append((pattern, _route_regex(pattern), _resolve_dates(body, today), f.name))
     return routes
 
 
@@ -360,13 +390,59 @@ def _packing_apply(state, method, path, body, user):
     return None
 
 
+# Activities. Saving a SideQuest is a POST to /activities; the app then opens
+# it by id and, back on the trip, re-fetches the list. The saved activity is
+# what the backend returns to its creator: they may open their own secret
+# (isHiddenForViewer false), while the trip feed seals it for everyone,
+# creator included, until revealAt (the app's isSealedInLists).
+ACTIVITIES = "/api/trips/{id}/activities"
+ACTIVITIES_LIST = _route_regex(ACTIVITIES)
+ACTIVITY_ONE = _route_regex("/api/trips/{id}/activities/{aid}")
+
+
+def _activities_apply(state, method, path, body, user):
+    """Serve or apply what the static fixture can't: opening an activity by
+    id, and creating one. Returns (status, response body), or None when the
+    request is neither. /api/trips/<id>/activities/<aid>: aid is segment 5."""
+    acts = state[ACTIVITIES]
+    if method == "GET" and ACTIVITY_ONE.match(path):
+        aid = path.rstrip("/").split("/")[5]
+        found = next((a for a in acts if a["id"] == aid), None)
+        return (200, found) if found else (404, {"error": "no such activity"})
+    if method == "POST" and ACTIVITIES_LIST.match(path):
+        hidden = body.get("visibility") == "hidden"
+        same_day = [a["sortIndex"] for a in acts if a["date"] == body["date"]]
+        activity = {
+            "id": _next_id(state, "act"), "tripId": path.split("/")[3],
+            "date": body["date"], "title": body.get("title") or None,
+            "description": body.get("description"), "time": body.get("time") or None,
+            "endDate": body.get("endDate"), "endTime": body.get("endTime") or None,
+            "sortIndex": max(same_day, default=-1) + 1, "category": body.get("category"),
+            "customCategoryLabel": body.get("customCategoryLabel"),
+            "imageUrl": body.get("imageUrl"),
+            "excludeFromSlideshow": bool(body.get("excludeFromSlideshow")),
+            "spotifyUrl": None, "visibility": body.get("visibility", "public"),
+            "revealAt": body.get("revealAt"), "isRevealed": not hidden,
+            "teaser": body.get("teaser"), "teaserOffsetMinutes": body.get("teaserOffsetMinutes"),
+            "isHiddenForViewer": False, "teaserVisible": False, "canEdit": True,
+            "isHidden": hidden, "ownerId": user["id"], "ownerName": user["name"],
+            "ownerAvatarUrl": None, "assignedToUserId": None, "assignedToName": None,
+            "createdAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "commentCount": 0,
+        }
+        acts.append(activity)
+        return 201, activity
+    return None
+
+
 async def install_api_mocks(page, routes, user=None):
     """Answer **/api/** from the fixtures. Returns (served, missed) for the log.
 
     Bodies are served from a deep copy, so a scenario's writes can change what
     later GETs see without touching the fixture on disk. With a `user`, the
     profile sync returns them, POSTs to the expenses route are applied, and so
-    are packing-list writes (add, tick, rename, assign, delete). When two
+    are packing-list writes (add, tick, rename, assign, delete) and activity
+    creates (and opening one by id). When two
     fixtures define the same route, the first loaded wins — for GETs and for
     the in-memory copy alike."""
     app_host = urlparse(APP_URL).netloc
@@ -376,6 +452,7 @@ async def install_api_mocks(page, routes, user=None):
     served, missed = {}, []
     can_post = user is not None and all(k in state for k in (EXPENSES, BALANCES, MEMBERS))
     can_pack = user is not None and PACKING in state
+    can_act = user is not None and ACTIVITIES in state
 
     async def fulfill_json(route, body, status=200):
         await route.fulfill(status=status, content_type="application/json",
@@ -413,6 +490,14 @@ async def install_api_mocks(page, routes, user=None):
             result = _packing_apply(state, req.method, url.path, body, user)
             if result is not None:
                 key = f"{req.method} packing-list"
+                served[key] = served.get(key, 0) + 1
+                await fulfill_json(route, result[1], status=result[0])
+                return
+        if can_act:
+            body = req.post_data_json if req.post_data else {}
+            result = _activities_apply(state, req.method, url.path, body, user)
+            if result is not None:
+                key = f"{req.method} activities"
                 served[key] = served.get(key, 0) + 1
                 await fulfill_json(route, result[1], status=result[0])
                 return
@@ -572,6 +657,22 @@ HUMAN_TYPE_DELAY_MS = 70    # per keystroke: a quick thumb, not a typist
 HUMAN_ARC = (0.08, 0.18)    # sideways bow of a move, as a share of its length
 _PATH_RNG = random.Random(7)  # seeded, so a re-record moves the same way
 _MOUSE = {}  # id(page) -> last (x, y); Playwright doesn't expose it
+_TEMPO = {}  # a scenario's overrides of the pacing above; see tempo()
+
+
+@contextlib.contextmanager
+def tempo(**pace):
+    """Run a stretch of a scenario at its own pacing: move_steps, type_ms and
+    scroll_ms stand in for HUMAN_MOVE_STEPS, HUMAN_TYPE_DELAY_MS and
+    HUMAN_SCROLL_MS in every helper called inside, and the shared values come
+    back after — so one take can run tighter without re-timing the others."""
+    saved = dict(_TEMPO)
+    _TEMPO.update(pace)
+    try:
+        yield
+    finally:
+        _TEMPO.clear()
+        _TEMPO.update(saved)
 
 
 async def mouse_to(page, x, y):
@@ -588,7 +689,7 @@ def _smoothstep(t):
     return t * t * (3 - 2 * t)
 
 
-async def _glide_to(page, bx, by, steps=HUMAN_MOVE_STEPS):
+async def _glide_to(page, bx, by, steps=None):
     """Glide the mouse — and the phantom dot — to (bx, by) along a slight
     arc, quick off the mark and settling onto the point. A thumb moves like
     that; straight linear interpolation moves like a plotter.
@@ -597,6 +698,7 @@ async def _glide_to(page, bx, by, steps=HUMAN_MOVE_STEPS):
     its control point the midpoint pushed sideways by HUMAN_ARC of the
     distance, to a random side. Progress along it is eased out (fast start,
     soft landing), and the last point is exactly the target."""
+    steps = steps or _TEMPO.get("move_steps", HUMAN_MOVE_STEPS)
     ax, ay = _MOUSE.get(id(page), (bx, by))
     dx, dy = bx - ax, by - ay
     dist = (dx * dx + dy * dy) ** 0.5
@@ -623,6 +725,15 @@ HUMAN_SWIPE_SHARE = 0.6   # finger travel as a share of the content's...
 HUMAN_SWIPE_MAX = 0.3     # ...capped at this share of the viewport height
 
 
+async def _pace(page, t0, at_s):
+    """Wait until at_s seconds after t0 (time.monotonic()). A stepped motion
+    paced this way lasts its nominal time: each Playwright step is a round
+    trip, and fixed gaps between them stretched a 1 s swipe to ~1.7 s."""
+    left = t0 + at_s - time.monotonic()
+    if left > 0:
+        await page.wait_for_timeout(left * 1000)
+
+
 async def human_scroll(page, delta_y, steps=25):
     """Scroll whatever is under the finger by delta_y px (positive = content
     moves up, i.e. further down the page) as one visible swipe."""
@@ -635,23 +746,26 @@ async def human_scroll(page, delta_y, steps=25):
     travel = min(abs(delta_y) * HUMAN_SWIPE_SHARE, VIEWPORT["height"] * HUMAN_SWIPE_MAX)
     travel = -travel if down else travel
     done = 0.0
+    secs = _TEMPO.get("scroll_ms", HUMAN_SCROLL_MS) / 1000
+    t0 = time.monotonic()
     for i in range(1, steps + 1):
         e = _smoothstep(i / steps)
         await page.mouse.move(x, y0 + travel * e)
         await page.mouse.wheel(0, delta_y * e - done)
         done = delta_y * e
-        await page.wait_for_timeout(HUMAN_SCROLL_MS / steps)
+        await _pace(page, t0, secs * i / steps)
     _MOUSE[id(page)] = (x, y0 + travel)
 
 
-async def _scroll_delta_for(locator):
-    """How far to scroll so the target sits just below the middle — clamped
-    to the room its scroller actually has, so the eased swipe ends where the
-    content does instead of stalling against the end of the form."""
+async def _scroll_delta_for(locator, at=0.6):
+    """How far to scroll so the target's centre sits at `at` of the viewport
+    height (default: just below the middle) — clamped to the room its
+    scroller actually has, so the eased swipe ends where the content does
+    instead of stalling against the end of the form."""
     box = await locator.bounding_box()
     if box is None:
         return 0.0
-    want = box["y"] + box["height"] / 2 - VIEWPORT["height"] * 0.6
+    want = box["y"] + box["height"] / 2 - VIEWPORT["height"] * at
     above, below = await locator.evaluate(
         "el => { let p = el.parentElement;"
         " while (p && !(/auto|scroll/.test(getComputedStyle(p).overflowY)"
@@ -673,7 +787,7 @@ async def _bring_into_view(page, locator):
     await page.wait_for_timeout(250)
 
 
-async def human_move(page, locator, steps=HUMAN_MOVE_STEPS):
+async def human_move(page, locator, steps=None):
     """Glide to the element's centre (see _glide_to), swiping it into view
     first if it is off-screen."""
     await _bring_into_view(page, locator)
@@ -691,10 +805,13 @@ async def human_click(page, locator):
     await locator.click()
 
 
-async def human_type(page, locator, text):
-    """Tap the field, then type it one key at a time."""
+async def human_type(page, locator, text, replace=False):
+    """Tap the field, then type it one key at a time. With replace, select
+    what the field already holds first, so the typing overwrites it."""
     await human_click(page, locator)
-    await locator.press_sequentially(text, delay=HUMAN_TYPE_DELAY_MS)
+    if replace:
+        await page.keyboard.press("Control+A")
+    await locator.press_sequentially(text, delay=_TEMPO.get("type_ms", HUMAN_TYPE_DELAY_MS))
 
 
 async def lift_finger(page):
@@ -741,6 +858,47 @@ async def human_click_row_control(page, text_locator, pick):
     await _glide_to(page, x, y)
     await page.wait_for_timeout(HUMAN_CLICK_PAUSE_MS)
     await page.mouse.click(x, y)
+
+
+# A slide-to-unlock control (SideQuest's "Hidden until reveal" track) only
+# answers a drag: press the thumb at the left end, pull it right, let go. The
+# track is found from its label by climbing to the first ancestor as tall as
+# a thumb and most of the screen wide; the round thumb is as wide as the
+# track is tall, so its centre sits half a track-height in from either end.
+HUMAN_SLIDE_STEPS = 18
+HUMAN_SLIDE_MS = 650  # the pull: deliberate, not a flick
+
+_TRACK_JS = """
+(el) => {
+  for (let node = el; node; node = node.parentElement) {
+    const r = node.getBoundingClientRect();
+    if (r.height >= 44 && r.width >= window.innerWidth * 0.6) {
+      return { x: r.x, y: r.y, width: r.width, height: r.height };
+    }
+  }
+  return null;
+}
+"""
+
+
+async def human_slide(page, label_locator):
+    """Drag the slide-to-unlock track labelled label_locator end to end."""
+    await _bring_into_view(page, label_locator)
+    box = await label_locator.evaluate(_TRACK_JS)
+    if box is None:
+        raise RuntimeError(f"human_slide: no track around {label_locator}")
+    y = box["y"] + box["height"] / 2
+    x0 = box["x"] + box["height"] / 2
+    x1 = box["x"] + box["width"] - box["height"] / 2
+    await _glide_to(page, x0, y)
+    await page.wait_for_timeout(HUMAN_CLICK_PAUSE_MS)
+    await page.mouse.down()
+    t0 = time.monotonic()
+    for i in range(1, HUMAN_SLIDE_STEPS + 1):
+        await page.mouse.move(x0 + (x1 - x0) * _smoothstep(i / HUMAN_SLIDE_STEPS), y)
+        await _pace(page, t0, HUMAN_SLIDE_MS / 1000 * i / HUMAN_SLIDE_STEPS)
+    await page.mouse.up()
+    _MOUSE[id(page)] = (x1, y)
 
 
 # ------------------------------------------------------------ scenarios
@@ -809,12 +967,96 @@ async def scenario_packing_list_demo(page):
     await page.wait_for_timeout(FINAL_HOLD_MS)
 
 
-# name -> (the journey, the fixture member it runs as, its fixture). A
-# scenario loads only its own fixture unless --fixture says otherwise, so two
-# fixtures that share a route (both define /members) can't cross wires.
+async def open_new_sidequest(page):
+    """Prelude, before the cut: from the trip, open its Add activity form
+    through the app. Loading trip/<id>/sidequest/new directly would leave no
+    trip behind the form, and Back from the saved SideQuest would have
+    nowhere to return to."""
+    await page.get_by_text("Add activity", exact=True).first.click()
+    await page.get_by_placeholder("What's the activity called?").wait_for(state="visible")
+
+
+# The SideQuest journey fills three fields, needs three swipes and passes
+# through the saved activity on its way back to the trip; at the shared
+# pacing it ran 36 s. It runs tighter to land near 20 s (see tempo()): keys
+# at half the usual delay, glides in 8 steps instead of 14, 0.8 s swipes,
+# 600 ms between beats, under a second on the saved SideQuest.
+SQ_TEMPO = {"type_ms": HUMAN_TYPE_DELAY_MS // 2, "move_steps": 8, "scroll_ms": 800}
+SQ_STEP_PAUSE_MS = 600
+SQ_DETAIL_BEAT_MS = 800
+SQ_FINAL_HOLD_MS = 2500
+
+
+async def scenario_hidden_sidequest_demo(page):
+    """Plant a secret: name it, slide it into a hidden SideQuest, set when it
+    reveals, leave the group a teaser, save — then back on the trip, where it
+    sits sealed in its day with the countdown. Runs at SQ_TEMPO."""
+    with tempo(**SQ_TEMPO):
+        await _hidden_sidequest_journey(page)
+
+
+async def _hidden_sidequest_journey(page):
+    await page.wait_for_timeout(OPENING_BEAT_MS)
+    await human_type(page, page.get_by_placeholder("What's the activity called?"),
+                     "Midnight Cliff Jump")
+    await page.wait_for_timeout(SQ_STEP_PAUSE_MS)
+
+    # The signature control: slide "Hidden until reveal" to make it a
+    # SideQuest. Visible / Hidden until reveal then fade in below it. One
+    # swipe puts the track high on screen, so the options that appear under
+    # it are already in view — no second scroll to reach them.
+    slide = page.get_by_text("Hidden until reveal", exact=True)
+    await human_scroll(page, await _scroll_delta_for(slide, at=0.3))
+    await human_slide(page, slide)
+    await page.wait_for_timeout(SQ_STEP_PAUSE_MS)
+    await human_click(page, page.get_by_text("Hidden until reveal", exact=True).first)
+    await page.wait_for_timeout(SQ_STEP_PAUSE_MS)
+
+    # Reveal schedule: the date defaults to the SideQuest's own day; the time
+    # goes from 18:00 to 23:30. On web both are text fields — the reveal time
+    # is the form's second "HH:MM" (the first is the activity's own time).
+    # One swipe brings it up high; the teaser and the submit below it then
+    # fit on screen without another.
+    reveal_time = page.get_by_placeholder("HH:MM").last
+    await human_scroll(page, await _scroll_delta_for(reveal_time, at=0.3))
+    await human_type(page, reveal_time, "23:30", replace=True)
+    await page.wait_for_timeout(SQ_STEP_PAUSE_MS)
+    # The teaser field caps at 35 characters.
+    await human_type(page, page.get_by_placeholder("Optional clue for the group before the reveal"),
+                     "Swimsuits. No questions.")
+    await page.wait_for_timeout(SQ_STEP_PAUSE_MS)
+
+    # "Add activity" is the screen's title AND its submit, at the foot; the
+    # trip underneath has one too, earlier in the DOM. Submit is the last.
+    # human_click swipes it into view only if it isn't already on screen.
+    await human_click(page, page.get_by_text("Add activity", exact=True).last)
+
+    # Saved: the app opens the new SideQuest. A beat on it, then Back — an
+    # icon-only arrow, first in the header row beside the "SideQuest" title.
+    # Screens below in the stack stay in the DOM, hidden, with their own
+    # "SideQuest" — so only a visible one counts.
+    title = page.get_by_text("SideQuest", exact=True).filter(visible=True).first
+    await title.wait_for(state="visible")
+    await page.wait_for_timeout(SQ_DETAIL_BEAT_MS)
+    await human_click_row_control(page, title, "first")
+
+    # The trip: the secret sealed in its day — locked, counting down.
+    card = page.get_by_text("Hidden sidequest", exact=True)
+    await _bring_into_view(page, card)
+    await page.wait_for_timeout(300)
+    await lift_finger(page)
+    await page.wait_for_timeout(SQ_FINAL_HOLD_MS)
+
+
+# name -> (the journey, the fixture member it runs as, its fixture, and an
+# optional prelude run before the cut). A scenario loads only its own fixture
+# unless --fixture says otherwise, so two fixtures that share a route (both
+# define /members) can't cross wires.
 SCENARIOS = {
-    "cost_split_demo": (scenario_cost_split_demo, "u5", "cost_split_demo.json"),
-    "packing_list_demo": (scenario_packing_list_demo, "u5", "packing_list_demo.json"),
+    "cost_split_demo": (scenario_cost_split_demo, "u5", "cost_split_demo.json", None),
+    "packing_list_demo": (scenario_packing_list_demo, "u5", "packing_list_demo.json", None),
+    "hidden_sidequest_demo": (scenario_hidden_sidequest_demo, "u5",
+                              "hidden_sidequest_demo.json", open_new_sidequest),
 }
 
 
@@ -822,9 +1064,9 @@ async def record(route, name, seconds=6.0, warmup_ms=DEFAULT_WARMUP_MS,
                  selector=None, keep_splash=False, scroll_to=1.0, fixtures=None,
                  safe_area=DEFAULT_SAFE_AREA, scenario="scroll"):
     from playwright.async_api import async_playwright
-    journey, member_id, user = None, None, None
+    journey, member_id, user, prelude = None, None, None, None
     if scenario != "scroll":
-        journey, member_id, fixture = SCENARIOS[scenario]
+        journey, member_id, fixture, prelude = SCENARIOS[scenario]
         fixtures = fixtures or [FIXTURE_DIR / fixture]
     api_routes = load_fixture_routes(fixtures)
     if journey:
@@ -878,6 +1120,8 @@ async def record(route, name, seconds=6.0, warmup_ms=DEFAULT_WARMUP_MS,
         except Exception:
             print(f"WARNING: content not ready within {ready_timeout} ms - "
                   f"recording anyway; check the route or pass --selector")
+    if prelude:
+        await prelude(page)
     if journey:
         # Rest the finger lower-centre before the cut, so the dot is already
         # on screen in the first frame instead of flying in from the corner.

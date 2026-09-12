@@ -316,6 +316,9 @@ repo root.
   balances and debts exactly). Packing list: POST items and categories, PATCH
   items (`isChecked`, `text`, `assignedToUserId` — the name is looked up from
   `/members` — or `clearAssignment`), DELETE items and categories.
+  Activities: a POST to `/api/trips/{id}/activities` returns what the
+  backend gives the creator (`isHiddenForViewer` false; `isRevealed` false
+  while hidden, so the feed seals it), and a GET by id opens it.
 - **`--scenario packing_list_demo`** (`trip/demo/packing-list`, fixture
   `packing_list_demo.json`: the same Mallorca trip and nine friends, Leo
   signed in). Leo ticks off "Sunscreen SPF 50" and "Snorkel masks ×4", taps
@@ -325,6 +328,42 @@ repo root.
   ```bash
   python capture/record_video.py trip/demo/packing-list packing_list_demo --scenario packing_list_demo
   ```
+- **`--scenario hidden_sidequest_demo`** (route `trip/demo`, fixture
+  `hidden_sidequest_demo.json`: the same Mallorca trip and nine friends, Leo
+  signed in, the trip upcoming). A prelude taps "Add activity" on the trip
+  before the cut — loading `trip/<id>/sidequest/new` directly leaves no trip
+  behind the form for Back to return to. Leo types "Midnight Cliff Jump",
+  drags "Hidden until reveal", picks "Hidden until reveal", sets the reveal
+  time 18:00 → 23:30 (on web the form's second `HH:MM` field), types the
+  teaser "Swimsuits. No questions." (the field caps at 35) and saves. The app
+  opens the saved SideQuest; Leo taps Back and the trip feed shows it sealed
+  on day 1: "Hidden sidequest · Reveals in 2d 5h 56m". 20.2 s; the sealed
+  card is on screen from ~17.0 s. The countdown runs from the moment of
+  recording, so reel copy quotes it from the take, never from the fixture.
+  No cover photo, so the card shows the SideQuest compass under the lock —
+  the app blurs only a cover image.
+  ```bash
+  python capture/record_video.py trip/demo hidden_sidequest_demo --scenario hidden_sidequest_demo
+  ```
+- **Slide-to-unlock: `human_slide(page, label)`.** SideQuest's activation
+  track only answers a drag. From its label the helper climbs to the first
+  ancestor ≥ 44 px tall and ≥ 60 % of the screen wide (the track), presses
+  the thumb half a track-height in from the left end, pulls it to the right
+  end over 0.65 s and lets go. RN Web's PanResponder takes mouse drags.
+- **Relative dates: `{today±N}`.** The Add activity form refuses dates in the
+  past and a reveal that has already passed, so a fixture for an upcoming
+  trip can't hold fixed dates — it would break a week later. Any string in a
+  fixture body may say `{today+2}`, `{today-30}T18:00:00Z` or `{today}`;
+  `load_fixture_routes` replaces it with that ISO date, counted from the day
+  of recording.
+- **Pacing.** `human_scroll` and `human_slide` wait for each step's moment on
+  the clock (`_pace`), not a fixed gap: every Playwright step is a round
+  trip, and fixed gaps stretched a 1 s swipe to ~1.7 s. A take that must run
+  tighter wraps its journey in `with tempo(move_steps=…, type_ms=…,
+  scroll_ms=…)`; the shared `HUMAN_*` values come back after, so the other
+  takes re-record as tuned. The SideQuest take runs at `SQ_TEMPO`: 8-step
+  glides, 35 ms keys, 0.8 s swipes, 600 ms between beats, 0.8 s on the saved
+  SideQuest, 2.5 s final hold — 36 s at the shared pacing, 20.2 s at this.
 - **Icon-only controls: `human_click_row_control(page, text, pick)`.** A
   checkbox or an assign button has no text to aim at, but its row does. From
   the row's text, the helper climbs to the nearest flex-row container and taps
@@ -333,7 +372,8 @@ repo root.
   the category's tap target and the draft input's placeholder — tap
   `get_by_text(…).first`, type into `get_by_placeholder(…)`.
 - A new scenario is an async function built from the helpers plus one entry
-  in `SCENARIOS`: name → (function, fixture member id, fixture file). A
+  in `SCENARIOS`: name → (function, fixture member id, fixture file,
+  prelude or None — a step run before the cut). A
   scenario loads ONLY its own fixture unless `--fixture` says otherwise, so
   two fixtures that share a route (both define `/members`) can't cross wires;
   when several are loaded, the first file wins for GETs and for the in-memory
