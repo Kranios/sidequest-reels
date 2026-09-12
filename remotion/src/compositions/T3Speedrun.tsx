@@ -1,20 +1,26 @@
 /**
  * T3 — THE SPEEDRUN.  Goal: saves.  Tempo: fast.
- * Phone: the tool, constantly moving. Capture: one per step.
+ * Phone: the tool, in one unbroken take. Capture: one scripted user journey.
  *
- * Hard cuts through a real flow — create trip, add activities, invite friends,
- * split costs — with a timer running. Competence porn: satisfying, save-worthy,
- * and it demos the product without feeling like a demo. This is the one
- * template where an urgent sign-off fits the tempo.
+ * A real job done start to finish on the phone while a stopwatch runs — here,
+ * logging an expense and splitting it. Competence porn: satisfying,
+ * save-worthy, and it demos the product without feeling like a demo.
  *
- * WHY IT SCALES: every feature combination is a new run, and the timer makes
- * it a format people expect variations of. A new reel is a new `steps` array.
+ * ONE TAKE, NO CUTS. The capture is a journey recorded with
+ * `record_video.py --scenario <name>`: a phantom-touch dot taps, types and
+ * saves, so the finger itself carries the viewer from screen to screen. Hard
+ * cuts between separate captures (the old ScreenSwapper version) would break
+ * exactly the continuity that sells it.
  *
- * Each step is its own <Sequence> inside ScreenSwapper, so each gets a fresh
- * phone with its own capture — the cuts are real cuts, not crossfades. The
- * step label rides inside the same sequence, so it can never fall out of sync
- * with the screen it names, and it lives in the bottom text band, so it can
- * never land on the phone.
+ * TIMING. A journey runs 15-20 s and qa.py caps a reel at 20 s, so the hook
+ * does not get a beat of its own: it sits in the top band while the capture's
+ * opening beat plays and the phone makes its entrance. Then the stopwatch
+ * takes the top band — reading the take's real elapsed time — and the run
+ * caption takes the bottom one. `videoSeconds` is how much of the capture
+ * plays: trim the idle hold at the end of a journey, never the journey.
+ *
+ * WHY IT SCALES: every journey is a new run — a new scenario, a new capture,
+ * new props. The clock makes it a format people expect variations of.
  */
 import React from "react";
 import { z } from "zod";
@@ -27,26 +33,20 @@ import { CTA } from "../components/CTA";
 import { Hook } from "../components/Hook";
 import { Phone } from "../components/Phone";
 import { SafeAreaOverlay } from "../components/SafeAreaOverlay";
-import { ScreenSwapper } from "../components/ScreenSwapper";
 import { Timer } from "../components/Timer";
-import { Band, CaptionText } from "../components/Text";
+import { Band, CaptionText, SupportText } from "../components/Text";
 
 export const t3SpeedrunSchema = z.object({
   // ---- content ----
+  /** One continuous user-journey capture (record_video.py --scenario). */
+  appVideo: z.string(),
   hookLine1: z.string(),
   hookLine2: z.string(),
+  /** Under the phone while the hook is up. Empty = none. */
   hookSubtext: z.string(),
-  /**
-   * The run. One entry per screen: which capture, what to call the step, and
-   * how long to hold it. Add a step and the reel and the clock both grow.
-   */
-  steps: z.array(
-    z.object({
-      video: z.string(),
-      label: z.string(),
-      holdSeconds: z.number(),
-    })
-  ),
+  /** Under the phone for the rest of the take. Empty = none. */
+  runCaption: z.string(),
+  /** Under the sign-off. */
   caption: z.string(),
   launchLine: z.string(),
 
@@ -60,10 +60,6 @@ export const t3SpeedrunSchema = z.object({
    */
   timerRate: z.number().min(0.1).max(60).step(0.1),
   timerAlign: z.enum(["start", "center", "end"]),
-
-  // ---- transitions ----
-  transition: z.enum(["cut", "whip", "slide", "punch"]),
-  transitionFrames: z.number().min(0).max(20).step(1),
 
   // ---- safe area (mirrors SAFE_INSETS) ----
   showSafeArea: z.boolean(),
@@ -85,8 +81,9 @@ export const t3SpeedrunSchema = z.object({
   bgVignette: z.number().min(0).max(1).step(0.02),
 
   // ---- type ----
+  /** The hook lives in the top band, so it is sized for it. */
   hookFontSize: z.number().min(30).max(140).step(2),
-  stepFontSize: z.number().min(20).max(90).step(2),
+  runCaptionFontSize: z.number().min(20).max(90).step(2),
   timerFontSize: z.number().min(24).max(120).step(2),
   captionFontSize: z.number().min(20).max(90).step(2),
 
@@ -102,8 +99,11 @@ export const t3SpeedrunSchema = z.object({
   ctaVariant: z.enum(["quiet", "standard", "urgent"]),
   ctaLogoSize: z.number().min(50).max(180).step(2),
 
-  // ---- timing (seconds); the run's length comes from the steps ----
-  hookSeconds: z.number().min(0.8).max(5).step(0.1),
+  // ---- timing (seconds) ----
+  /** How long the hook stays up, OVER the start of the take. */
+  hookSeconds: z.number().min(0.8).max(6).step(0.1),
+  /** How much of the capture plays — the take's length on screen. */
+  videoSeconds: z.number().min(2).max(30).step(0.1),
   ctaSeconds: z.number().min(1.5).max(6).step(0.1),
 });
 
@@ -111,9 +111,8 @@ export type T3SpeedrunProps = z.infer<typeof t3SpeedrunSchema>;
 
 export const T3Speedrun: React.FC<T3SpeedrunProps> = (p) => {
   const { fps } = useVideoConfig();
-  const hookDur = frames(p.hookSeconds, fps);
-  const holds = p.steps.map((s) => frames(s.holdSeconds, fps));
-  const runDur = holds.reduce((n, h) => n + h, 0);
+  const runDur = frames(p.videoSeconds, fps);
+  const hookDur = Math.min(frames(p.hookSeconds, fps), runDur);
   const ctaDur = frames(p.ctaSeconds, fps);
 
   const insets = { top: p.safeTop, bottom: p.safeBottom, left: p.safeLeft, right: p.safeRight };
@@ -129,56 +128,44 @@ export const T3Speedrun: React.FC<T3SpeedrunProps> = (p) => {
         vignette={p.bgVignette}
       />
 
+      {/* The take: one phone, one capture, start to finish. */}
+      <Sequence durationInFrames={runDur}>
+        <AbsoluteFill>
+          <Phone
+            videoSrc={staticFile(p.appVideo)}
+            swingDeg={p.swingDeg}
+            dollyIn={p.dollyIn}
+            band={bands.stage}
+            bandFill={p.phoneFill}
+            videoStartFrom={p.videoStartFrom}
+            screenRotDeg={p.screenRotDeg}
+            screenFlipY={p.screenFlipY}
+            insets={insets}
+            offsetY={p.phoneOffsetY}
+          />
+        </AbsoluteFill>
+      </Sequence>
+
+      {/* The hook, over the take's opening beat. */}
       <Sequence durationInFrames={hookDur}>
         <Hook
-          box={whole}
+          box={bands.top}
           fontSize={p.hookFontSize}
           wordStagger={3}
           lines={[
             { text: p.hookLine1, color: BRAND.white },
             { text: p.hookLine2, color: BRAND.pink },
           ]}
-          subtext={p.hookSubtext}
         />
+        {p.hookSubtext ? (
+          <Band box={bands.bottom} align="start">
+            <SupportText text={p.hookSubtext} delay={12} />
+          </Band>
+        ) : null}
       </Sequence>
 
-      <Sequence from={hookDur} durationInFrames={runDur}>
-        <ScreenSwapper
-          sources={p.steps.map((s) => s.video)}
-          holdFrames={holds}
-          transition={p.transition}
-          transitionFrames={p.transitionFrames}
-        >
-          {(src, i) => (
-            <AbsoluteFill>
-              <Phone
-                videoSrc={staticFile(src)}
-                // Only the first screen makes an entrance; every later step
-                // cuts in hard, which is the whole tempo of this template.
-                entry={i === 0}
-                swingDeg={p.swingDeg}
-                dollyIn={p.dollyIn}
-                band={bands.stage}
-                bandFill={p.phoneFill}
-                videoStartFrom={p.videoStartFrom}
-                screenRotDeg={p.screenRotDeg}
-                screenFlipY={p.screenFlipY}
-                insets={insets}
-                offsetY={p.phoneOffsetY}
-              />
-              <Band box={bands.bottom} align="start">
-                <CaptionText
-                  text={`${i + 1}. ${p.steps[i]?.label ?? ""}`}
-                  fontSize={p.stepFontSize}
-                  delay={2}
-                />
-              </Band>
-            </AbsoluteFill>
-          )}
-        </ScreenSwapper>
-
-        {/* One clock across the whole run — outside the swapper so it does not
-            restart on every cut. */}
+      {/* The rest of the take: the clock and what is being done. */}
+      <Sequence from={hookDur} durationInFrames={runDur - hookDur}>
         {p.showTimer ? (
           <Band box={bands.top} align="end">
             <div
@@ -193,9 +180,11 @@ export const T3Speedrun: React.FC<T3SpeedrunProps> = (p) => {
                     : "center",
               }}
             >
+              {/* Starts where the take already is, so it reads real elapsed
+                  time rather than time since the hook left. */}
               <Timer
                 direction="up"
-                startSeconds={0}
+                startSeconds={(hookDur / fps) * p.timerRate}
                 rate={p.timerRate}
                 format={p.timerFormat}
                 fontSize={p.timerFontSize}
@@ -205,9 +194,14 @@ export const T3Speedrun: React.FC<T3SpeedrunProps> = (p) => {
             </div>
           </Band>
         ) : null}
+        {p.runCaption ? (
+          <Band box={bands.bottom} align="start">
+            <CaptionText text={p.runCaption} fontSize={p.runCaptionFontSize} delay={4} />
+          </Band>
+        ) : null}
       </Sequence>
 
-      <Sequence from={hookDur + runDur} durationInFrames={ctaDur}>
+      <Sequence from={runDur} durationInFrames={ctaDur}>
         <CTA
           variant={p.ctaVariant}
           box={whole}
@@ -225,10 +219,8 @@ export const T3Speedrun: React.FC<T3SpeedrunProps> = (p) => {
   );
 };
 
-/** The run's length comes from the steps, so adding one extends the reel. */
+/** The take plus the sign-off; the hook overlaps the take, so it adds nothing. */
 export const t3SpeedrunDuration = (
-  p: Pick<T3SpeedrunProps, "hookSeconds" | "ctaSeconds" | "steps">,
+  p: Pick<T3SpeedrunProps, "videoSeconds" | "ctaSeconds">,
   fps = 30
-) =>
-  totalFrames([p.hookSeconds, p.ctaSeconds], fps) +
-  p.steps.reduce((n, s) => n + frames(s.holdSeconds, fps), 0);
+) => totalFrames([p.videoSeconds, p.ctaSeconds], fps);

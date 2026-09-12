@@ -33,7 +33,7 @@ app renders in `app/cost_split.mp4`.
 |---|---|---|---|
 | `T1-Receipt-CostSplit` | recognition | **€9,584.85** — "Nine friends. Seven nights. Seventeen receipts." | rows: who paid what (sum = €9,584.85) / "Ana booked the villa. Ana is still waiting." / "Already worked out. Nobody had to ask." |
 | `T2-Reveal-CostSplit` | curiosity | "What the villa week cost. / Nobody looked." | "€9,584.85, assigned to the cent." |
-| `T3-Speedrun-CostSplit` | competence | "Nine people. / One stopwatch." | "€9,584.85 to split." / steps: "Pick the trip", "Log the expense", "Settle up" / "Saved: one argument at the airport." |
+| `T3-Speedrun-CostSplit` | competence | "Nine people. / One stopwatch." | "€9,584.85 to split." / over the one-take journey: "€850 dinner, split nine ways." / "Saved: one argument at the airport." |
 | `T4-Callout-CostSplit` | humour | "Every trip has a treasurer. / Nobody elected them." | "Paid for the villa. Covered the wine tasting. Kept every receipt. Still owed €3,725.62." / "Tag the one still waiting." |
 | `T5-Atlas-CostSplit` | aspiration | "Seven nights in Mallorca. / The maths already done." | "The trip, closed out." / stats: 9,584.85 euros spent · 0 spreadsheets opened |
 
@@ -47,6 +47,7 @@ app renders in `app/cost_split.mp4`.
 | Ana booked the villa | Villa Sóller, €4,284.00, paid by Ana |
 | Ana's lines in T4 | Ana paid the villa, the cleaning fee and the wine tasting |
 | €3,725.62 still owed | Ana's net balance (paid 4,788.00 − share 1,062.38) = sum of the settle-up debts to her |
+| €850 dinner, split nine ways (T3) | the `cost_split_demo` journey: Leo saves "Farewell dinner", €850.00, split equally between all 9 (4 × 94.45 + 5 × 94.44 = 850.00) |
 
 Verified 2026-09-12: every expense's payers and shares equal its total, the
 nets sum to zero, and the settle-up debts clear every net exactly.

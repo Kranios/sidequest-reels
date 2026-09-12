@@ -263,8 +263,8 @@ type PhoneProps = {
   videoStartFrom?: number;
   /**
    * Play the sprung entrance (45deg tilt + slight zoom -> rest). On by default;
-   * turn it off where the phone must cut in hard, e.g. every T3 step after the
-   * first.
+   * turn it off where the phone must cut in hard, e.g. every screen after the
+   * first in a multi-capture cut.
    */
   entry?: boolean;
 

@@ -42,7 +42,7 @@ component and schema, differing only in `defaultProps`.
 |---|---|---|---|---|---|
 | T1 Receipt | `T1Receipt.tsx` | shares | medium | late payoff | cost split, real data |
 | T2 Reveal | `T2Reveal.tsx` | comments | slow | centre throughout | hidden sidequest |
-| T3 Speedrun | `T3Speedrun.tsx` | saves | fast | the tool | one per step |
+| T3 Speedrun | `T3Speedrun.tsx` | saves | fast | the tool, one take | one `--scenario` journey |
 | T4 Callout | `T4Callout.tsx` | comments/shares | punchy | absent | **none** |
 | T5 Atlas | `T5Atlas.tsx` | saves | slowest | the object | travel-tracker |
 
@@ -66,7 +66,8 @@ derived from the content where the content sets them — add a line to T4's
 
 `NumberCounter` (T1, T5) · `KineticList` — stack rows or swap lines (T1, T4) ·
 `BlurReveal` (T2) · `Timer` — counts up or down (T2, T3) · `ScreenSwapper` —
-real hard cuts, one `<Sequence>` per screen (T3).
+real hard cuts, one `<Sequence>` per screen (no template uses it since T3
+became one continuous `--scenario` take; kept for a multi-capture reel).
 
 **Legacy (do not extend):** `compose/`, `render/`, `qa/`, `make_reel.ps1`,
 `render_plate.ps1`. These were the PIL + Blender pipeline. Superseded because
@@ -135,7 +136,7 @@ repo root.
 - The entrance is a Remotion `spring` (damping 11, stiffness 40, mass 1.8)
   from a 45° tilt on two axes and 0.88 zoom, settled in ~1.3 s. A stiff spring
   stretched with `durationInFrames` still snaps — the stretch includes its
-  long tail. T3 plays the entrance on its first step only (`entry={i === 0}`).
+  long tail. `entry={false}` turns it off where a phone must cut in hard.
 - The canvas renders at `dpr={2}` for crisp UI text — see memory below.
 
 ### Text hierarchy — one definition, five templates
@@ -381,9 +382,11 @@ template's psychology is the variable under test.
 5. **One `<Composition>` per template** in `src/reels/T*.tsx`, id
    `T<n>-<Template>-<Feature>`:
    - T1, T2, T5: `appVideo: "app/<name>.mp4"`.
-   - **T3 exception:** no `appVideo` — a `steps` array, each step with its own
-     `video`. One capture per step reads as a real flow; the same file in every
-     step cuts to the same screen.
+   - **T3 exception:** one continuous take, no cuts. Record a user journey
+     with `record_video.py <route> <name> --scenario <scenario>` and point
+     `appVideo` at it. The hook overlaps the start of the take; set
+     `videoSeconds` to end ~2 s after the result appears, so the reel stays
+     within 20 s.
    - **T4 exception:** no phone and no video prop at all — only the copy
      (`hookLine1/2`, `lines`, `punchline`).
    - `videoStartFrom: 0` — the capture already trims the splash.
@@ -438,11 +441,10 @@ Higgsfield is for b-roll and hooks only — never for faking app UI. Draft at
   measured 4.3 Mbps at CRF 16 and 5.6 Mbps at CRF 12. A darker, stiller reel
   could still dip under 4.0; render it with `--crf=12` rather than lowering
   the floor again.
-- **T3 Cost Split uses one capture for all three steps.** Record the trip
-  picker and the add-expense sheet and swap the first two `steps[].video`.
 - **Still to capture:** the hidden sidequest card in its hidden state (T2's
-  intended screen) and a per-step flow for T3 (create trip, add activities,
-  invite, split).
+  intended screen), and more `--scenario` journeys for T3 (create a trip,
+  invite friends, settle up). T3 itself now plays one continuous take
+  (`app/cost_split_demo.mp4`), so the old per-step captures are not needed.
 - T1's first frame is empty background (the counter fades in from frame 4) —
   a weak cover if Instagram picks frame 0.
 - `backdrop-filter` on chips may render differently than the preview.
