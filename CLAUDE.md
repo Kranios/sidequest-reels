@@ -267,7 +267,8 @@ repo root.
 ### User journeys — `--scenario` and Phantom Touch
 - `record_video.py --scenario cost_split_demo` records a scripted user instead
   of a scroll: after a 1.5 s beat on the list, Leo opens Add Expense, types
-  "Farewell dinner" and 850, saves, and the new row lands at the top (~18 s).
+  "Farewell dinner" and 850, saves, and the new row lands at the top
+  (14.8 s).
   The default, `--scenario scroll`, is unchanged; scenarios ignore `seconds`.
   ```bash
   python capture/record_video.py trip/demo/split cost_split_demo --scenario cost_split_demo
@@ -279,10 +280,16 @@ repo root.
   click. `lift_finger()` fades it out before the closing hold, so the result
   isn't covered by a dot parked on the last button.
 - **Aim with text, never CSS.** `human_move` / `human_click` / `human_type`
-  take Playwright locators (`get_by_text`, `get_by_placeholder`). They glide
-  with `steps=30`, hover 300 ms before a tap, type at 150 ms a key, and
-  smooth-scroll an off-screen target to the centre first (Playwright's own
-  scroll-into-view is a jump cut). Locators are the ENGLISH UI strings — the
+  take Playwright locators (`get_by_text`, `get_by_placeholder`). A move is
+  NOT a straight line: it follows a quadratic Bézier from where the mouse is
+  (tracked in `_MOUSE`; Playwright doesn't expose it) to the target, bowed
+  sideways by 8–18 % of the distance to a random side, eased out over 14
+  steps — quick off the mark, soft landing. The RNG is seeded, so a
+  re-record moves the same way. They hover 120 ms before a tap, type at 70 ms
+  a key, and smooth-scroll an off-screen target to the centre first
+  (Playwright's own scroll-into-view is a jump cut). Place the mouse with
+  `mouse_to()`, not `page.mouse.move()`, or the next arc starts from the
+  wrong point. Locators are the ENGLISH UI strings — the
   capture pins en-US. "Add Expense" is the floating button until the sheet
   opens; then it is both the sheet's title and its submit, and the submit is
   `.last`. Nobody has to find a class name.

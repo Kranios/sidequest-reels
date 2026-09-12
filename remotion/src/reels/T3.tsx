@@ -7,10 +7,12 @@
  * journeys") and point `appVideo` at it.
  *
  * COST SPLIT A/B TEST (see strategy/hook_vault.md). The capture is
- * app/cost_split_demo.mp4 (19.76 s): Leo logs a €850 farewell dinner and
- * splits it nine ways; the saved row is on screen from ~14.5 s. videoSeconds
- * 17.0 plays the whole journey plus 2.5 s of the result and drops only the
- * idle hold at the end — so the reel is 19.4 s, under qa.py's 20 s cap.
+ * app/cost_split_demo.mp4 (14.8 s): Leo logs a €850 farewell dinner and
+ * splits it nine ways; the saved row is on screen from ~10.5 s. videoSeconds
+ * 13.0 plays the whole journey plus 2.5 s of the result and drops only the
+ * idle hold at the end — so the reel is 15.4 s (qa.py caps a reel at 20 s).
+ * Re-record the journey and these times move: re-check where the result
+ * lands before trusting videoSeconds.
  */
 import React from "react";
 import { Composition } from "remotion";
@@ -71,14 +73,14 @@ export const T3Reels: React.FC = () => (
         ctaVariant: "urgent",
         ctaLogoSize: 104,
 
-        hookSeconds: 2.4,
-        videoSeconds: 17.0,
+        hookSeconds: 2.0,
+        videoSeconds: 13.0,
         ctaSeconds: 2.4,
       }}
       fps={CANVAS.fps}
       width={CANVAS.width}
       height={CANVAS.height}
-      durationInFrames={t3SpeedrunDuration({ videoSeconds: 17.0, ctaSeconds: 2.4 }, CANVAS.fps)}
+      durationInFrames={t3SpeedrunDuration({ videoSeconds: 13.0, ctaSeconds: 2.4 }, CANVAS.fps)}
       calculateMetadata={({ props }) => ({
         durationInFrames: t3SpeedrunDuration(props, CANVAS.fps),
       })}

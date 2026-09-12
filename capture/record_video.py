@@ -88,6 +88,7 @@ import base64
 import copy
 import json
 import os
+import random
 import re
 import subprocess
 import sys
@@ -466,9 +467,23 @@ async def inject_phantom_touch(page):
 # Every helper takes a Playwright LOCATOR (page.get_by_text, get_by_placeholder,
 # get_by_role ...), never a CSS string: React Native Web has no app class
 # names to aim at, but the words a viewer reads are always there.
-HUMAN_MOVE_STEPS = 30       # interpolated mouse positions per move = the glide
-HUMAN_CLICK_PAUSE_MS = 300  # hover before the tap, so the eye lands first
-HUMAN_TYPE_DELAY_MS = 150   # per keystroke
+HUMAN_MOVE_STEPS = 14       # mouse positions per move: few, so it is quick
+HUMAN_STEP_MS = 12          # between positions: ~14 x (12 ms + round trip)
+HUMAN_CLICK_PAUSE_MS = 120  # hover before the tap, just long enough to land
+HUMAN_TYPE_DELAY_MS = 70    # per keystroke: a quick thumb, not a typist
+HUMAN_ARC = (0.08, 0.18)    # sideways bow of a move, as a share of its length
+_PATH_RNG = random.Random(7)  # seeded, so a re-record moves the same way
+_MOUSE = {}  # id(page) -> last (x, y); Playwright doesn't expose it
+
+
+async def mouse_to(page, x, y):
+    """Put the mouse somewhere without a glide, and remember where it is."""
+    await page.mouse.move(x, y)
+    _MOUSE[id(page)] = (x, y)
+
+
+def _ease_out_quad(t):
+    return 1 - (1 - t) ** 2
 
 
 async def _bring_into_view(page, locator):
@@ -484,17 +499,36 @@ async def _bring_into_view(page, locator):
         await locator.evaluate(
             "el => el.scrollIntoView({behavior: 'smooth', block: 'center'})"
         )
-        await page.wait_for_timeout(800)
+        await page.wait_for_timeout(650)
 
 
 async def human_move(page, locator, steps=HUMAN_MOVE_STEPS):
-    """Glide the mouse — and the phantom dot — to the element's centre."""
+    """Glide the mouse — and the phantom dot — to the element's centre along
+    a slight arc, quick off the mark and settling onto the target. A thumb
+    moves like that; straight linear interpolation moves like a plotter.
+
+    The path is a quadratic Bezier from where the mouse is to the target,
+    its control point the midpoint pushed sideways by HUMAN_ARC of the
+    distance, to a random side. Progress along it is eased out (fast start,
+    soft landing), and the last point is exactly the target."""
     await _bring_into_view(page, locator)
     box = await locator.bounding_box()
     if box is None:
         raise RuntimeError(f"human_move: {locator} has no bounding box")
-    await page.mouse.move(box["x"] + box["width"] / 2,
-                          box["y"] + box["height"] / 2, steps=steps)
+    bx, by = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
+    ax, ay = _MOUSE.get(id(page), (bx, by))
+    dx, dy = bx - ax, by - ay
+    dist = (dx * dx + dy * dy) ** 0.5
+    nx, ny = (-dy / dist, dx / dist) if dist else (0.0, 0.0)  # unit normal
+    bow = dist * _PATH_RNG.uniform(*HUMAN_ARC) * _PATH_RNG.choice((-1, 1))
+    cx, cy = (ax + bx) / 2 + nx * bow, (ay + by) / 2 + ny * bow
+    for i in range(1, steps + 1):
+        u = _ease_out_quad(i / steps)
+        x = (1 - u) ** 2 * ax + 2 * (1 - u) * u * cx + u * u * bx
+        y = (1 - u) ** 2 * ay + 2 * (1 - u) * u * cy + u * u * by
+        await page.mouse.move(x, y)
+        await page.wait_for_timeout(HUMAN_STEP_MS)
+    _MOUSE[id(page)] = (bx, by)
 
 
 async def human_click(page, locator):
@@ -522,8 +556,8 @@ async def lift_finger(page):
 # ------------------------------------------------------------ scenarios
 # Every locator is text the app itself renders (the capture pins en-US), so a
 # scenario survives any restyle that keeps the words.
-OPENING_BEAT_MS = 1500  # the screen, untouched, before the first tap
-STEP_PAUSE_MS = 2000    # between beats, so a viewer keeps up
+OPENING_BEAT_MS = 1500  # the screen, untouched, while the reel's phone lands
+STEP_PAUSE_MS = 1200    # between beats: long enough to follow, not to wait
 FINAL_HOLD_MS = 3000    # the result, held long enough to land on film
 
 
@@ -618,7 +652,7 @@ async def record(route, name, seconds=6.0, warmup_ms=DEFAULT_WARMUP_MS,
     if journey:
         # Rest the finger lower-centre before the cut, so the dot is already
         # on screen in the first frame instead of flying in from the corner.
-        await page.mouse.move(VIEWPORT["width"] * 0.6, VIEWPORT["height"] * 0.62)
+        await mouse_to(page, VIEWPORT["width"] * 0.6, VIEWPORT["height"] * 0.62)
     await page.wait_for_timeout(warmup_ms)
 
     # Everything before this instant is boot/splash and gets trimmed below.
