@@ -18,6 +18,8 @@ strategy/*
 !strategy/templates_spec.md
 !strategy/feature_map.md
 !strategy/analytics_template.csv
+# the hook vault must stay readable: it is what stops a hook being reused
+!strategy/hook_vault.md
 
 # archived one-off diagnostics
 docs/archive/

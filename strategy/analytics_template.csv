@@ -2,3 +2,8 @@ reel_id,theme,category,posted_date,views,reach,saves,shares,profile_visits,link_
 theme01_reveal,1,A-reveal,,,,,,,,
 theme07_globe,7,C-tracker,,,,,,,,
 theme04_split,4,B-problem,,,,,,,,
+T1-Receipt-CostSplit,4,B-problem,,,,,,,,
+T2-Reveal-CostSplit,4,B-problem,,,,,,,,
+T3-Speedrun-CostSplit,4,B-problem,,,,,,,,
+T4-Callout-CostSplit,4,B-problem,,,,,,,,
+T5-Atlas-CostSplit,4,B-problem,,,,,,,,

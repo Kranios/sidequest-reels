@@ -186,8 +186,11 @@ def check(mp4):
     if not (8 <= dur <= 20):
         problems.append(f"duration {dur:.1f}s outside 8-20s")
     br = int(info.get("format", {}).get("bit_rate", 0) or 0)
-    if br and br < 6_000_000:
-        problems.append(f"bitrate {br/1e6:.1f} Mbps < 6 Mbps (IG will look muddy)")
+    # 4.0 Mbps, not 6: flat app graphics on a dark ground compress hard at
+    # CRF 16 (T1 measured 4.3 Mbps), and forcing a higher bitrate would only
+    # inflate the file, not improve it.
+    if br and br < 4_000_000:
+        problems.append(f"bitrate {br/1e6:.1f} Mbps < 4.0 Mbps (IG will look muddy)")
 
     for i, p in enumerate(frames):
         if 0 < i < len(frames) - 1:

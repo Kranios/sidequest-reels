@@ -1,11 +1,16 @@
 /**
  * REELS BUILT FROM T1 — THE RECEIPT.
  *
- * Three trips, three currencies, three villains. Only props differ.
+ * One <Composition> per reel; only props differ.
  *
- * CAPTURE NEEDED: all three point at app/travel_tracker.mp4 as a placeholder.
- * The real payoff shot is the cost-split screen with real data in it — record
- * it, drop it in public/app/, and change `appVideo`. Nothing else changes.
+ * COST SPLIT A/B TEST (see strategy/hook_vault.md). Every figure below is the
+ * demo trip in configs/fixtures/cost_split_demo.json — the same data the app
+ * renders in app/cost_split.mp4 (rule 9).
+ *
+ * THE ROWS MUST ADD UP TO THE TOTAL. The template reads as "here is the
+ * total, here is who covered it", so a viewer sums the rows against the
+ * figure above them. They are what each of the nine paid, and together they
+ * are exactly the €9,584.85 the seventeen expenses come to.
  */
 import React from "react";
 import { Composition } from "remotion";
@@ -14,103 +19,34 @@ import { T1Receipt, t1ReceiptSchema, t1ReceiptDuration } from "../compositions/T
 
 export const T1Reels: React.FC = () => (
   <>
-    {/* 1. THE VILLA — the flagship. One villa, four people, an odd total. */}
+    {/* COST SPLIT — the receipt. A specific, un-round total, then who paid
+        it — one person carrying half — then the app with the split done. */}
     <Composition
-      id="T1-Receipt-Villa"
+      id="T1-Receipt-CostSplit"
       component={T1Receipt}
       schema={t1ReceiptSchema}
       defaultProps={{
-        appVideo: "app/travel_tracker.mp4",
+        appVideo: "app/cost_split.mp4",
         currency: "€",
-        total: 2847,
-        totalDecimals: 0,
+        total: 9584.85,
+        totalDecimals: 2,
         thousandsSeparator: ",",
-        stakeLine: "Nine days. One villa. Four people.",
+        stakeLine: "Nine friends. Seven nights. Seventeen receipts.",
+        // 4788.00 + 1218.50 + 1143.20 + 742.60 + 427.80 + 360.00 + 350.40
+        // + 329.35 + 225.00 = 9584.85
         rows: [
-          { name: "Ana", amount: 712, flagged: false },
-          { name: "Jo", amount: 712, flagged: false },
-          { name: "Sam", amount: 712, flagged: false },
-          { name: "Marcus", amount: 711, flagged: true },
+          { name: "Ana", amount: 4788.0, flagged: true },
+          { name: "Marcus", amount: 1218.5, flagged: false },
+          { name: "Sam", amount: 1143.2, flagged: false },
+          { name: "Leo", amount: 742.6, flagged: false },
+          { name: "Ravi", amount: 427.8, flagged: false },
+          { name: "Mia", amount: 360.0, flagged: false },
+          { name: "Ines", amount: 350.4, flagged: false },
+          { name: "Jo", amount: 329.35, flagged: false },
+          { name: "Ella", amount: 225.0, flagged: false },
         ],
-        rowNote: "Nobody wanted to do the maths.",
-        caption: "Split in four taps.",
-        launchLine: "First 50 get lifetime access — free.",
-
-        showSafeArea: false,
-        safeTop: 220,
-        safeBottom: 450,
-        safeLeft: 65,
-        safeRight: 120,
-
-        topBandFrac: 0.16,
-        bottomBandFrac: 0.16,
-        bandGutter: 44,
-        phoneFill: 0.95,
-
-        bgIntensity: 0.55,
-        bgSpeed: 0.5,
-        bgBlur: 170,
-        bgVignette: 0.82,
-
-        totalFontSize: 170,
-        runningTotalFontSize: 62,
-        stakeFontSize: 36,
-        rowFontSize: 56,
-        rowGap: 24,
-        rowStagger: 9,
-        captionFontSize: 42,
-
-        screenRotDeg: 0,
-        screenFlipY: false,
-        phoneOffsetY: 0,
-        swingDeg: 14,
-        dollyIn: 0.5,
-        videoStartFrom: 10,
-
-        ctaVariant: "standard",
-        ctaLogoSize: 104,
-
-        totalSeconds: 2.4,
-        rowsSeconds: 3.6,
-        phoneSeconds: 3.4,
-        ctaSeconds: 2.4,
-      }}
-      fps={CANVAS.fps}
-      width={CANVAS.width}
-      height={CANVAS.height}
-      durationInFrames={t1ReceiptDuration(2.4, 3.6, 3.4, 2.4, CANVAS.fps)}
-      calculateMetadata={({ props }) => ({
-        durationInFrames: t1ReceiptDuration(
-          props.totalSeconds,
-          props.rowsSeconds,
-          props.phoneSeconds,
-          props.ctaSeconds,
-          CANVAS.fps
-        ),
-      })}
-    />
-
-    {/* 2. THE FLIGHTS — identical amounts, one person who did not pay.
-           Tighter, angrier, faster rows. */}
-    <Composition
-      id="T1-Receipt-Flights"
-      component={T1Receipt}
-      schema={t1ReceiptSchema}
-      defaultProps={{
-        appVideo: "app/travel_tracker.mp4",
-        currency: "€",
-        total: 2448,
-        totalDecimals: 0,
-        thousandsSeparator: ",",
-        stakeLine: "The flights were €612 each.",
-        rows: [
-          { name: "Leo", amount: 612, flagged: false },
-          { name: "Ines", amount: 612, flagged: false },
-          { name: "Tom", amount: 612, flagged: false },
-          { name: "Marcus", amount: 0, flagged: true },
-        ],
-        rowNote: "Then Marcus forgot his card.",
-        caption: "The app remembers. You don't have to.",
+        rowNote: "Ana booked the villa. Ana is still waiting.",
+        caption: "Already worked out. Nobody had to ask.",
         launchLine: "First 50 get lifetime access — free.",
 
         showSafeArea: false,
@@ -120,121 +56,42 @@ export const T1Reels: React.FC = () => (
         safeRight: 120,
 
         topBandFrac: 0.14,
-        bottomBandFrac: 0.18,
+        bottomBandFrac: 0.16,
         bandGutter: 44,
         phoneFill: 0.95,
 
-        bgIntensity: 1.1,
-        bgSpeed: 0.9,
-        bgBlur: 140,
-        bgVignette: 0.7,
+        bgIntensity: 0.7,
+        bgSpeed: 0.6,
+        bgBlur: 160,
+        bgVignette: 0.8,
 
-        totalFontSize: 150,
-        runningTotalFontSize: 56,
-        stakeFontSize: 34,
-        rowFontSize: 60,
-        rowGap: 22,
-        rowStagger: 7,
+        totalFontSize: 136,
+        runningTotalFontSize: 60,
+        stakeFontSize: 36,
+        rowFontSize: 44,
+        rowGap: 12,
+        rowStagger: 5,
         captionFontSize: 40,
 
         screenRotDeg: 0,
         screenFlipY: false,
         phoneOffsetY: 0,
-        swingDeg: 18,
-        dollyIn: 0.7,
-        videoStartFrom: 10,
+        swingDeg: 12,
+        dollyIn: 0.45,
+        videoStartFrom: 0,
 
-        ctaVariant: "urgent",
+        ctaVariant: "standard",
         ctaLogoSize: 104,
 
-        totalSeconds: 2.0,
-        rowsSeconds: 3.2,
-        phoneSeconds: 3.0,
-        ctaSeconds: 2.4,
-      }}
-      fps={CANVAS.fps}
-      width={CANVAS.width}
-      height={CANVAS.height}
-      durationInFrames={t1ReceiptDuration(2.0, 3.2, 3.0, 2.4, CANVAS.fps)}
-      calculateMetadata={({ props }) => ({
-        durationInFrames: t1ReceiptDuration(
-          props.totalSeconds,
-          props.rowsSeconds,
-          props.phoneSeconds,
-          props.ctaSeconds,
-          CANVAS.fps
-        ),
-      })}
-    />
-
-    {/* 3. TOKYO — bigger group, different currency, calmer frame. Six rows, so
-           the type comes down and the rows beat runs longer. */}
-    <Composition
-      id="T1-Receipt-Tokyo"
-      component={T1Receipt}
-      schema={t1ReceiptSchema}
-      defaultProps={{
-        appVideo: "app/travel_tracker.mp4",
-        currency: "$",
-        total: 4193,
-        totalDecimals: 0,
-        thousandsSeparator: ",",
-        stakeLine: "Six people. Ten days. Tokyo.",
-        rows: [
-          { name: "Mia", amount: 731, flagged: false },
-          { name: "Ravi", amount: 698, flagged: false },
-          { name: "Ella", amount: 702, flagged: false },
-          { name: "Nils", amount: 688, flagged: false },
-          { name: "Yuki", amount: 690, flagged: false },
-          { name: "Chris", amount: 684, flagged: true },
-        ],
-        rowNote: "Nobody paid the same. That is the point.",
-        caption: "Every yen accounted for.",
-        launchLine: "",
-
-        showSafeArea: false,
-        safeTop: 220,
-        safeBottom: 450,
-        safeLeft: 65,
-        safeRight: 120,
-
-        topBandFrac: 0.13,
-        bottomBandFrac: 0.14,
-        bandGutter: 40,
-        phoneFill: 0.95,
-
-        bgIntensity: 0.35,
-        bgSpeed: 0.3,
-        bgBlur: 190,
-        bgVignette: 0.88,
-
-        totalFontSize: 150,
-        runningTotalFontSize: 54,
-        stakeFontSize: 34,
-        rowFontSize: 46,
-        rowGap: 16,
-        rowStagger: 7,
-        captionFontSize: 38,
-
-        screenRotDeg: 0,
-        screenFlipY: false,
-        phoneOffsetY: 0,
-        swingDeg: 10,
-        dollyIn: 0.4,
-        videoStartFrom: 10,
-
-        ctaVariant: "quiet",
-        ctaLogoSize: 112,
-
-        totalSeconds: 2.6,
+        totalSeconds: 2.4,
         rowsSeconds: 4.4,
-        phoneSeconds: 3.2,
+        phoneSeconds: 4.2,
         ctaSeconds: 2.4,
       }}
       fps={CANVAS.fps}
       width={CANVAS.width}
       height={CANVAS.height}
-      durationInFrames={t1ReceiptDuration(2.6, 4.4, 3.2, 2.4, CANVAS.fps)}
+      durationInFrames={t1ReceiptDuration(2.4, 4.4, 4.2, 2.4, CANVAS.fps)}
       calculateMetadata={({ props }) => ({
         durationInFrames: t1ReceiptDuration(
           props.totalSeconds,
