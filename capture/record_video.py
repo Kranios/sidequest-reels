@@ -486,36 +486,19 @@ def _ease_out_quad(t):
     return 1 - (1 - t) ** 2
 
 
-async def _bring_into_view(page, locator):
-    """Smooth-scroll an off-screen element to the middle before the finger
-    heads for it — otherwise the dot glides off the edge of the frame, and
-    Playwright's own scroll-into-view is an instant jump that reads as a cut."""
-    await locator.wait_for(state="visible")
-    in_view = await locator.evaluate(
-        "el => { const r = el.getBoundingClientRect();"
-        " return r.top >= 0 && r.bottom <= window.innerHeight; }"
-    )
-    if not in_view:
-        await locator.evaluate(
-            "el => el.scrollIntoView({behavior: 'smooth', block: 'center'})"
-        )
-        await page.wait_for_timeout(650)
+def _smoothstep(t):
+    return t * t * (3 - 2 * t)
 
 
-async def human_move(page, locator, steps=HUMAN_MOVE_STEPS):
-    """Glide the mouse — and the phantom dot — to the element's centre along
-    a slight arc, quick off the mark and settling onto the target. A thumb
-    moves like that; straight linear interpolation moves like a plotter.
+async def _glide_to(page, bx, by, steps=HUMAN_MOVE_STEPS):
+    """Glide the mouse — and the phantom dot — to (bx, by) along a slight
+    arc, quick off the mark and settling onto the point. A thumb moves like
+    that; straight linear interpolation moves like a plotter.
 
     The path is a quadratic Bezier from where the mouse is to the target,
     its control point the midpoint pushed sideways by HUMAN_ARC of the
     distance, to a random side. Progress along it is eased out (fast start,
     soft landing), and the last point is exactly the target."""
-    await _bring_into_view(page, locator)
-    box = await locator.bounding_box()
-    if box is None:
-        raise RuntimeError(f"human_move: {locator} has no bounding box")
-    bx, by = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
     ax, ay = _MOUSE.get(id(page), (bx, by))
     dx, dy = bx - ax, by - ay
     dist = (dx * dx + dy * dy) ** 0.5
@@ -529,6 +512,78 @@ async def human_move(page, locator, steps=HUMAN_MOVE_STEPS):
         await page.mouse.move(x, y)
         await page.wait_for_timeout(HUMAN_STEP_MS)
     _MOUSE[id(page)] = (bx, by)
+
+
+# A scroll the viewer can follow. The finger glides to open space on the
+# scroller, then swipes against the scroll direction while small wheel steps
+# push the content by delta_y — eased in and out like a flick, over about a
+# second. Wheel, not drag: React Native Web doesn't scroll on a mouse drag in
+# a desktop browser. And never scrollIntoView(): it jumps or animates too fast
+# to read, and leaves the finger parked over whatever slides under it.
+HUMAN_SCROLL_MS = 1000    # the whole scroll; 0.8-1.2 s reads as a swipe
+HUMAN_SWIPE_SHARE = 0.6   # finger travel as a share of the content's...
+HUMAN_SWIPE_MAX = 0.3     # ...capped at this share of the viewport height
+
+
+async def human_scroll(page, delta_y, steps=25):
+    """Scroll whatever is under the finger by delta_y px (positive = content
+    moves up, i.e. further down the page) as one visible swipe."""
+    if abs(delta_y) < 1:
+        return
+    down = delta_y > 0
+    x = VIEWPORT["width"] * 0.55
+    y0 = VIEWPORT["height"] * (0.72 if down else 0.38)
+    await _glide_to(page, x, y0)
+    travel = min(abs(delta_y) * HUMAN_SWIPE_SHARE, VIEWPORT["height"] * HUMAN_SWIPE_MAX)
+    travel = -travel if down else travel
+    done = 0.0
+    for i in range(1, steps + 1):
+        e = _smoothstep(i / steps)
+        await page.mouse.move(x, y0 + travel * e)
+        await page.mouse.wheel(0, delta_y * e - done)
+        done = delta_y * e
+        await page.wait_for_timeout(HUMAN_SCROLL_MS / steps)
+    _MOUSE[id(page)] = (x, y0 + travel)
+
+
+async def _scroll_delta_for(locator):
+    """How far to scroll so the target sits just below the middle — clamped
+    to the room its scroller actually has, so the eased swipe ends where the
+    content does instead of stalling against the end of the form."""
+    box = await locator.bounding_box()
+    if box is None:
+        return 0.0
+    want = box["y"] + box["height"] / 2 - VIEWPORT["height"] * 0.6
+    above, below = await locator.evaluate(
+        "el => { let p = el.parentElement;"
+        " while (p && !(/auto|scroll/.test(getComputedStyle(p).overflowY)"
+        " && p.scrollHeight > p.clientHeight)) p = p.parentElement;"
+        " return p ? [p.scrollTop, p.scrollHeight - p.clientHeight - p.scrollTop]"
+        " : [0, 0]; }"
+    )
+    return max(-above, min(want, below))
+
+
+async def _bring_into_view(page, locator):
+    """If the target is off-screen, swipe it into view first — otherwise the
+    dot would glide off the edge of the frame."""
+    await locator.wait_for(state="visible")
+    box = await locator.bounding_box()
+    if box is None or (box["y"] >= 0 and box["y"] + box["height"] <= VIEWPORT["height"]):
+        return
+    await human_scroll(page, await _scroll_delta_for(locator))
+    await page.wait_for_timeout(250)
+
+
+async def human_move(page, locator, steps=HUMAN_MOVE_STEPS):
+    """Glide to the element's centre (see _glide_to), swiping it into view
+    first if it is off-screen."""
+    await _bring_into_view(page, locator)
+    box = await locator.bounding_box()
+    if box is None:
+        raise RuntimeError(f"human_move: {locator} has no bounding box")
+    await _glide_to(page, box["x"] + box["width"] / 2,
+                    box["y"] + box["height"] / 2, steps)
 
 
 async def human_click(page, locator):
@@ -575,8 +630,13 @@ async def scenario_cost_split_demo(page):
     await page.wait_for_timeout(STEP_PAUSE_MS)
 
     # With the sheet open, "Add Expense" is its title AND its submit button;
-    # the submit is the last one, at the foot of the form.
-    await human_click(page, page.get_by_text("Add Expense", exact=True).last)
+    # the submit is the last one, at the foot of the form, below the fold.
+    submit = page.get_by_text("Add Expense", exact=True).last
+    # Down to it as a visible swipe: the finger leaves the amount field for
+    # open space and pushes the form up, instead of parking while it jumps.
+    await human_scroll(page, await _scroll_delta_for(submit))
+    await page.wait_for_timeout(250)
+    await human_click(page, submit)
     # Lift as soon as the ripple has played: the sheet closes onto the list
     # and the floating button lands right under where the finger was.
     await page.wait_for_timeout(400)

@@ -267,8 +267,8 @@ repo root.
 ### User journeys — `--scenario` and Phantom Touch
 - `record_video.py --scenario cost_split_demo` records a scripted user instead
   of a scroll: after a 1.5 s beat on the list, Leo opens Add Expense, types
-  "Farewell dinner" and 850, saves, and the new row lands at the top
-  (14.8 s).
+  "Farewell dinner" and 850, swipes the form up to the save button, saves,
+  and the new row lands at the top (16.6 s).
   The default, `--scenario scroll`, is unchanged; scenarios ignore `seconds`.
   ```bash
   python capture/record_video.py trip/demo/split cost_split_demo --scenario cost_split_demo
@@ -286,8 +286,13 @@ repo root.
   sideways by 8–18 % of the distance to a random side, eased out over 14
   steps — quick off the mark, soft landing. The RNG is seeded, so a
   re-record moves the same way. They hover 120 ms before a tap, type at 70 ms
-  a key, and smooth-scroll an off-screen target to the centre first
-  (Playwright's own scroll-into-view is a jump cut). Place the mouse with
+  a key, and bring an off-screen target in with `human_scroll()`: the finger
+  glides to open space and swipes while 25 eased wheel steps move the
+  content over ~1 s, clamped to the scroller's real room so the ease-out
+  lands instead of stalling. Never `scrollIntoView()` — Chromium's smooth
+  scroll takes ~0.4 s, too fast to read, and leaves the finger parked over
+  whatever slides under it. Wheel, not drag: RN Web doesn't scroll on a
+  mouse drag. Place the mouse with
   `mouse_to()`, not `page.mouse.move()`, or the next arc starts from the
   wrong point. Locators are the ENGLISH UI strings — the
   capture pins en-US. "Add Expense" is the floating button until the sheet
