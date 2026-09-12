@@ -263,6 +263,43 @@ repo root.
 - Playwright records at **25 fps**; Remotion samples by time, so that's fine.
   Past the end of a capture the phone holds the last frame.
 
+### User journeys — `--scenario` and Phantom Touch
+- `record_video.py --scenario cost_split_demo` records a scripted user instead
+  of a scroll: after a 1.5 s beat on the list, Leo opens Add Expense, types
+  "Farewell dinner" and 850, saves, and the new row lands at the top (~18 s).
+  The default, `--scenario scroll`, is unchanged; scenarios ignore `seconds`.
+  ```bash
+  python capture/record_video.py trip/demo/split cost_split_demo --scenario cost_split_demo
+  ```
+- **Phantom Touch.** A recording has no cursor, so `inject_phantom_touch()`
+  draws one: a 30 px translucent dot that follows the mouse and ripples
+  (1.5×, fade, 300 ms) on every press. It MUST keep `pointer-events: none` —
+  without it the dot sits on top of what it hovers and swallows Playwright's
+  click. `lift_finger()` fades it out before the closing hold, so the result
+  isn't covered by a dot parked on the last button.
+- **Aim with text, never CSS.** `human_move` / `human_click` / `human_type`
+  take Playwright locators (`get_by_text`, `get_by_placeholder`). They glide
+  with `steps=30`, hover 300 ms before a tap, type at 150 ms a key, and
+  smooth-scroll an off-screen target to the centre first (Playwright's own
+  scroll-into-view is a jump cut). Locators are the ENGLISH UI strings — the
+  capture pins en-US. "Add Expense" is the floating button until the sheet
+  opens; then it is both the sheet's title and its submit, and the submit is
+  `.last`. Nobody has to find a class name.
+- **A journey needs a user.** Add Expense does nothing signed out
+  (`openAddModal` returns early). Scenarios seed a Supabase session in
+  localStorage under `sb-<project ref>-auth-token` (ref from
+  `EXPO_PUBLIC_SUPABASE_URL`, default `placeholder`) as a fixture member, and
+  the mock answers `POST /api/auth/sync` with that profile. supabase-js only
+  needs `access_token`, `refresh_token` and a future `expires_at`, and decodes
+  the token as a JWT — so it is a well-formed, unsigned one.
+- **Saves are stateful.** A POST to `/api/trips/{id}/expenses` is applied to
+  an in-memory copy of the fixture and the balances are recomputed to the cent
+  with the fixture's own rules, so the saved row comes back when the app
+  reloads the list (rule 9). The fixture file is never changed. Recomputing
+  the untouched fixture reproduces its balances and debts exactly.
+- A new scenario is an async function built from the helpers plus one entry
+  in `SCENARIOS` (name → function, fixture member id).
+
 ---
 
 ## Rules from Oskar (non-negotiable)
