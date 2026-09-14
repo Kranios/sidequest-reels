@@ -345,6 +345,13 @@ repo root.
   Activities: a POST to `/api/trips/{id}/activities` returns what the
   backend gives the creator (`isHiddenForViewer` false; `isRevealed` false
   while hidden, so the feed seals it), and a GET by id opens it.
+  Itinerary drags: the trip feed orders each day by `sortIndex`, not by time.
+  `PATCH /activities/reorder` (`{date, activityIds}`) stamps `sortIndex`
+  0..n-1 in the order it is sent. `PATCH /activities/{aid}/move` does the
+  same and also changes the activity's date; a hotel stay keeps its number
+  of nights. Fixture: `itinerary_demo.json`, where day 1 files the 20:30
+  dinner before the 11:00 beach. `python capture/test_dnd.py` checks the
+  drag end to end.
 - **`--scenario packing_list_demo`** (`trip/demo/packing-list`, fixture
   `packing_list_demo.json`: the same Mallorca trip and nine friends, Leo
   signed in). Leo ticks off "Sunscreen SPF 50" and "Snorkel masks ×4", taps
@@ -376,6 +383,42 @@ repo root.
   ancestor ≥ 44 px tall and ≥ 60 % of the screen wide (the track), presses
   the thumb half a track-height in from the left end, pulls it to the right
   end over 0.65 s and lets go. RN Web's PanResponder takes mouse drags.
+- **Drag-to-reorder: `human_drag(page, source, target, hold_time=500)`.**
+  The itinerary's `DraggableDayList` is a gesture-handler Pan with
+  `activateAfterLongPress(350)`, so a drag has to press, hold still and only
+  then move. The helper:
+  - finds both rows from their text, with the same climb as `human_slide`;
+  - glides to the source row's centre and holds for `hold_time` ms, while
+    the dot swells and darkens;
+  - carries the row along a gentle bow, 18 paced steps over 0.8 s;
+  - lets go on the target row's far edge, past its midpoint and short of
+    the next row's, so the row lands just beyond the target. The dot lifts
+    off with a ring.
+
+  Keep both rows clear of the list's auto-scroll edges (150 px from the top
+  of the viewport, 140 px from the bottom), or the list scrolls under the
+  drag. During the carry the other rows don't reflow, and the carried row
+  has no background, so its text crosses the rows it passes. That is how the
+  app looks, not a capture fault.
+- **`--scenario itinerary_demo`** (route `trip/demo`, fixture
+  `itinerary_demo.json`: the same Mallorca trip and nine friends, Leo signed
+  in, the trip upcoming). The take runs 17.6 s. Leo:
+  1. swipes day 1 up and drags "Dinner, Sóller old town" (20:30) below
+     "Villa Sóller check-in" (16:00);
+  2. opens Add activity and types "Beach Club";
+  3. picks "Food". There is no restaurant or bar category, and Food is one
+     of the three chips shown before "Show more";
+  4. changes the date to day 2 and the time to 14:00. The web date field's
+     placeholder is `ÅÅÅÅ-MM-DD` in every locale;
+  5. saves, taps Back from the saved activity and swipes to day 2.
+
+  A new activity lands LAST in its day, because the app sends no
+  `sortIndex`. That is why the club goes on day 2, after the 10:00 boat
+  day, and not on the day that was just put in order.
+  ```bash
+  python capture/record_video.py trip/demo itinerary_demo --scenario itinerary_demo \
+      --selector "text=Dinner, Sóller old town"
+  ```
 - **Relative dates: `{today±N}`.** The Add activity form refuses dates in the
   past and a reveal that has already passed, so a fixture for an upcoming
   trip can't hold fixed dates — it would break a week later. Any string in a
