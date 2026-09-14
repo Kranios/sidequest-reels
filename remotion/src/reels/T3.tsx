@@ -1,17 +1,18 @@
 /**
  * REELS BUILT FROM T3 — THE SPEEDRUN.
  *
- * One <Composition> per reel; only props differ. The run IS the `steps` array
- * — add a step and both the reel and the clock grow.
+ * One <Composition> per reel; only props differ. The run is ONE continuous
+ * capture of a scripted user journey — record a new one with
+ * `record_video.py <route> <name> --scenario <scenario>` (CLAUDE.md, "User
+ * journeys") and point `appVideo` at it.
  *
- * COST SPLIT A/B TEST (see strategy/hook_vault.md). Three steps, all on
- * app/cost_split.mp4 for now, so each cut lands on the same screen. Record the
- * trip picker and the add-expense sheet as their own captures and swap the
- * first two `video` fields to make the run read as a real flow:
- *
- *   python capture/record_video.py <route> <name> <seconds> --scroll-to <frac>
- *
- * Routes use hyphens (travel-tracker, not travel_tracker) — see CLAUDE.md.
+ * COST SPLIT A/B TEST (see strategy/hook_vault.md). The capture is
+ * app/cost_split_demo.mp4 (16.6 s): Leo logs a €850 farewell dinner, swipes
+ * the form up to the save button, and splits it nine ways; the saved row is
+ * on screen from ~12.0 s. videoSeconds 14.5 plays the whole journey plus
+ * 2.5 s of the result and drops only the idle hold at the end — so the reel
+ * is 16.9 s (qa.py caps a reel at 20 s). Re-record the journey and these
+ * times move: re-check where the result lands before trusting videoSeconds.
  */
 import React from "react";
 import { Composition } from "remotion";
@@ -20,21 +21,18 @@ import { T3Speedrun, t3SpeedrunSchema, t3SpeedrunDuration } from "../composition
 
 export const T3Reels: React.FC = () => (
   <>
-    {/* COST SPLIT — nine people against the clock. Whip cuts, a stopwatch in
-        tenths, urgent sign-off. */}
+    {/* COST SPLIT — one expense, logged and split against the clock, in a
+        single take. Urgent sign-off. */}
     <Composition
       id="T3-Speedrun-CostSplit"
       component={T3Speedrun}
       schema={t3SpeedrunSchema}
       defaultProps={{
+        appVideo: "app/cost_split_demo.mp4",
         hookLine1: "Nine people.",
         hookLine2: "One stopwatch.",
         hookSubtext: "€9,584.85 to split.",
-        steps: [
-          { video: "app/cost_split.mp4", label: "Pick the trip", holdSeconds: 2.0 },
-          { video: "app/cost_split.mp4", label: "Log the expense", holdSeconds: 2.0 },
-          { video: "app/cost_split.mp4", label: "Settle up", holdSeconds: 2.4 },
-        ],
+        runCaption: "€850 dinner, split nine ways.",
         caption: "Saved: one argument at the airport.",
         launchLine: "First 50 get lifetime access — free.",
 
@@ -44,17 +42,14 @@ export const T3Reels: React.FC = () => (
         timerRate: 1,
         timerAlign: "end",
 
-        transition: "whip",
-        transitionFrames: 7,
-
         showSafeArea: false,
         safeTop: 220,
         safeBottom: 450,
         safeLeft: 65,
         safeRight: 120,
 
-        topBandFrac: 0.15,
-        bottomBandFrac: 0.15,
+        topBandFrac: 0.18,
+        bottomBandFrac: 0.14,
         bandGutter: 28,
         phoneFill: 0.95,
 
@@ -63,8 +58,8 @@ export const T3Reels: React.FC = () => (
         bgBlur: 140,
         bgVignette: 0.72,
 
-        hookFontSize: 92,
-        stepFontSize: 46,
+        hookFontSize: 64,
+        runCaptionFontSize: 42,
         timerFontSize: 48,
         captionFontSize: 40,
 
@@ -78,13 +73,14 @@ export const T3Reels: React.FC = () => (
         ctaVariant: "urgent",
         ctaLogoSize: 104,
 
-        hookSeconds: 1.6,
+        hookSeconds: 2.0,
+        videoSeconds: 14.5,
         ctaSeconds: 2.4,
       }}
       fps={CANVAS.fps}
       width={CANVAS.width}
       height={CANVAS.height}
-      durationInFrames={312}
+      durationInFrames={t3SpeedrunDuration({ videoSeconds: 14.5, ctaSeconds: 2.4 }, CANVAS.fps)}
       calculateMetadata={({ props }) => ({
         durationInFrames: t3SpeedrunDuration(props, CANVAS.fps),
       })}

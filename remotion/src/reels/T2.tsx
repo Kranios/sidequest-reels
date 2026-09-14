@@ -37,10 +37,10 @@ export const T2Reels: React.FC = () => (
         countdownLabel: "",
         countdownFormat: "s",
 
-        revealAtSeconds: 5.6,
+        revealAtSeconds: 3.0,
         revealFrames: 18,
         maxBlur: 34,
-        revealDim: 0.45,
+        revealDim: 0.44,
         showLock: false,
 
         showSafeArea: false,

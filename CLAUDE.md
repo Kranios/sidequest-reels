@@ -42,7 +42,7 @@ component and schema, differing only in `defaultProps`.
 |---|---|---|---|---|---|
 | T1 Receipt | `T1Receipt.tsx` | shares | medium | late payoff | cost split, real data |
 | T2 Reveal | `T2Reveal.tsx` | comments | slow | centre throughout | hidden sidequest |
-| T3 Speedrun | `T3Speedrun.tsx` | saves | fast | the tool | one per step |
+| T3 Speedrun | `T3Speedrun.tsx` | saves | fast | the tool, one take | one `--scenario` journey |
 | T4 Callout | `T4Callout.tsx` | comments/shares | punchy | absent | **none** |
 | T5 Atlas | `T5Atlas.tsx` | saves | slowest | the object | travel-tracker |
 
@@ -66,7 +66,8 @@ derived from the content where the content sets them — add a line to T4's
 
 `NumberCounter` (T1, T5) · `KineticList` — stack rows or swap lines (T1, T4) ·
 `BlurReveal` (T2) · `Timer` — counts up or down (T2, T3) · `ScreenSwapper` —
-real hard cuts, one `<Sequence>` per screen (T3).
+real hard cuts, one `<Sequence>` per screen (no template uses it since T3
+became one continuous `--scenario` take; kept for a multi-capture reel).
 
 **Legacy (do not extend):** `compose/`, `render/`, `qa/`, `make_reel.ps1`,
 `render_plate.ps1`. These were the PIL + Blender pipeline. Superseded because
@@ -135,7 +136,7 @@ repo root.
 - The entrance is a Remotion `spring` (damping 11, stiffness 40, mass 1.8)
   from a 45° tilt on two axes and 0.88 zoom, settled in ~1.3 s. A stiff spring
   stretched with `durationInFrames` still snaps — the stretch includes its
-  long tail. T3 plays the entrance on its first step only (`entry={i === 0}`).
+  long tail. `entry={false}` turns it off where a phone must cut in hard.
 - The canvas renders at `dpr={2}` for crisp UI text — see memory below.
 
 ### Text hierarchy — one definition, five templates
@@ -263,6 +264,55 @@ repo root.
 - Playwright records at **25 fps**; Remotion samples by time, so that's fine.
   Past the end of a capture the phone holds the last frame.
 
+### User journeys — `--scenario` and Phantom Touch
+- `record_video.py --scenario cost_split_demo` records a scripted user instead
+  of a scroll: after a 1.5 s beat on the list, Leo opens Add Expense, types
+  "Farewell dinner" and 850, swipes the form up to the save button, saves,
+  and the new row lands at the top (16.6 s).
+  The default, `--scenario scroll`, is unchanged; scenarios ignore `seconds`.
+  ```bash
+  python capture/record_video.py trip/demo/split cost_split_demo --scenario cost_split_demo
+  ```
+- **Phantom Touch.** A recording has no cursor, so `inject_phantom_touch()`
+  draws one: a 30 px translucent dot that follows the mouse and ripples
+  (1.5×, fade, 300 ms) on every press. It MUST keep `pointer-events: none` —
+  without it the dot sits on top of what it hovers and swallows Playwright's
+  click. `lift_finger()` fades it out before the closing hold, so the result
+  isn't covered by a dot parked on the last button.
+- **Aim with text, never CSS.** `human_move` / `human_click` / `human_type`
+  take Playwright locators (`get_by_text`, `get_by_placeholder`). A move is
+  NOT a straight line: it follows a quadratic Bézier from where the mouse is
+  (tracked in `_MOUSE`; Playwright doesn't expose it) to the target, bowed
+  sideways by 8–18 % of the distance to a random side, eased out over 14
+  steps — quick off the mark, soft landing. The RNG is seeded, so a
+  re-record moves the same way. They hover 120 ms before a tap, type at 70 ms
+  a key, and bring an off-screen target in with `human_scroll()`: the finger
+  glides to open space and swipes while 25 eased wheel steps move the
+  content over ~1 s, clamped to the scroller's real room so the ease-out
+  lands instead of stalling. Never `scrollIntoView()` — Chromium's smooth
+  scroll takes ~0.4 s, too fast to read, and leaves the finger parked over
+  whatever slides under it. Wheel, not drag: RN Web doesn't scroll on a
+  mouse drag. Place the mouse with
+  `mouse_to()`, not `page.mouse.move()`, or the next arc starts from the
+  wrong point. Locators are the ENGLISH UI strings — the
+  capture pins en-US. "Add Expense" is the floating button until the sheet
+  opens; then it is both the sheet's title and its submit, and the submit is
+  `.last`. Nobody has to find a class name.
+- **A journey needs a user.** Add Expense does nothing signed out
+  (`openAddModal` returns early). Scenarios seed a Supabase session in
+  localStorage under `sb-<project ref>-auth-token` (ref from
+  `EXPO_PUBLIC_SUPABASE_URL`, default `placeholder`) as a fixture member, and
+  the mock answers `POST /api/auth/sync` with that profile. supabase-js only
+  needs `access_token`, `refresh_token` and a future `expires_at`, and decodes
+  the token as a JWT — so it is a well-formed, unsigned one.
+- **Saves are stateful.** A POST to `/api/trips/{id}/expenses` is applied to
+  an in-memory copy of the fixture and the balances are recomputed to the cent
+  with the fixture's own rules, so the saved row comes back when the app
+  reloads the list (rule 9). The fixture file is never changed. Recomputing
+  the untouched fixture reproduces its balances and debts exactly.
+- A new scenario is an async function built from the helpers plus one entry
+  in `SCENARIOS` (name → function, fixture member id).
+
 ---
 
 ## Rules from Oskar (non-negotiable)
@@ -344,9 +394,11 @@ template's psychology is the variable under test.
 5. **One `<Composition>` per template** in `src/reels/T*.tsx`, id
    `T<n>-<Template>-<Feature>`:
    - T1, T2, T5: `appVideo: "app/<name>.mp4"`.
-   - **T3 exception:** no `appVideo` — a `steps` array, each step with its own
-     `video`. One capture per step reads as a real flow; the same file in every
-     step cuts to the same screen.
+   - **T3 exception:** one continuous take, no cuts. Record a user journey
+     with `record_video.py <route> <name> --scenario <scenario>` and point
+     `appVideo` at it. The hook overlaps the start of the take; set
+     `videoSeconds` to end ~2 s after the result appears, so the reel stays
+     within 20 s.
    - **T4 exception:** no phone and no video prop at all — only the copy
      (`hookLine1/2`, `lines`, `punchline`).
    - `videoStartFrom: 0` — the capture already trims the splash.
@@ -401,11 +453,10 @@ Higgsfield is for b-roll and hooks only — never for faking app UI. Draft at
   measured 4.3 Mbps at CRF 16 and 5.6 Mbps at CRF 12. A darker, stiller reel
   could still dip under 4.0; render it with `--crf=12` rather than lowering
   the floor again.
-- **T3 Cost Split uses one capture for all three steps.** Record the trip
-  picker and the add-expense sheet and swap the first two `steps[].video`.
 - **Still to capture:** the hidden sidequest card in its hidden state (T2's
-  intended screen) and a per-step flow for T3 (create trip, add activities,
-  invite, split).
+  intended screen), and more `--scenario` journeys for T3 (create a trip,
+  invite friends, settle up). T3 itself now plays one continuous take
+  (`app/cost_split_demo.mp4`), so the old per-step captures are not needed.
 - T1's first frame is empty background (the counter fades in from frame 4) —
   a weak cover if Instagram picks frame 0.
 - `backdrop-filter` on chips may render differently than the preview.
