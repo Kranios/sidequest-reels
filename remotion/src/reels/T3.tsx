@@ -210,13 +210,13 @@ export const T3Reels: React.FC = () => (
         ctaLogoSize: 104,
 
         hookSeconds: 2.0,
-        videoSeconds: 17.6,
+        videoSeconds: 17.5,
         ctaSeconds: 2.4,
       }}
       fps={CANVAS.fps}
       width={CANVAS.width}
       height={CANVAS.height}
-      durationInFrames={t3SpeedrunDuration({ videoSeconds: 17.6, ctaSeconds: 2.4 }, CANVAS.fps)}
+      durationInFrames={t3SpeedrunDuration({ videoSeconds: 17.5, ctaSeconds: 2.4 }, CANVAS.fps)}
       calculateMetadata={({ props }) => ({
         durationInFrames: t3SpeedrunDuration(props, CANVAS.fps),
       })}
