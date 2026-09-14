@@ -170,31 +170,51 @@ repo root.
 - Rule of thumb: `bandGutter` 28 is tight, 44 breathes. Raise it if a figure
   or caption looks like it is touching the phone.
 
-### Rendering the 3D phone — memory
-- **At `dpr={2}` a phone reel renders at ~2.6 s per frame with
-  `--concurrency=1`** (T1, 402 frames: ~18 min). `--concurrency=2` ran a 16 GB
-  machine out of memory with a browser open, and took the Expo server with it.
-  Render phone reels at concurrency 1; if that is too slow, lower `PHONE_DPR`
-  in `Phone.tsx` to 1.5.
+### Rendering the 3D phone — GPU and memory
+- **Render on the GPU.** `remotion.config.ts` sets
+  `setChromiumOpenGlRenderer("angle")`. Chrome's headless default draws WebGL
+  in software (SwiftShader). At `dpr={2}` that ran at ~7 s per frame, and the
+  long renders were killed for low memory. On the GPU (RTX 3070) a phone reel
+  runs at ~0.2 s per frame: T1 (402 frames) in under a minute, T3 (597
+  frames) in 2 min, all 15 template reels in ~25 min. The frames match: a
+  still differs by a mean of 0.6/255. The old "2.6 s per frame, 18 min per
+  reel" figures were software rendering.
+- **The OffthreadVideo cache is capped at 512 MB**
+  (`setOffthreadVideoCacheSizeInBytes`). The phone's texture comes through
+  `useOffthreadVideoTexture`, and by default the cache may use half the RAM
+  that is free when the render starts. A T3 take filled ~2.8 GB and got the
+  job killed.
+- Render phone reels **one at a time** at `--concurrency=1`. `PHONE_DPR`
+  stays 2; there is no need to lower it now.
 - For stills, **bundle once** (`npx remotion bundle src/index.ts
-  --out-dir=<dir>`) and pass the bundle dir to `npx remotion still` — every
-  `still src/index.ts …` re-bundles.
-- `remotion.config.ts` sets CRF 16. Don't also pass `--video-bitrate` — the
-  renderer refuses both.
-- A reel with the phone in it renders at roughly 40 s per 100 frames and holds
-  ~4 GB. **Render them one at a time**, and use `--concurrency=2` if anything
-  else is open — four in a chain alongside a browser will run a 16 GB machine
-  out of memory and the OS will kill the job. (Those figures pre-date dpr 2.)
+  --out-dir=<dir>`) and pass the bundle dir to `npx remotion still`, because
+  every `still src/index.ts …` re-bundles.
+- `remotion.config.ts` sets CRF 16. Don't also pass `--video-bitrate`: the
+  renderer refuses both. Dark, slow reels need a lower CRF to clear QA's
+  4.0 Mbps floor. Measured on the 2026-09-14 batch:
+  - T1, T3 and T4 pass at CRF 10–16.
+  - T5 needs CRF 8 (it measured 3.7–3.8 Mbps at CRF 10).
+  - T2 needs CRF 4 (3.3 Mbps at CRF 10, 3.7 at CRF 8, 4.5 at CRF 4).
+- **The mp4 container adds ~0.053 s** to the duration that `qa.py` reads, so
+  600 frames measures 20.05 s and fails the 20 s cap. Keep a reel at ≤ 598
+  frames.
+- **Check for a magenta frame 0.** On a GPU render the phone screen can come
+  out magenta in the first frame, intermittently, because the texture is not
+  ready yet. This happened once in 15 reels, and re-rendering fixed it.
+  `qa.py` does not catch it, so scan every frame for pixels with R>180, G<90,
+  B>180.
 - **A killed Remotion render does not clean up after itself on Windows.** It
   leaves `chrome-headless-shell.exe`, `remotion.exe` and `ffmpeg.exe` behind,
   several GB each, and the next attempt then dies faster than the last. They
-  all live under `remotion/node_modules`, so they are safe to identify and kill
-  by path — and note the name is `chrome-headless-shell.exe`, NOT `chrome.exe`
-  (that is the user's browser) and not `headless_shell.exe`:
+  all live under `remotion/node_modules`, so they are safe to find and kill
+  by path. The name is `chrome-headless-shell.exe`, NOT `chrome.exe` (that is
+  the user's browser) and not `headless_shell.exe`. Match on the name as well:
+  a running Studio's `esbuild.exe` lives there too.
 
   ```powershell
   Get-CimInstance Win32_Process |
-    Where-Object { $_.ExecutablePath -like '*reel_factory_v2\remotion\node_modules*' } |
+    Where-Object { $_.ExecutablePath -like '*reel_factory_v2\remotion\node_modules*' -and
+                   $_.Name -in 'chrome-headless-shell.exe','remotion.exe','ffmpeg.exe','ffprobe.exe' } |
     ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
   ```
 
@@ -218,7 +238,7 @@ repo root.
   garbage. This was a real bug.
 
 ### App capture
-- App runs locally: `cd <mobile-master> && npx expo start --web` (port 8081).
+- App runs locally: `cd D:\sidequest-mobile && npx expo start --web` (port 8081).
   Needs `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` set.
   For capture, placeholders work (`https://placeholder.supabase.co` /
   `placeholder`), plus `EXPO_PUBLIC_API_URL=http://localhost:5079` — a dead
@@ -522,9 +542,10 @@ Higgsfield is for b-roll and hooks only — never for faking app UI. Draft at
 
 - **QA bitrate floor.** `qa.py`'s floor is 4.0 Mbps (lowered from 6 on
   2026-09-12): flat app graphics compress hard at CRF 16 — the T1 test
-  measured 4.3 Mbps at CRF 16 and 5.6 Mbps at CRF 12. A darker, stiller reel
-  could still dip under 4.0; render it with `--crf=12` rather than lowering
-  the floor again.
+  measured 4.3 Mbps at CRF 16 and 5.6 Mbps at CRF 12. Darker, stiller reels
+  dip under 4.0 and need a lower CRF, not a lower floor. On blurred dark frames
+  each CRF step buys less and less: T2 went from 3.3 Mbps at CRF 10 to 3.7 at
+  CRF 8 and 4.5 at CRF 4. T5 needs CRF 8. See "Rendering the 3D phone".
 - **Still to capture:** the hidden sidequest card in its hidden state (T2's
   intended screen), and more `--scenario` journeys for T3 (create a trip,
   invite friends, settle up). T3 itself now plays one continuous take
