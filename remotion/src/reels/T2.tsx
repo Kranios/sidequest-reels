@@ -84,5 +84,77 @@ export const T2Reels: React.FC = () => (
         durationInFrames: t2RevealDuration(props.mainSeconds, props.ctaSeconds, CANVAS.fps),
       })}
     />
+
+    {/* PACKING LIST — the list blurred under the hook, then the group's
+        packing in full view. Lock and countdown off: the packing list has no
+        timed unlock either. mainSeconds 13.0 runs app/packing_list_demo.mp4
+        past the moment Mia gets the speaker (~12.0 s), so the reveal pays
+        off. Figures: configs/fixtures/packing_list_demo.json — 16 items, 4
+        with no owner. */}
+    <Composition
+      id="T2-Reveal-PackingList"
+      component={T2Reveal}
+      schema={t2RevealSchema}
+      defaultProps={{
+        appVideo: "app/packing_list_demo.mp4",
+        hookLine1: "Sixteen things to pack.",
+        hookLine2: "Four have no owner.",
+        lockLabel: "",
+        caption: "Every tick shows up on nine phones.",
+        revealedLabel: "the list",
+        launchLine: "",
+
+        showCountdown: false,
+        countdownFrom: 30,
+        countdownLabel: "",
+        countdownFormat: "s",
+
+        revealAtSeconds: 3.0,
+        revealFrames: 18,
+        maxBlur: 34,
+        revealDim: 0.44,
+        showLock: false,
+
+        showSafeArea: false,
+        safeTop: 220,
+        safeBottom: 450,
+        safeLeft: 65,
+        safeRight: 120,
+
+        topBandFrac: 0.12,
+        bottomBandFrac: 0.22,
+        bandGutter: 28,
+        phoneFill: 0.95,
+
+        bgIntensity: 0.35,
+        bgSpeed: 0.2,
+        bgBlur: 200,
+        bgVignette: 0.88,
+
+        hookFontSize: 58,
+        captionFontSize: 40,
+        timerFontSize: 54,
+
+        screenRotDeg: 0,
+        screenFlipY: false,
+        phoneOffsetY: 0,
+        swingDeg: 4,
+        dollyIn: 0.2,
+        videoStartFrom: 0,
+
+        ctaVariant: "quiet",
+        ctaLogoSize: 112,
+
+        mainSeconds: 13.0,
+        ctaSeconds: 2.4,
+      }}
+      fps={CANVAS.fps}
+      width={CANVAS.width}
+      height={CANVAS.height}
+      durationInFrames={t2RevealDuration(13.0, 2.4, CANVAS.fps)}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: t2RevealDuration(props.mainSeconds, props.ctaSeconds, CANVAS.fps),
+      })}
+    />
   </>
 );

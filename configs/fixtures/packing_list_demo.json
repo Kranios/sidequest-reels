@@ -1,0 +1,73 @@
+{
+  "_about": "Packing List demo: the same Mallorca trip and nine friends as cost_split_demo.json, with Leo (u5) as the signed-in user, so reels across features share one story. Served by capture/record_video.py for GET /api/** while recording; the packing_list_demo scenario's POST (add item) and PATCH (tick, rename, assign) are applied to an in-memory copy, never to this file. 'shared' is the whole group's list; 'private' is Leo's own ('My list').",
+  "routes": {
+    "/api/trips/{id}/members": [
+      { "id": "u1", "name": "Ana", "avatarUrl": null, "isOwner": true, "joinedAt": "2026-05-02T18:00:00Z" },
+      { "id": "u2", "name": "Jo", "avatarUrl": null, "isOwner": false, "joinedAt": "2026-05-03T18:00:00Z" },
+      { "id": "u3", "name": "Sam", "avatarUrl": null, "isOwner": false, "joinedAt": "2026-05-04T18:00:00Z" },
+      { "id": "u4", "name": "Marcus", "avatarUrl": null, "isOwner": false, "joinedAt": "2026-05-05T18:00:00Z" },
+      { "id": "u5", "name": "Leo", "avatarUrl": null, "isOwner": false, "joinedAt": "2026-05-06T18:00:00Z" },
+      { "id": "u6", "name": "Ines", "avatarUrl": null, "isOwner": false, "joinedAt": "2026-05-07T18:00:00Z" },
+      { "id": "u7", "name": "Mia", "avatarUrl": null, "isOwner": false, "joinedAt": "2026-05-08T18:00:00Z" },
+      { "id": "u8", "name": "Ravi", "avatarUrl": null, "isOwner": false, "joinedAt": "2026-05-09T18:00:00Z" },
+      { "id": "u9", "name": "Ella", "avatarUrl": null, "isOwner": false, "joinedAt": "2026-05-10T18:00:00Z" }
+    ],
+    "/api/trips/{id}/packing-list": {
+      "shared": [
+        {
+          "id": "cat-beach", "name": "Beach day", "scope": "shared", "sortOrder": 1, "createdByUserId": "u1",
+          "items": [
+            { "id": "it-01", "text": "Sunscreen SPF 50", "isChecked": false, "sortOrder": 1, "createdByUserId": "u1", "assignedToUserId": "u6", "assignedToName": "Ines", "assignedToAvatarUrl": null },
+            { "id": "it-02", "text": "Snorkel masks ×4", "isChecked": false, "sortOrder": 2, "createdByUserId": "u4", "assignedToUserId": "u4", "assignedToName": "Marcus", "assignedToAvatarUrl": null },
+            { "id": "it-03", "text": "Beach umbrella", "isChecked": true, "sortOrder": 3, "createdByUserId": "u3", "assignedToUserId": "u3", "assignedToName": "Sam", "assignedToAvatarUrl": null },
+            { "id": "it-04", "text": "Beach towels ×9", "isChecked": true, "sortOrder": 4, "createdByUserId": "u7", "assignedToUserId": "u7", "assignedToName": "Mia", "assignedToAvatarUrl": null },
+            { "id": "it-05", "text": "Cooler bag", "isChecked": false, "sortOrder": 5, "createdByUserId": "u1", "assignedToUserId": null, "assignedToName": null, "assignedToAvatarUrl": null }
+          ]
+        },
+        {
+          "id": "cat-kitchen", "name": "Villa kitchen", "scope": "shared", "sortOrder": 2, "createdByUserId": "u1",
+          "items": [
+            { "id": "it-06", "text": "Coffee filters", "isChecked": true, "sortOrder": 1, "createdByUserId": "u2", "assignedToUserId": "u2", "assignedToName": "Jo", "assignedToAvatarUrl": null },
+            { "id": "it-07", "text": "Paella pan", "isChecked": false, "sortOrder": 2, "createdByUserId": "u8", "assignedToUserId": "u8", "assignedToName": "Ravi", "assignedToAvatarUrl": null },
+            { "id": "it-08", "text": "Olive oil", "isChecked": false, "sortOrder": 3, "createdByUserId": "u1", "assignedToUserId": null, "assignedToName": null, "assignedToAvatarUrl": null },
+            { "id": "it-09", "text": "Dish soap", "isChecked": true, "sortOrder": 4, "createdByUserId": "u6", "assignedToUserId": null, "assignedToName": null, "assignedToAvatarUrl": null }
+          ]
+        },
+        {
+          "id": "cat-tech", "name": "Tech", "scope": "shared", "sortOrder": 3, "createdByUserId": "u3",
+          "items": [
+            { "id": "it-10", "text": "Power strip", "isChecked": false, "sortOrder": 1, "createdByUserId": "u3", "assignedToUserId": "u2", "assignedToName": "Jo", "assignedToAvatarUrl": null },
+            { "id": "it-11", "text": "EU travel adapters ×3", "isChecked": true, "sortOrder": 2, "createdByUserId": "u3", "assignedToUserId": "u3", "assignedToName": "Sam", "assignedToAvatarUrl": null },
+            { "id": "it-12", "text": "Phone chargers", "isChecked": false, "sortOrder": 3, "createdByUserId": "u9", "assignedToUserId": null, "assignedToName": null, "assignedToAvatarUrl": null }
+          ]
+        },
+        {
+          "id": "cat-firstaid", "name": "First aid", "scope": "shared", "sortOrder": 4, "createdByUserId": "u6",
+          "items": [
+            { "id": "it-13", "text": "Plasters", "isChecked": true, "sortOrder": 1, "createdByUserId": "u6", "assignedToUserId": "u6", "assignedToName": "Ines", "assignedToAvatarUrl": null },
+            { "id": "it-14", "text": "Motion sickness pills (boat day)", "isChecked": false, "sortOrder": 2, "createdByUserId": "u4", "assignedToUserId": "u4", "assignedToName": "Marcus", "assignedToAvatarUrl": null },
+            { "id": "it-15", "text": "After-sun", "isChecked": false, "sortOrder": 3, "createdByUserId": "u9", "assignedToUserId": "u9", "assignedToName": "Ella", "assignedToAvatarUrl": null }
+          ]
+        }
+      ],
+      "private": [
+        {
+          "id": "cat-leo-docs", "name": "Documents", "scope": "private", "sortOrder": 1, "createdByUserId": "u5",
+          "items": [
+            { "id": "it-20", "text": "Passport", "isChecked": true, "sortOrder": 1, "createdByUserId": "u5", "assignedToUserId": null, "assignedToName": null, "assignedToAvatarUrl": null },
+            { "id": "it-21", "text": "Driving licence (for the van)", "isChecked": false, "sortOrder": 2, "createdByUserId": "u5", "assignedToUserId": null, "assignedToName": null, "assignedToAvatarUrl": null },
+            { "id": "it-22", "text": "EHIC card", "isChecked": false, "sortOrder": 3, "createdByUserId": "u5", "assignedToUserId": null, "assignedToName": null, "assignedToAvatarUrl": null }
+          ]
+        },
+        {
+          "id": "cat-leo-clothes", "name": "Clothes", "scope": "private", "sortOrder": 2, "createdByUserId": "u5",
+          "items": [
+            { "id": "it-23", "text": "Swimwear ×2", "isChecked": false, "sortOrder": 1, "createdByUserId": "u5", "assignedToUserId": null, "assignedToName": null, "assignedToAvatarUrl": null },
+            { "id": "it-24", "text": "Linen shirts", "isChecked": false, "sortOrder": 2, "createdByUserId": "u5", "assignedToUserId": null, "assignedToName": null, "assignedToAvatarUrl": null },
+            { "id": "it-25", "text": "Sandals", "isChecked": true, "sortOrder": 3, "createdByUserId": "u5", "assignedToUserId": null, "assignedToName": null, "assignedToAvatarUrl": null }
+          ]
+        }
+      ]
+    }
+  }
+}

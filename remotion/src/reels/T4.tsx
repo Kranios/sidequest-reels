@@ -81,5 +81,66 @@ export const T4Reels: React.FC = () => (
         durationInFrames: t4CalloutDuration(props, CANVAS.fps),
       })}
     />
+
+    {/* PACKING LIST — the group bag, itemised. No phone and no capture;
+        these are the group-trip truths everyone recognises, in one
+        deadpan parallel list, with the fix as the punchline. */}
+    <Composition
+      id="T4-Callout-PackingList"
+      component={T4Callout}
+      schema={t4CalloutSchema}
+      defaultProps={{
+        hookLine1: "Three umbrellas.",
+        hookLine2: "Zero sunscreen.",
+        hookSubtext: "",
+        lines: [
+          { text: "Four chargers.", accent: false },
+          { text: "No adapter.", accent: false },
+          { text: "Two speakers.", accent: false },
+          { text: "Zero snorkels.", accent: true },
+        ],
+        punchline: "Put it on the list. With a name.",
+        kicker: "",
+        launchLine: "First 50 get lifetime access — free.",
+
+        showCounter: false,
+
+        showSafeArea: false,
+        safeTop: 220,
+        safeBottom: 450,
+        safeLeft: 65,
+        safeRight: 120,
+
+        topBandFrac: 0.2,
+        bottomBandFrac: 0.18,
+        bandGutter: 28,
+
+        bgIntensity: 1.15,
+        bgSpeed: 1.2,
+        bgBlur: 135,
+        bgVignette: 0.64,
+        bgPulse: true,
+
+        hookFontSize: 86,
+        lineFontSize: 96,
+        punchFontSize: 72,
+        kickerFontSize: 40,
+
+        ctaVariant: "standard",
+        ctaLogoSize: 104,
+
+        hookSeconds: 1.8,
+        lineSeconds: 1.0,
+        punchSeconds: 1.6,
+        ctaSeconds: 2.4,
+      }}
+      fps={CANVAS.fps}
+      width={CANVAS.width}
+      height={CANVAS.height}
+      durationInFrames={294}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: t4CalloutDuration(props, CANVAS.fps),
+      })}
+    />
   </>
 );
