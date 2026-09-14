@@ -89,6 +89,41 @@ from 6/15 to 8/16 while it plays.
 
 ---
 
+## 2026-09-12 — Hidden SideQuest batch (theme 1, A-reveal)
+
+The signature feature — the one no competitor has (feature_map.md). Same trip
+and nine friends. Figures come from `configs/fixtures/hidden_sidequest_demo.json`
+and the journey in `app/hidden_sidequest_demo.mp4`: Leo names it "Midnight
+Cliff Jump", slides it hidden, sets the reveal to 23:30, leaves the teaser
+"Swimsuits. No questions." and saves; the trip feed shows it sealed on day 1.
+
+| Reel ID | Driver | Hook (≤ 8 words) | Supporting lines |
+|---|---|---|---|
+| `T1-Receipt-HiddenSideQuest` | recognition | **1** — "One secret plan." | rows: who knows it (Leo 1, the other eight 0) / "Reveals in 2 days, 5 hours." / "The other eight get a countdown." |
+| `T2-Reveal-HiddenSideQuest` | curiosity | "They think it's a normal dinner. / Nobody knows what happens at 23:30." | lock "Hidden until reveal" / "The group gets one clue: swimsuits." |
+| `T3-Speedrun-HiddenSideQuest` | competence | "How to lock / a secret SideQuest." | "Hidden until reveal." / over the take: "Named. Hidden. 23:30. Saved." / "Nobody finds out before 23:30." |
+| `T4-Callout-HiddenSideQuest` | humour | "Don't tell the group chat / where you're going." | "Someone screenshots it. Someone guesses in one. Someone tells their partner. Surprise over by lunch." / "Lock it in SideQuest instead." |
+| `T5-Atlas-HiddenSideQuest` | aspiration | "Mallorca Day 1. / Midnight cliff jump locked." | "The group sees a lock and a countdown." / stats: 8 friends in the dark · 1 clue given |
+
+### Where every figure comes from
+
+| Figure | Source |
+|---|---|
+| 1 secret plan · Leo 1, the others 0 | the journey creates the trip's only hidden SideQuest, as Leo; nine members |
+| 2 days, 5 hours | the sealed row in the take: "Reveals in 2d 5h 56m" — counted from the moment of recording, so a re-record changes it; read it off the new take |
+| 23:30 | the reveal time Leo sets |
+| eight · 8 friends in the dark | nine members minus Leo, who made it |
+| one clue: swimsuits · 1 clue given | the teaser "Swimsuits. No questions." |
+| Day 1 | the SideQuest's date is the trip's first day ("Mon · Sep 14 · Day 1" in the feed) |
+| a lock and a countdown | the sealed row: lock over the icon, "Reveals in …" |
+| Midnight cliff jump | the title Leo types |
+
+"They think it's a normal dinner" and T4's group-chat lines are narrative,
+not fixture figures. T3 runs exactly 20.0 s, qa.py's cap (videoSeconds
+17.6), so the sealed card holds ~1.2 s before the CTA.
+
+---
+
 ## Retired — used before 2026-09-12
 
 The first template reels (removed from `src/reels/` for this test; recoverable

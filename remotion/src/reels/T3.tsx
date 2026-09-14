@@ -152,5 +152,74 @@ export const T3Reels: React.FC = () => (
         durationInFrames: t3SpeedrunDuration(props, CANVAS.fps),
       })}
     />
+
+    {/* HIDDEN SIDEQUEST — plant a secret against the clock. The capture is
+        app/hidden_sidequest_demo.mp4 (20.2 s): Leo names it, slides it
+        hidden, sets the reveal to 23:30, leaves the teaser, saves, and the
+        trip feed shows it sealed from ~16.4 s. videoSeconds 17.6 + the 2.4 s
+        CTA is exactly qa.py's 20.0 s cap, so the sealed card holds ~1.2 s
+        before the CTA (19.5 held it ~3.1 s but ran 21.9 s). */}
+    <Composition
+      id="T3-Speedrun-HiddenSideQuest"
+      component={T3Speedrun}
+      schema={t3SpeedrunSchema}
+      defaultProps={{
+        appVideo: "app/hidden_sidequest_demo.mp4",
+        hookLine1: "How to lock",
+        hookLine2: "a secret SideQuest.",
+        hookSubtext: "Hidden until reveal.",
+        runCaption: "Named. Hidden. 23:30. Saved.",
+        caption: "Nobody finds out before 23:30.",
+        launchLine: "First 50 get lifetime access — free.",
+
+        showTimer: true,
+        timerLabel: "elapsed",
+        timerFormat: "s.t",
+        timerRate: 1,
+        timerAlign: "end",
+
+        showSafeArea: false,
+        safeTop: 220,
+        safeBottom: 450,
+        safeLeft: 65,
+        safeRight: 120,
+
+        topBandFrac: 0.18,
+        bottomBandFrac: 0.14,
+        bandGutter: 28,
+        phoneFill: 0.95,
+
+        bgIntensity: 1.05,
+        bgSpeed: 1.6,
+        bgBlur: 140,
+        bgVignette: 0.74,
+
+        hookFontSize: 64,
+        runCaptionFontSize: 42,
+        timerFontSize: 48,
+        captionFontSize: 40,
+
+        screenRotDeg: 0,
+        screenFlipY: false,
+        phoneOffsetY: 0,
+        swingDeg: 10,
+        dollyIn: 0.3,
+        videoStartFrom: 0,
+
+        ctaVariant: "urgent",
+        ctaLogoSize: 104,
+
+        hookSeconds: 2.0,
+        videoSeconds: 17.6,
+        ctaSeconds: 2.4,
+      }}
+      fps={CANVAS.fps}
+      width={CANVAS.width}
+      height={CANVAS.height}
+      durationInFrames={t3SpeedrunDuration({ videoSeconds: 17.6, ctaSeconds: 2.4 }, CANVAS.fps)}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: t3SpeedrunDuration(props, CANVAS.fps),
+      })}
+    />
   </>
 );

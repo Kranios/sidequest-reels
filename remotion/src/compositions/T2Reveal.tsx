@@ -93,7 +93,7 @@ export const t2RevealSchema = z.object({
   phoneOffsetY: z.number().min(-400).max(400).step(5),
   swingDeg: z.number().min(0).max(45).step(1),
   dollyIn: z.number().min(0).max(3).step(0.05),
-  videoStartFrom: z.number().min(0).max(120).step(1),
+  videoStartFrom: z.number().min(0).max(600).step(1),
 
   // ---- cta ----
   ctaVariant: z.enum(["quiet", "standard", "urgent"]),
