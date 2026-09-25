@@ -245,5 +245,85 @@ export const T5Reels: React.FC = () => (
         ),
       })}
     />
+    {/* ITINERARY — the finished week as an object. videoStartFrom 390
+        (13.0 s) opens app/itinerary_demo.mp4 on the feed after the save, so
+        the itinerary drifting past is the ordered one, and the take still
+        has 4.6 s of motion left to run. The two stats are the ones that hold
+        for the whole beat: day 1 keeps its four plans throughout (the
+        journey's Beach Club lands on day 2), and the count of messages it
+        took to agree them stays zero. */}
+    <Composition
+      id="T5-Atlas-Itinerary"
+      component={T5Atlas}
+      schema={t5AtlasSchema}
+      defaultProps={{
+        appVideo: "app/itinerary_demo.mp4",
+
+        hookLine1: "Mallorca Day 1.",
+        hookLine2: "Itinerary locked and loaded.",
+        hookSubtext: "",
+        caption: "Eight days, in order.",
+
+        showStats: true,
+        statAValue: 4,
+        statADecimals: 0,
+        statASuffix: "",
+        statALabel: "plans on day one",
+        statBValue: 0,
+        statBDecimals: 0,
+        statBSuffix: "",
+        statBLabel: "messages to agree them",
+
+        showSafeArea: false,
+        safeTop: 220,
+        safeBottom: 450,
+        safeLeft: 65,
+        safeRight: 120,
+
+        topBandFrac: 0.2,
+        bottomBandFrac: 0.12,
+        bandGutter: 28,
+        phoneFill: 1,
+
+        bgIntensity: 0.25,
+        bgSpeed: 0.15,
+        bgBlur: 210,
+        bgVignette: 0.9,
+
+        // 60, not 64: "Itinerary locked and loaded." is 28 characters and
+        // HookText wraps rather than clips.
+        hookFontSize: 60,
+        statFontSize: 76,
+        statLabelFontSize: 22,
+        captionFontSize: 40,
+
+        screenRotDeg: 0,
+        screenFlipY: false,
+        phoneOffsetY: 0,
+        swingDeg: 5,
+        dollyIn: 0.25,
+        videoStartFrom: 390,
+
+        ctaVariant: "quiet",
+        ctaLogoSize: 112,
+        launchLine: "",
+
+        introSeconds: 2.4,
+        globeSeconds: 6.0,
+        ctaSeconds: 2.6,
+      }}
+      fps={CANVAS.fps}
+      width={CANVAS.width}
+      height={CANVAS.height}
+      durationInFrames={t5AtlasDuration(2.4, 6.0, 2.6, CANVAS.fps)}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: t5AtlasDuration(
+          props.introSeconds,
+          props.globeSeconds,
+          props.ctaSeconds,
+          CANVAS.fps
+        ),
+      })}
+    />
   </>
 );

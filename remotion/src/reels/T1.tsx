@@ -276,5 +276,93 @@ export const T1Reels: React.FC = () => (
         ),
       })}
     />
+    {/* ITINERARY — the receipt for a week of plans. The figure is the 9
+        activities the trip holds once the journey has added the Beach Club;
+        the rows are the days they fall on, and they add up to it: 4 + 2 + 1
+        + 1 + 1 = 9 (configs/fixtures/itinerary_demo.json plus the
+        itinerary_demo journey). Day 1 is the flagged row — it is the day
+        that was filed in the wrong order. The phone plays
+        app/itinerary_demo.mp4 from 2.0 s (frame 60) for 4.2 s, which is the
+        whole argument in one beat: day 1 filed out of order, the carry from
+        ~4.2 s, the drop at ~4.9 s, and the list chronological from 5.19 s —
+        ending at 6.2 s, just as the Add activity form would open. Starting
+        here also lets the phone's entrance spring settle (~1.3 s) before the
+        drag begins. */}
+    <Composition
+      id="T1-Receipt-Itinerary"
+      component={T1Receipt}
+      schema={t1ReceiptSchema}
+      defaultProps={{
+        appVideo: "app/itinerary_demo.mp4",
+        currency: "",
+        total: 9,
+        totalDecimals: 0,
+        thousandsSeparator: ",",
+        stakeLine: "Group chat chaos.",
+        // 4 + 2 + 1 + 1 + 1 = 9
+        rows: [
+          { name: "Day 1", amount: 4, flagged: true },
+          { name: "Day 2", amount: 2, flagged: false },
+          { name: "Day 3", amount: 1, flagged: false },
+          { name: "Day 4", amount: 1, flagged: false },
+          { name: "Day 7", amount: 1, flagged: false },
+        ],
+        rowNote: "Day 1 had four plans and no order.",
+        caption: "Sorted in 15 seconds.",
+        launchLine: "First 50 get lifetime access — free.",
+
+        showSafeArea: false,
+        safeTop: 220,
+        safeBottom: 450,
+        safeLeft: 65,
+        safeRight: 120,
+
+        topBandFrac: 0.14,
+        bottomBandFrac: 0.16,
+        bandGutter: 44,
+        phoneFill: 0.95,
+
+        bgIntensity: 0.75,
+        bgSpeed: 0.65,
+        bgBlur: 155,
+        bgVignette: 0.8,
+
+        totalFontSize: 220,
+        runningTotalFontSize: 60,
+        stakeFontSize: 36,
+        rowFontSize: 44,
+        rowGap: 12,
+        rowStagger: 5,
+        captionFontSize: 40,
+
+        screenRotDeg: 0,
+        screenFlipY: false,
+        phoneOffsetY: 0,
+        swingDeg: 12,
+        dollyIn: 0.45,
+        videoStartFrom: 60,
+
+        ctaVariant: "standard",
+        ctaLogoSize: 104,
+
+        totalSeconds: 2.4,
+        rowsSeconds: 4.4,
+        phoneSeconds: 4.2,
+        ctaSeconds: 2.4,
+      }}
+      fps={CANVAS.fps}
+      width={CANVAS.width}
+      height={CANVAS.height}
+      durationInFrames={t1ReceiptDuration(2.4, 4.4, 4.2, 2.4, CANVAS.fps)}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: t1ReceiptDuration(
+          props.totalSeconds,
+          props.rowsSeconds,
+          props.phoneSeconds,
+          props.ctaSeconds,
+          CANVAS.fps
+        ),
+      })}
+    />
   </>
 );

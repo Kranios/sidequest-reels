@@ -124,6 +124,41 @@ not fixture figures. T3 runs exactly 20.0 s, qa.py's cap (videoSeconds
 
 ---
 
+## 2026-09-25 — Itinerary batch (theme 5, B-problem)
+
+The shared itinerary: a day filed in the wrong order, dragged into place, and
+a new activity added. Same Mallorca trip and nine friends as the other three
+batches. Figures come from `configs/fixtures/itinerary_demo.json` as it stands
+at the end of the `itinerary_demo` journey in `app/itinerary_demo.mp4` (Leo
+drags the 20:30 dinner to the end of day 1, then adds "Beach Club" to day 2 at
+14:00).
+
+| Reel ID | Driver | Hook (≤ 8 words) | Supporting lines |
+|---|---|---|---|
+| `T1-Receipt-Itinerary` | recognition | **9** — "Group chat chaos." | rows: plans per day (sum = 9) / "Day 1 had four plans and no order." / "Sorted in 15 seconds." |
+| `T2-Reveal-Itinerary` | curiosity | "They couldn't agree on the schedule. / So we just dragged it into place." | "Day 1 in order. Nobody sent a message." |
+| `T3-Speedrun-Itinerary` | competence | "How to fix / a messy trip schedule." | "Drag, drop, add." / over the take: "Day 1 reordered. Beach Club added." / "One take. No group chat." |
+| `T4-Callout-Itinerary` | humour | "Stop fighting over the itinerary. / Build it together instead." | "Beach at 11:00, says Mia. Dinner at 20:30, says Leo. Filed in that exact order." / "Fixed with one drag." / "Tag the schedule police." |
+| `T5-Atlas-Itinerary` | aspiration | "Mallorca Day 1. / Itinerary locked and loaded." | "Eight days, in order." / stats: 4 plans on day one · 0 messages to agree them |
+
+### Where every figure comes from
+
+| Figure | Source |
+|---|---|
+| 9 plans | the trip's activities after the journey: 8 in the fixture + "Beach Club" |
+| T1 rows | activities per day after the journey: day 1 = 4 · day 2 = 2 (boat + Beach Club) · day 3 = 1 · day 4 = 1 · day 7 = 1 = 9 |
+| "four plans and no order" / "4 plans on day one" | day 1 holds Flight 07:40, Dinner 20:30, Beach 11:00, check-in 16:00 at sortIndex 0-3 — filed by drag order, not by time. The journey's Beach Club goes to day 2, so day 1 keeps its four for the whole take |
+| 11:00 / Mia · 20:30 / Leo | the Beach, Cala Deià and Dinner, Sóller old town rows and their `ownerName` |
+| "Sorted in 15 seconds." | the journey from the first press to the finished feed: the drop lands at ~4.9 s and the Beach Club is in the feed by ~14.0 s of a 17.6 s take |
+| "Eight days, in order." | Sep 16 – Sep 23, the trip's `startDate`/`endDate` — eight days, seven nights |
+| 0 messages / "Nobody sent a message." | the reorder is a `PATCH /activities/reorder`; nothing goes through the chat |
+
+T4 is text-only — it has no video prop at all — but its three deadpan lines are
+still the fixture's day 1, not invented ones. T5's two stats are the pair that
+hold for its whole beat.
+
+---
+
 ## Retired — used before 2026-09-12
 
 The first template reels (removed from `src/reels/` for this test; recoverable

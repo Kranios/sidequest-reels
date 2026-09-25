@@ -55,7 +55,10 @@ Registered reels — the Cost Split A/B test: `T1-Receipt-CostSplit`,
 batch (capture `app/hidden_sidequest_demo.mp4`, fixture
 `hidden_sidequest_demo.json`): `T1-Receipt-HiddenSideQuest`,
 `T2-Reveal-HiddenSideQuest`, `T3-Speedrun-HiddenSideQuest`,
-`T4-Callout-HiddenSideQuest`, `T5-Atlas-HiddenSideQuest`. `videoStartFrom` is
+`T4-Callout-HiddenSideQuest`, `T5-Atlas-HiddenSideQuest`; and the Itinerary
+batch (capture `app/itinerary_demo.mp4`, fixture `itinerary_demo.json`):
+`T1-Receipt-Itinerary`, `T2-Reveal-Itinerary`, `T3-Speedrun-Itinerary`,
+`T4-Callout-Itinerary`, `T5-Atlas-Itinerary`. `videoStartFrom` is
 in frames (30 fps); T1, T2 and T5 allow up to 600, so a phone beat can start
 late in a take. The first fifteen template reels were removed for it;
 they are recoverable from commit `1ff4ffd` and their hooks are in the retired
