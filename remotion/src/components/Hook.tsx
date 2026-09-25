@@ -30,6 +30,10 @@ export const Hook: React.FC<{
   offsetY?: number;
   wordStagger?: number;
   startFrame?: number;
+  /** Words to turn pink and pop (see Text.tsx). */
+  accentWords?: string[];
+  /** Frame the lines and subtext start dropping out; see exitBefore(). */
+  exitAt?: number;
 }> = ({
   lines,
   subtext,
@@ -41,6 +45,8 @@ export const Hook: React.FC<{
   offsetY = 0,
   wordStagger = 4,
   startFrame = 0,
+  accentWords,
+  exitAt,
 }) => {
   const target = box ?? fullSafeBox(insets);
   const wordCount = lines.reduce((n, l) => n + l.text.split(" ").length, 0);
@@ -53,6 +59,8 @@ export const Hook: React.FC<{
           fontSize={fontSize}
           wordStagger={wordStagger}
           startFrame={startFrame}
+          accentWords={accentWords}
+          exitAt={exitAt}
         />
         {subtext ? (
           <SupportText
@@ -60,6 +68,7 @@ export const Hook: React.FC<{
             fontSize={subFontSize}
             delay={startFrame + wordCount * wordStagger}
             marginTop={36}
+            exitAt={exitAt}
           />
         ) : null}
       </Band>

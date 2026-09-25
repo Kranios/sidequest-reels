@@ -42,8 +42,9 @@ import { CTA } from "../components/CTA";
 import { KineticList } from "../components/KineticList";
 import { NumberCounter, formatNumber } from "../components/NumberCounter";
 import { Phone } from "../components/Phone";
+import { Grade } from "../components/Grade";
 import { SafeAreaOverlay } from "../components/SafeAreaOverlay";
-import { Band, CaptionText, SupportText } from "../components/Text";
+import { Band, CaptionText, SupportText, exitBefore } from "../components/Text";
 
 export const t1ReceiptSchema = z.object({
   // ---- content ----
@@ -70,6 +71,22 @@ export const t1ReceiptSchema = z.object({
   /** Over the phone beat, once the app has solved it. */
   caption: z.string(),
   launchLine: z.string(),
+  /** Words to turn pink and pop when they land (Text.tsx). Optional. */
+  accentWords: z.array(z.string()).optional(),
+  /** Film grain opacity (Grade.tsx). Optional; 0.04 by default. */
+  grain: z.number().min(0).max(0.2).optional(),
+  /** Camera focus moments, in CAPTURE seconds (see PhoneFocus). Optional. */
+  phoneFocus: z
+    .array(
+      z.object({
+        at: z.number().min(0).max(60),
+        u: z.number().min(0).max(1),
+        v: z.number().min(0).max(1),
+        zoom: z.number().min(1).max(4),
+        hold: z.number().min(0.2).max(20),
+      })
+    )
+    .optional(),
 
   // ---- safe area (mirrors SAFE_INSETS) ----
   showSafeArea: z.boolean(),
@@ -182,7 +199,14 @@ export const T1Receipt: React.FC<T1ReceiptProps> = (p) => {
             stiffness={38}
             fontSize={p.totalFontSize}
           />
-          <SupportText text={p.stakeLine} fontSize={p.stakeFontSize} delay={26} marginTop={28} />
+          <SupportText
+            text={p.stakeLine}
+            fontSize={p.stakeFontSize}
+            delay={26}
+            marginTop={28}
+            accentWords={p.accentWords}
+            exitAt={exitBefore(totalDur, p.stakeLine)}
+          />
         </Band>
       </Sequence>
 
@@ -216,6 +240,7 @@ export const T1Receipt: React.FC<T1ReceiptProps> = (p) => {
               text={p.rowNote}
               fontSize={p.captionFontSize}
               delay={4 + p.rowStagger * p.rows.length}
+              exitAt={exitBefore(rowsDur, p.rowNote)}
             />
           </Band>
         ) : null}
@@ -235,13 +260,19 @@ export const T1Receipt: React.FC<T1ReceiptProps> = (p) => {
             screenFlipY={p.screenFlipY}
             insets={insets}
             offsetY={p.phoneOffsetY}
+            focus={p.phoneFocus}
           />
         </SlideUp>
         <Band box={bands.top} align="center">
           <div style={textStyle("hook", { fontSize: p.runningTotalFontSize })}>{settled}</div>
         </Band>
         <Band box={bands.bottom} align="start">
-          <CaptionText text={p.caption} fontSize={p.captionFontSize} delay={14} />
+          <CaptionText
+            text={p.caption}
+            fontSize={p.captionFontSize}
+            delay={14}
+            exitAt={exitBefore(phoneDur, p.caption)}
+          />
         </Band>
       </Sequence>
 
@@ -254,6 +285,8 @@ export const T1Receipt: React.FC<T1ReceiptProps> = (p) => {
           background="transparent"
         />
       </Sequence>
+
+      <Grade grain={p.grain} />
 
       {p.showSafeArea ? <SafeAreaOverlay insets={insets} /> : null}
     </AbsoluteFill>

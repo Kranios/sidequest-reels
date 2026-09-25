@@ -12,7 +12,7 @@
  * almost legible just before the reveal and the viewer sees it coming. Then
  * it SNAPS: an exponential ease-out over `revealFrames` (6-10 reads as a cut,
  * not a fade), a scale pop on an underdamped spring, and an optional white
- * flash that decays over 6 frames.
+ * bloom on the phone that decays over 6 frames.
  *
  * Wraps anything: the 3D phone, a flat capture, a card.
  */
@@ -114,8 +114,10 @@ export const BlurReveal: React.FC<{
 
       {flashOpacity > 0.001 ? (
         <AbsoluteFill
+          // A bloom centred on the phone, not a full-frame wash: a flat white
+          // layer over a dark reel reads as a grey fog, not a flash.
           style={{
-            background: "#ffffff",
+            background: `radial-gradient(ellipse 42% 30% at 50% calc(50% + ${lockOffsetY}px), rgba(255,255,255,1) 0%, rgba(255,255,255,0.35) 45%, rgba(255,255,255,0) 72%)`,
             opacity: flashOpacity,
             mixBlendMode: "screen",
             pointerEvents: "none",

@@ -30,9 +30,10 @@ import { AnimatedBackground } from "../components/AnimatedBackground";
 import { BlurReveal } from "../components/BlurReveal";
 import { CTA } from "../components/CTA";
 import { Phone } from "../components/Phone";
+import { Grade } from "../components/Grade";
 import { SafeAreaOverlay } from "../components/SafeAreaOverlay";
 import { Timer } from "../components/Timer";
-import { Band, CaptionText, HookText } from "../components/Text";
+import { Band, CaptionText, HookText, exitBefore } from "../components/Text";
 
 export const t2RevealSchema = z.object({
   // ---- content ----
@@ -47,6 +48,22 @@ export const t2RevealSchema = z.object({
   /** Small line above the phone after the reveal, e.g. "UNLOCKED". */
   revealedLabel: z.string(),
   launchLine: z.string(),
+  /** Words to turn pink and pop when they land (Text.tsx). Optional. */
+  accentWords: z.array(z.string()).optional(),
+  /** Film grain opacity (Grade.tsx). Optional; 0.04 by default. */
+  grain: z.number().min(0).max(0.2).optional(),
+  /** Camera focus moments, in CAPTURE seconds (see PhoneFocus). Optional. */
+  phoneFocus: z
+    .array(
+      z.object({
+        at: z.number().min(0).max(60),
+        u: z.number().min(0).max(1),
+        v: z.number().min(0).max(1),
+        zoom: z.number().min(1).max(4),
+        hold: z.number().min(0.2).max(20),
+      })
+    )
+    .optional(),
 
   // ---- countdown ----
   showCountdown: z.boolean(),
@@ -162,6 +179,7 @@ export const T2Reveal: React.FC<T2RevealProps> = (p) => {
             screenFlipY={p.screenFlipY}
             insets={insets}
             offsetY={p.phoneOffsetY}
+            focus={p.phoneFocus}
           />
         </BlurReveal>
 
@@ -208,13 +226,20 @@ export const T2Reveal: React.FC<T2RevealProps> = (p) => {
               ]}
               fontSize={p.hookFontSize}
               wordStagger={6}
+              accentWords={p.accentWords}
+              exitAt={exitBefore(revealFrame, p.hookLine1, p.hookLine2)}
             />
           </Band>
         </Sequence>
 
         <Sequence from={revealFrame}>
           <Band box={bands.bottom} align="start">
-            <CaptionText text={p.caption} fontSize={p.captionFontSize} delay={6} />
+            <CaptionText
+              text={p.caption}
+              fontSize={p.captionFontSize}
+              delay={6}
+              exitAt={exitBefore(mainDur - revealFrame, p.caption)}
+            />
           </Band>
         </Sequence>
       </Sequence>
@@ -228,6 +253,14 @@ export const T2Reveal: React.FC<T2RevealProps> = (p) => {
           background="transparent"
         />
       </Sequence>
+
+      {/* Grain throughout, and one glint across the glass as the blur lifts. */}
+      <Grade
+        grain={p.grain}
+        sweepAt={revealFrame + 2}
+        sweepBand={bands.stage}
+        sweepFill={p.phoneFill}
+      />
 
       {p.showSafeArea ? <SafeAreaOverlay insets={insets} /> : null}
     </AbsoluteFill>

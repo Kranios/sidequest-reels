@@ -30,8 +30,9 @@ import { AnimatedBackground } from "../components/AnimatedBackground";
 import { Hook } from "../components/Hook";
 import { CTA } from "../components/CTA";
 import { KineticList } from "../components/KineticList";
+import { Grade } from "../components/Grade";
 import { SafeAreaOverlay } from "../components/SafeAreaOverlay";
-import { Band, CaptionText } from "../components/Text";
+import { Band, CaptionText, exitBefore } from "../components/Text";
 
 export const t4CalloutSchema = z.object({
   // ---- content: this is the entire reel ----
@@ -51,6 +52,10 @@ export const t4CalloutSchema = z.object({
   /** Small line that stays under the list, e.g. "tag them". Empty = none. */
   kicker: z.string(),
   launchLine: z.string(),
+  /** Words to turn pink and pop when they land (Text.tsx). Optional. */
+  accentWords: z.array(z.string()).optional(),
+  /** Film grain opacity (Grade.tsx). Optional; 0.04 by default. */
+  grain: z.number().min(0).max(0.2).optional(),
 
   // ---- counter ("02 / 05") in the top band; suits list reels ----
   showCounter: z.boolean(),
@@ -200,6 +205,8 @@ export const T4Callout: React.FC<T4CalloutProps> = (p) => {
             { text: p.hookLine2, color: BRAND.pink },
           ]}
           subtext={p.hookSubtext}
+          accentWords={p.accentWords}
+          exitAt={exitBefore(hookDur, p.hookLine1, p.hookLine2, p.hookSubtext)}
         />
       </Sequence>
 
@@ -213,6 +220,8 @@ export const T4Callout: React.FC<T4CalloutProps> = (p) => {
             box={whole}
             fontSize={p.punchFontSize}
             lines={[{ text: p.punchline, color: BRAND.white }]}
+            accentWords={p.accentWords}
+            exitAt={exitBefore(punchDur, p.punchline)}
           />
         </Sequence>
       ) : null}
@@ -226,6 +235,8 @@ export const T4Callout: React.FC<T4CalloutProps> = (p) => {
           background="transparent"
         />
       </Sequence>
+
+      <Grade grain={p.grain} />
 
       {p.showSafeArea ? <SafeAreaOverlay insets={insets} /> : null}
     </AbsoluteFill>

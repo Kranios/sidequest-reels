@@ -32,8 +32,9 @@ import { AnimatedBackground } from "../components/AnimatedBackground";
 import { CTA } from "../components/CTA";
 import { Hook } from "../components/Hook";
 import { Phone } from "../components/Phone";
+import { Grade } from "../components/Grade";
 import { SafeAreaOverlay } from "../components/SafeAreaOverlay";
-import { Band, CaptionText, SupportText } from "../components/Text";
+import { Band, CaptionText, SupportText, exitBefore } from "../components/Text";
 
 export const t3SpeedrunSchema = z.object({
   // ---- content ----
@@ -48,6 +49,22 @@ export const t3SpeedrunSchema = z.object({
   /** Under the sign-off. */
   caption: z.string(),
   launchLine: z.string(),
+  /** Words to turn pink and pop when they land (Text.tsx). Optional. */
+  accentWords: z.array(z.string()).optional(),
+  /** Film grain opacity (Grade.tsx). Optional; 0.04 by default. */
+  grain: z.number().min(0).max(0.2).optional(),
+  /** Camera focus moments, in CAPTURE seconds (see PhoneFocus). Optional. */
+  phoneFocus: z
+    .array(
+      z.object({
+        at: z.number().min(0).max(60),
+        u: z.number().min(0).max(1),
+        v: z.number().min(0).max(1),
+        zoom: z.number().min(1).max(4),
+        hold: z.number().min(0.2).max(20),
+      })
+    )
+    .optional(),
 
   // ---- safe area (mirrors SAFE_INSETS) ----
   showSafeArea: z.boolean(),
@@ -129,6 +146,7 @@ export const T3Speedrun: React.FC<T3SpeedrunProps> = (p) => {
             screenFlipY={p.screenFlipY}
             insets={insets}
             offsetY={p.phoneOffsetY}
+            focus={p.phoneFocus}
           />
         </AbsoluteFill>
       </Sequence>
@@ -139,6 +157,8 @@ export const T3Speedrun: React.FC<T3SpeedrunProps> = (p) => {
           box={bands.top}
           fontSize={p.hookFontSize}
           wordStagger={3}
+          accentWords={p.accentWords}
+          exitAt={exitBefore(hookDur, p.hookLine1, p.hookLine2)}
           lines={[
             { text: p.hookLine1, color: BRAND.white },
             { text: p.hookLine2, color: BRAND.pink },
@@ -146,7 +166,11 @@ export const T3Speedrun: React.FC<T3SpeedrunProps> = (p) => {
         />
         {p.hookSubtext ? (
           <Band box={bands.bottom} align="start">
-            <SupportText text={p.hookSubtext} delay={12} />
+            <SupportText
+              text={p.hookSubtext}
+              delay={12}
+              exitAt={exitBefore(hookDur, p.hookSubtext)}
+            />
           </Band>
         ) : null}
       </Sequence>
@@ -155,7 +179,12 @@ export const T3Speedrun: React.FC<T3SpeedrunProps> = (p) => {
       <Sequence from={hookDur} durationInFrames={runDur - hookDur}>
         {p.runCaption ? (
           <Band box={bands.bottom} align="start">
-            <CaptionText text={p.runCaption} fontSize={p.runCaptionFontSize} delay={4} />
+            <CaptionText
+              text={p.runCaption}
+              fontSize={p.runCaptionFontSize}
+              delay={4}
+              exitAt={exitBefore(runDur - hookDur, p.runCaption)}
+            />
           </Band>
         ) : null}
       </Sequence>
@@ -172,6 +201,8 @@ export const T3Speedrun: React.FC<T3SpeedrunProps> = (p) => {
           <CaptionText text={p.caption} fontSize={p.captionFontSize} delay={10} />
         </Band>
       </Sequence>
+
+      <Grade grain={p.grain} />
 
       {p.showSafeArea ? <SafeAreaOverlay insets={insets} /> : null}
     </AbsoluteFill>

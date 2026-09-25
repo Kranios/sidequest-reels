@@ -26,8 +26,9 @@ import { Hook } from "../components/Hook";
 import { CTA } from "../components/CTA";
 import { NumberCounter } from "../components/NumberCounter";
 import { Phone } from "../components/Phone";
+import { Grade } from "../components/Grade";
 import { SafeAreaOverlay } from "../components/SafeAreaOverlay";
-import { Band, CaptionText } from "../components/Text";
+import { Band, CaptionText, exitBefore } from "../components/Text";
 
 export const t5AtlasSchema = z.object({
   // ---- content ----
@@ -85,6 +86,22 @@ export const t5AtlasSchema = z.object({
   ctaVariant: z.enum(["quiet", "standard", "urgent"]),
   ctaLogoSize: z.number().min(50).max(180).step(2),
   launchLine: z.string(),
+  /** Words to turn pink and pop when they land (Text.tsx). Optional. */
+  accentWords: z.array(z.string()).optional(),
+  /** Film grain opacity (Grade.tsx). Optional; 0.04 by default. */
+  grain: z.number().min(0).max(0.2).optional(),
+  /** Camera focus moments, in CAPTURE seconds (see PhoneFocus). Optional. */
+  phoneFocus: z
+    .array(
+      z.object({
+        at: z.number().min(0).max(60),
+        u: z.number().min(0).max(1),
+        v: z.number().min(0).max(1),
+        zoom: z.number().min(1).max(4),
+        hold: z.number().min(0.2).max(20),
+      })
+    )
+    .optional(),
 
   // ---- timing (seconds) ----
   introSeconds: z.number().min(1).max(6).step(0.1),
@@ -164,6 +181,8 @@ export const T5Atlas: React.FC<T5AtlasProps> = (p) => {
             { text: p.hookLine2, color: BRAND.pink },
           ]}
           subtext={p.hookSubtext}
+          accentWords={p.accentWords}
+          exitAt={exitBefore(introDur, p.hookLine1, p.hookLine2, p.hookSubtext)}
         />
       </Sequence>
 
@@ -180,6 +199,7 @@ export const T5Atlas: React.FC<T5AtlasProps> = (p) => {
             screenFlipY={p.screenFlipY}
             insets={insets}
             offsetY={p.phoneOffsetY}
+            focus={p.phoneFocus}
           />
 
           {p.showStats ? (
@@ -209,7 +229,12 @@ export const T5Atlas: React.FC<T5AtlasProps> = (p) => {
 
           {p.caption ? (
             <Band box={bands.bottom} align="center">
-              <CaptionText text={p.caption} fontSize={p.captionFontSize} delay={26} />
+              <CaptionText
+                text={p.caption}
+                fontSize={p.captionFontSize}
+                delay={26}
+                exitAt={exitBefore(globeDur, p.caption)}
+              />
             </Band>
           ) : null}
         </AbsoluteFill>
@@ -224,6 +249,8 @@ export const T5Atlas: React.FC<T5AtlasProps> = (p) => {
           background="transparent"
         />
       </Sequence>
+
+      <Grade grain={p.grain} />
 
       {p.showSafeArea ? <SafeAreaOverlay insets={insets} /> : null}
     </AbsoluteFill>

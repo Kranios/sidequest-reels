@@ -10,6 +10,7 @@
 import React from "react";
 import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
 import { BRAND } from "../brand";
+import { GRADE_FILTER } from "./Grade";
 
 const TEAL = "#7FD8D0";
 
@@ -54,7 +55,8 @@ export const AnimatedBackground: React.FC<{
   const t = (frame / fps) * speed;
 
   return (
-    <AbsoluteFill style={{ backgroundColor: BRAND.bgDark, overflow: "hidden" }}>
+    // The finish's grade lives here, on the background only (see Grade.tsx).
+    <AbsoluteFill style={{ backgroundColor: BRAND.bgDark, overflow: "hidden", filter: GRADE_FILTER }}>
       {/* saturate() is what stops heavy blur turning pink + teal into grey
           mud — without it the blobs read as dirty shadow on a dark ground. */}
       <AbsoluteFill style={{ filter: `blur(${blur}px) saturate(1.35)` }}>

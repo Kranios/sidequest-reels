@@ -66,6 +66,7 @@ import React, { useMemo, useRef } from "react";
 import {
   useCurrentFrame,
   useVideoConfig,
+  Easing,
   interpolate,
   spring,
   staticFile,
@@ -109,6 +110,17 @@ const ENTRY_ZOOM = 0.88;
  * whole curve including its long tail, so the visible motion stays up front.
  */
 const ENTRY_SPRING = { damping: 11, stiffness: 40, mass: 1.8 };
+
+/**
+ * A FOCUS MOMENT: the camera pans to a point on the screen and pushes in, then
+ * lets go. `at` and `hold` are seconds of the CAPTURE (the take's own clock,
+ * the times CLAUDE.md documents), so they don't change when videoStartFrom
+ * moves the take. u/v are the displayed picture: 0,0 top-left, 1,1
+ * bottom-right. `zoom` divides the camera distance: 1.6 fills ~1.6x more.
+ */
+export type PhoneFocus = { at: number; u: number; v: number; zoom: number; hold: number };
+/** In and out: unhurried, no overshoot. A camera move, not a bounce. */
+const FOCUS_SPRING = { damping: 20, stiffness: 60, mass: 1 };
 
 /**
  * THE STAGE ROTATION — why the whole shot is lying on its back.
@@ -295,7 +307,12 @@ type PhoneProps = {
    * insets or the copy length change. `radius` is then ignored.
    */
   bandFill?: number;
+  /** Focus moments, in capture time. See PhoneFocus. */
+  focus?: PhoneFocus[];
 };
+
+/** The strongest focus moment at this frame: where, how close, how much. */
+type FocusState = { u: number; v: number; zoom: number; w: number };
 
 const PhoneModel: React.FC<{
   texture: THREE.Texture | null;
@@ -306,7 +323,8 @@ const PhoneModel: React.FC<{
   radius: number;
   screenRotDeg: number;
   screenFlipY: boolean;
-}> = ({ texture, progress, entryProgress, swingDeg, dollyIn, radius, screenRotDeg, screenFlipY }) => {
+  focus: FocusState | null;
+}> = ({ texture, progress, entryProgress, swingDeg, dollyIn, radius, screenRotDeg, screenFlipY, focus }) => {
   const { scene } = useGLTF(staticFile("iphone17pro.glb"));
 
   // Clone once so re-renders don't mutate the cached GLTF.
@@ -320,9 +338,10 @@ const PhoneModel: React.FC<{
   //  - hide the two glass shells ("glass.002" back panel, "lensinglass" lenses).
   //  - tame the body metals: the GLB ships them at metalness ~0.77, which with
   //    an HDR env + key light blows the orange frame out to a glowing look.
-  const { screenMat, screenAspect } = useMemo(() => {
+  const { screenMat, screenAspect, screenBox } = useMemo(() => {
     let mat: THREE.MeshPhysicalMaterial | null = null;
     let aspect: number | null = null;
+    let screenMesh: THREE.Mesh | null = null;
 
     model.traverse((obj) => {
       const mesh = obj as THREE.Mesh;
@@ -357,6 +376,7 @@ const PhoneModel: React.FC<{
         });
         mesh.material = mat;
         mesh.visible = true;
+        screenMesh = mesh;
         return;
       }
       if (name.includes("glass") || name.includes("lensinglass")) {
@@ -392,9 +412,16 @@ const PhoneModel: React.FC<{
     const centre = bounds.getCenter(new THREE.Vector3());
     model.position.sub(centre);
 
+    // The display's box in the shot frame, measured after the recentre: a
+    // focus point (u, v) becomes an exact 3D point on the glass. Screen faces
+    // -X, so its face is the box's min X; +Y is up, +Z is screen-right.
+    model.updateMatrixWorld(true);
+    const box = screenMesh ? new THREE.Box3().setFromObject(screenMesh) : null;
+
     return {
       screenMat: mat as THREE.MeshPhysicalMaterial | null,
       screenAspect: (aspect as number | null) ?? SCREEN_ASPECT_FALLBACK,
+      screenBox: box,
     };
   }, [model]);
 
@@ -461,9 +488,25 @@ const PhoneModel: React.FC<{
   // distance; the spring's overshoot reads as the phone settling.
   const zoom = interpolate(entryProgress, [0, 1], [ENTRY_ZOOM, 1]);
   const r = (radius - dollyIn * progress) * zoom;
-  camera.position.copy(toStage(-Math.cos(ang) * r, 0, Math.sin(ang) * r));
+  // Focus: aim at a point on the glass instead of the phone's centre, and
+  // come closer along the same line of sight, both weighted by w.
+  let aim = new THREE.Vector3(0, 0, 0);
+  let closer = 1;
+  if (focus && focus.w > 0.001 && screenBox) {
+    const target = new THREE.Vector3(
+      screenBox.min.x,
+      THREE.MathUtils.lerp(screenBox.max.y, screenBox.min.y, focus.v),
+      THREE.MathUtils.lerp(screenBox.min.z, screenBox.max.z, focus.u)
+    );
+    aim = target.multiplyScalar(focus.w);
+    closer = THREE.MathUtils.lerp(1, Math.max(focus.zoom, 0.1), focus.w);
+  }
+  const rr = r / closer;
+  camera.position.copy(
+    toStage(aim.x - Math.cos(ang) * rr, aim.y, aim.z + Math.sin(ang) * rr)
+  );
   camera.up.copy(toStage(0, 1, 0));
-  camera.lookAt(0, 0, 0);
+  camera.lookAt(toStage(aim.x, aim.y, aim.z));
   camera.updateProjectionMatrix();
 
   // The entrance tilt rotates the PHONE (not the camera), so the shadow behind
@@ -528,25 +571,63 @@ const PhoneModel: React.FC<{
  * computed OUTSIDE the Sequence and passed in, so shifting the video can never
  * drift the animation timing.
  */
-export const Phone: React.FC<PhoneProps> = ({ videoStartFrom = 10, entry = true, ...props }) => {
+export const Phone: React.FC<PhoneProps> = ({
+  videoStartFrom = 10,
+  entry = true,
+  focus,
+  ...props
+}) => {
   const frame = useCurrentFrame();
   const { durationInFrames, fps } = useVideoConfig();
-  const progress = interpolate(frame, [0, Math.max(durationInFrames - 1, 1)], [0, 1]);
+  // Eased, not linear: the orbit leaves and arrives gently instead of
+  // turning at a constant, mechanical rate.
+  const progress = interpolate(frame, [0, Math.max(durationInFrames - 1, 1)], [0, 1], {
+    easing: Easing.inOut(Easing.sin),
+  });
   const entryProgress = entry ? spring({ frame, fps, config: ENTRY_SPRING }) : 1;
+  const focusState = focusAt(focus, frame + Math.max(0, Math.round(videoStartFrom)), fps);
 
   return (
     <Sequence from={-Math.max(0, Math.round(videoStartFrom))} layout="none">
-      <PhoneCanvas {...props} progress={progress} entryProgress={entryProgress} />
+      <PhoneCanvas
+        {...props}
+        progress={progress}
+        entryProgress={entryProgress}
+        focusState={focusState}
+      />
     </Sequence>
   );
 };
 
+/** Weight of each focus moment at capture frame `takeFrame`; the strongest wins. */
+const focusAt = (
+  focus: PhoneFocus[] | undefined,
+  takeFrame: number,
+  fps: number
+): FocusState | null => {
+  let best: FocusState | null = null;
+  for (const f of focus ?? []) {
+    const start = Math.round(f.at * fps);
+    const end = Math.round((f.at + f.hold) * fps);
+    const w =
+      spring({ frame: takeFrame - start, fps, config: FOCUS_SPRING }) -
+      spring({ frame: takeFrame - end, fps, config: FOCUS_SPRING });
+    if (!best || w > best.w) best = { u: f.u, v: f.v, zoom: f.zoom, w };
+  }
+  return best;
+};
+
 const PhoneCanvas: React.FC<
-  Omit<PhoneProps, "videoStartFrom" | "entry"> & { progress: number; entryProgress: number }
+  Omit<PhoneProps, "videoStartFrom" | "entry" | "focus"> & {
+    progress: number;
+    entryProgress: number;
+    focusState: FocusState | null;
+  }
 > = ({
   videoSrc,
   progress,
   entryProgress,
+  focusState,
   swingDeg = 18,
   dollyIn = 0.8,
   radius = 4.2,
@@ -620,6 +701,7 @@ const PhoneCanvas: React.FC<
           radius={effectiveRadius}
           screenRotDeg={screenRotDeg}
           screenFlipY={screenFlipY}
+          focus={focusState}
         />
       </ThreeCanvas>
     </>

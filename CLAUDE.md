@@ -148,6 +148,17 @@ repo root.
   stretched with `durationInFrames` still snaps — the stretch includes its
   long tail. `entry={false}` turns it off where a phone must cut in hard.
 - The canvas renders at `dpr={2}` for crisp UI text — see memory below.
+- **The orbit is eased** (`Easing.inOut(Easing.sin)`), not linear.
+- **Focus moments: `phoneFocus`** (T1, T2, T3, T5), which is
+  `[{ at, u, v, zoom, hold }]`. The camera pans to a point on the glass and
+  pushes in, on a spring with no overshoot, then lets go after `hold`.
+  - `at` and `hold` are seconds on the CAPTURE's clock, the take times
+    documented below. So `videoStartFrom` never shifts them.
+  - `u` and `v` are the displayed picture, with 0,0 at top-left.
+  - The point comes from the display mesh's box, measured at load.
+  - A zoom makes the phone outgrow its stage band. At `zoom` 1.8 it covers
+    the bottom band, so time captions outside a focus or keep the zoom near
+    1.3. Tested at `at` 1.5, `v` 0.3, `zoom` 1.8 on T1-Receipt-CostSplit.
 
 ### Text hierarchy — one definition, five templates
 - `src/type.ts` holds exactly three styles: **hook**, **support**, **caption**.
@@ -156,6 +167,24 @@ repo root.
   size so a big hook still reads as the hook.
 - Draw copy through `<HookText> <SupportText> <CaptionText>` (`components/Text.tsx`).
   `Caption` used to be copy-pasted into every composition; it is not any more.
+- **Kinetic words.** Every tier draws through `MaskedWord`: each word rises
+  from behind its own mask (`overflow: hidden`, `translateY` 110 % → 0) on
+  an underdamped spring (damping 14, stiffness 160, mass 0.6; the calm
+  tiers use damping 20).
+  - `accentWords` (optional on every template) turns those words pink and
+    pops their scale once they land.
+  - `exitAt` drops the words back out in reading order. Templates compute it
+    with `exitBefore(sequenceEnd, ...texts)`, so the copy has left before
+    the cut instead of being cut.
+  - Every text spring used to be damping 200, which is why everything moved
+    the same polite way.
+- **The finish: `components/Grade.tsx`**, the last layer in every template.
+  - Film grain: `feTurbulence` with a new seed each frame, `grain` (0.04
+    by default, optional prop).
+  - A glint that sweeps across the phone glass, used on T2's reveal.
+  - `GRADE_FILTER` (`contrast(1.06) saturate(1.08)`) is applied to
+    `AnimatedBackground` ONLY. A grade over the whole frame would change the
+    colours of the app's UI (rule 3).
 
 ### Bands — why text can no longer land on the phone
 - `splitSafeArea(insets, topFrac, bottomFrac, gutter)` in `src/layout.ts` cuts
