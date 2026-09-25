@@ -80,7 +80,7 @@ derived from the content where the content sets them — add a line to T4's
 ### The five shared pieces
 
 `NumberCounter` (T1, T5) · `KineticList` — stack rows or swap lines (T1, T4) ·
-`BlurReveal` (T2) · `Timer` — counts up or down (T2's countdown; T3's
+`PopReveal` (T2; it was BlurReveal) · `Timer` — counts up or down (T2's countdown; T3's
 stopwatch was removed 2026-09-25 as clutter) · `ScreenSwapper` —
 real hard cuts, one `<Sequence>` per screen (no template uses it since T3
 became one continuous `--scenario` take; kept for a multi-capture reel).
@@ -678,11 +678,13 @@ template's psychology is the variable under test.
    - **T4 exception:** no phone and no video prop at all — only the copy
      (`hookLine1/2`, `lines`, `punchline`).
    - `videoStartFrom: 0` — the capture already trims the splash.
-   - T2's reveal: the blur creeps from `maxBlur` to `teaseBlur` across the
-     hold, then snaps in `revealFrames` (8) with `revealFlash` and
-     `revealPunch`. Viewers leave during a flat blur, so reveal by ~3 s. If
-     the result comes late in the take, use `videoStartFrom` to start the
-     take later rather than holding the blur longer.
+   - T2's reveal has NO BLUR (removed 2026-09-25: it made the UI mushy
+     instead of building anticipation). The phone is sharp from frame one
+     under a dark veil (`revealDim`) with the lock. At the reveal the veil
+     lifts in `revealFrames` (8), the phone pops (`revealPunch`) and a bloom
+     flashes (`revealFlash`). Viewers leave during a long hold, so reveal by
+     ~3 s. If the result comes late in the take, start the take later with
+     `videoStartFrom` rather than holding longer.
    - T2's lock and countdown imply a timed unlock. Turn them off
      (`showLock`, `showCountdown`) for any feature that doesn't have one.
 6. **Duration limit: 8–20 s** — `qa.py` fails anything outside it; aim for

@@ -1,18 +1,14 @@
 /**
- * Blur -> sharp, with a lock over the top. T2's entire premise.
+ * Dim -> lit, with a pop. T2's reveal.
  *
- * The research point this implements: a pattern interrupt has to be SUSTAINED.
- * One weird frame then ten normal ones loses people faster than no interrupt
- * at all — so the blur holds for most of the shot and the reveal is the last
- * thing that happens, not the first.
- *
- * But a blur that simply sits there reads as "nothing is happening", and
- * viewers leave before it lifts. So the hold is not static: the blur EASES
- * from `maxBlur` down to `teaseBlur` across the whole hold, so the screen is
- * almost legible just before the reveal and the viewer sees it coming. Then
- * it SNAPS: an exponential ease-out over `revealFrames` (6-10 reads as a cut,
- * not a fade), a scale pop on an underdamped spring, and an optional white
- * bloom on the phone that decays over 6 frames.
+ * The phone is sharp from the first frame: no blur, ever (removed on
+ * 2026-09-25; blur turned the app's UI to mush instead of building
+ * anticipation, and the UI is what we are selling). What is withheld is the
+ * LIGHT: the phone sits under a dark veil (`dim`) with the lock on it, and at
+ * the reveal the veil lifts over `revealFrames` on an exponential ease-out
+ * (6-10 frames reads as a cut, not a fade), the phone pops in scale on an
+ * underdamped spring, and an optional white bloom on the phone decays over
+ * 6 frames.
  *
  * Wraps anything: the 3D phone, a flat capture, a card.
  */
@@ -21,22 +17,18 @@ import { AbsoluteFill, Easing, useCurrentFrame, useVideoConfig, spring, interpol
 import { BRAND } from "../brand";
 import { textStyle } from "../type";
 
-export const BlurReveal: React.FC<{
-  /** Frame the blur starts lifting. */
+export const PopReveal: React.FC<{
+  /** Frame the veil starts lifting. */
   revealFrame: number;
   /** How long the lift takes. */
   revealFrames?: number;
-  /** Blur radius at frame 0, px. */
-  maxBlur?: number;
-  /** Blur radius reached just before the reveal, px. = maxBlur holds flat. */
-  teaseBlur?: number;
   /** White flash at the reveal, 0..1. 0 disables. */
   flash?: number;
-  /** Extra darkening while hidden, 0..1. */
+  /** The veil over the phone until the reveal, 0..1. */
   dim?: number;
   /** Scale pop at the reveal (overshoots, then settles); 0 disables. */
   scalePunch?: number;
-  /** Padlock + label sitting on the blur. Omit the label for just the lock. */
+  /** Padlock + label on the veiled phone. Omit the label for just the lock. */
   showLock?: boolean;
   lockLabel?: string;
   lockOffsetY?: number;
@@ -44,8 +36,6 @@ export const BlurReveal: React.FC<{
 }> = ({
   revealFrame,
   revealFrames = 8,
-  maxBlur = 26,
-  teaseBlur,
   flash = 0,
   dim = 0.35,
   scalePunch = 0.03,
@@ -57,13 +47,6 @@ export const BlurReveal: React.FC<{
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const tease = teaseBlur ?? maxBlur;
-  // The hold: blur creeps down, faster towards the end, so tension builds.
-  const holdBlur = interpolate(frame, [0, Math.max(revealFrame, 1)], [maxBlur, tease], {
-    easing: Easing.in(Easing.quad),
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
   // The snap: most of the lift happens in the first two or three frames.
   const reveal = interpolate(frame - revealFrame, [0, Math.max(revealFrames, 1)], [0, 1], {
     easing: Easing.out(Easing.exp),
@@ -77,7 +60,6 @@ export const BlurReveal: React.FC<{
     config: { damping: 9, stiffness: 220, mass: 0.5 },
   });
 
-  const blur = frame < revealFrame ? holdBlur : tease * (1 - reveal);
   const scale = 1 + scalePunch * (1 - pop);
   const flashOpacity =
     flash > 0 && frame >= revealFrame
@@ -95,10 +77,7 @@ export const BlurReveal: React.FC<{
   return (
     <AbsoluteFill>
       <AbsoluteFill
-        style={{
-          filter: blur > 0.05 ? `blur(${blur}px)` : undefined,
-          transform: `scale(${scale})`,
-        }}
+        style={{ transform: `scale(${scale})` }}
       >
         {children}
       </AbsoluteFill>

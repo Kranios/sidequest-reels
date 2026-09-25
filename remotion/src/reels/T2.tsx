@@ -4,10 +4,10 @@
  * One <Composition> per reel; only props differ.
  *
  * COST SPLIT A/B TEST (see strategy/hook_vault.md). The secret here is the
- * bill itself: the expense list sits blurred under the hook, then lifts.
+ * bill itself: the expense list sits veiled under the hook, then lifts.
  * Lock and countdown are OFF on purpose — on the cost-split screen they would
  * imply a timed-unlock feature that only the hidden sidequest has, and
- * feature_map.md forbids misrepresenting a feature. The blur is editorial.
+ * feature_map.md forbids misrepresenting a feature. The veil is editorial.
  * Figures match configs/fixtures/cost_split_demo.json (rule 9).
  */
 import React from "react";
@@ -39,8 +39,6 @@ export const T2Reels: React.FC = () => (
 
         revealAtSeconds: 3.0,
         revealFrames: 8,
-        maxBlur: 34,
-        teaseBlur: 12,
         revealFlash: 0.35,
         revealPunch: 0.06,
         revealDim: 0.44,
@@ -88,7 +86,7 @@ export const T2Reels: React.FC = () => (
       })}
     />
 
-    {/* PACKING LIST — the list blurred under the hook, then the group's
+    {/* PACKING LIST — the list veiled under the hook, then the group's
         packing in full view. Lock and countdown off: the packing list has no
         timed unlock either. mainSeconds 13.0 runs app/packing_list_demo.mp4
         past the moment Mia gets the speaker (~12.0 s), so the reveal pays
@@ -114,8 +112,6 @@ export const T2Reels: React.FC = () => (
 
         revealAtSeconds: 3.0,
         revealFrames: 8,
-        maxBlur: 34,
-        teaseBlur: 12,
         revealFlash: 0.35,
         revealPunch: 0.06,
         revealDim: 0.44,
@@ -166,7 +162,7 @@ export const T2Reels: React.FC = () => (
     {/* HIDDEN SIDEQUEST — the one feature the lock belongs to, so it is ON,
         labelled with the app's own words; the countdown stays off (a timer
         racing to 0 in three seconds would misstate a reveal days away). The
-        hook is twelve words and lands word by word by ~2.8 s, so the blur
+        hook is twelve words and lands word by word by ~2.8 s, so the veil
         waits until 3.8 s: a full second to read it (at 56 px "23:30." fell
         onto a line of its own — 48 keeps it on the second line). The phone
         plays app/hidden_sidequest_demo.mp4 (production-build take, 21.0 s)
@@ -196,8 +192,6 @@ export const T2Reels: React.FC = () => (
 
         revealAtSeconds: 3.8,
         revealFrames: 8,
-        maxBlur: 34,
-        teaseBlur: 12,
         revealFlash: 0.35,
         revealPunch: 0.06,
         revealDim: 0.44,
@@ -244,14 +238,14 @@ export const T2Reels: React.FC = () => (
         durationInFrames: t2RevealDuration(props.mainSeconds, props.ctaSeconds, CANVAS.fps),
       })}
     />
-    {/* ITINERARY — day 1, filed in the wrong order, blurred under the hook.
-        The blur lifts on the drop. app/itinerary_demo.mp4 (production-build
+    {/* ITINERARY — day 1, filed in the wrong order, veiled under the hook.
+        The veil lifts on the drop. app/itinerary_demo.mp4 (production-build
         take, 18.8 s) starts 0.8 s in (videoStartFrom 24), so the drop
         at ~5.8 s of the take lands at ~5.0 s of the reel and the list is
-        chronological by ~5.2 s: revealAtSeconds 5.0 snaps the blur clear as
+        chronological by ~5.2 s: revealAtSeconds 5.0 snaps the veil off as
         the row lands. Lock and countdown are OFF: the itinerary has no timed
         unlock, and implying one would misrepresent the feature (same call as
-        the Cost Split and Packing List reels). The blur is editorial. */}
+        the Cost Split and Packing List reels). The veil is editorial. */}
     <Composition
       id="T2-Reveal-Itinerary"
       component={T2Reveal}
@@ -272,8 +266,6 @@ export const T2Reels: React.FC = () => (
 
         revealAtSeconds: 5.0,
         revealFrames: 8,
-        maxBlur: 34,
-        teaseBlur: 12,
         revealFlash: 0.35,
         revealPunch: 0.06,
         revealDim: 0.44,
@@ -323,11 +315,11 @@ export const T2Reels: React.FC = () => (
         durationInFrames: t2RevealDuration(props.mainSeconds, props.ctaSeconds, CANVAS.fps),
       })}
     />
-    {/* SPOTIFY — the whole journey plays blurred under the hook, and the blur
+    {/* SPOTIFY — the whole journey plays veiled under the hook, and the veil
         lifts on the result. In app/spotify_demo.mp4 (production-build take,
         9.4 s) Leo saves the link at ~5.0 s, the sheet closes, he reopens
         Trip tools and from ~6.8 s the "Spotify playlist" row carries
-        "Open". revealAtSeconds 6.5 snaps the blur clear as that row lands,
+        "Open". revealAtSeconds 6.5 snaps the veil off as that row lands,
         and mainSeconds 9.4 ends with the take.
         Lock and countdown are OFF: a playlist link has no timed unlock. */}
     <Composition
@@ -350,8 +342,6 @@ export const T2Reels: React.FC = () => (
 
         revealAtSeconds: 6.5,
         revealFrames: 8,
-        maxBlur: 34,
-        teaseBlur: 12,
         revealFlash: 0.35,
         revealPunch: 0.06,
         revealDim: 0.44,

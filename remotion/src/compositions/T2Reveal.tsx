@@ -2,10 +2,10 @@
  * T2 — THE REVEAL.  Goal: comments.  Tempo: slow, held.
  * Phone: centre stage the whole time. Capture: the hidden sidequest screen.
  *
- * A blurred activity card, a lock, a countdown — then the blur lifts. The
+ * A veiled phone, a lock, a countdown — then the veil lifts. The
  * entire reel is ONE sustained pattern interrupt, which is what actually holds
  * viewers; a single strange frame followed by ten normal ones loses them
- * faster than no interrupt at all. So the blur owns most of the runtime and
+ * faster than no interrupt at all. So the veil owns most of the runtime and
  * the reveal is the last thing that happens.
  *
  * This is our only true category exclusive: nobody else markets the surprise.
@@ -17,7 +17,10 @@
  * the spell and costs the comment.
  *
  * Bands: countdown on top, phone on the stage, copy underneath. The copy
- * switches from the hook to the caption at the moment the blur lifts.
+ * switches from the hook to the caption at the moment the veil lifts.
+ *
+ * No blur (removed 2026-09-25): the app UI stays sharp from frame one, and
+ * the reveal is light, a pop and a bloom (components/PopReveal.tsx).
  */
 import React from "react";
 import { z } from "zod";
@@ -27,7 +30,7 @@ import { splitSafeArea, fullSafeBox } from "../layout";
 import { frames, totalFrames } from "../timing";
 import { textStyle } from "../type";
 import { AnimatedBackground } from "../components/AnimatedBackground";
-import { BlurReveal } from "../components/BlurReveal";
+import { PopReveal } from "../components/PopReveal";
 import { CTA } from "../components/CTA";
 import { Phone } from "../components/Phone";
 import { Grade } from "../components/Grade";
@@ -38,12 +41,12 @@ import { Band, CaptionText, HookText, exitBefore } from "../components/Text";
 export const t2RevealSchema = z.object({
   // ---- content ----
   appVideo: z.string(),
-  /** Two short lines, held under the blurred phone from frame one. */
+  /** Two short lines, held under the veiled phone from frame one. */
   hookLine1: z.string(),
   hookLine2: z.string(),
   /** Word on the lock, e.g. "Hidden until Friday". Empty = lock with no label. */
   lockLabel: z.string(),
-  /** Replaces the hook the instant the blur lifts. */
+  /** Replaces the hook the instant the veil lifts. */
   caption: z.string(),
   /** Small line above the phone after the reveal, e.g. "UNLOCKED". */
   revealedLabel: z.string(),
@@ -67,21 +70,16 @@ export const t2RevealSchema = z.object({
 
   // ---- countdown ----
   showCountdown: z.boolean(),
-  /** Seconds on the clock at frame 0. It reaches 0 as the blur lifts. */
+  /** Seconds on the clock at frame 0. It reaches 0 as the veil lifts. */
   countdownFrom: z.number().min(1).max(600).step(1),
   countdownLabel: z.string(),
   countdownFormat: z.enum(["mm:ss", "s.t", "s"]),
 
   // ---- the reveal itself ----
-  /** Seconds into the reel when the blur starts lifting. */
+  /** Seconds into the reel when the veil starts lifting. */
   revealAtSeconds: z.number().min(0.5).max(12).step(0.1),
   /** Frames the snap takes: 6-10 reads as a cut, 18+ as a polite fade. */
   revealFrames: z.number().min(4).max(60).step(1),
-  /** Blur at frame 0. */
-  maxBlur: z.number().min(0).max(80).step(1),
-  /** Blur just before the reveal: it creeps from maxBlur to this across the
-   *  hold, so the viewer sees progress. = maxBlur holds it flat. */
-  teaseBlur: z.number().min(0).max(80).step(1),
   /** White flash at the reveal, 0..1. */
   revealFlash: z.number().min(0).max(1).step(0.05),
   /** Scale pop at the reveal (underdamped spring). 0 = none. */
@@ -113,7 +111,7 @@ export const t2RevealSchema = z.object({
   captionFontSize: z.number().min(20).max(90).step(2),
   timerFontSize: z.number().min(24).max(120).step(2),
 
-  // ---- phone: minimal movement. The blur is the event, not the camera. ----
+  // ---- phone: minimal movement. The reveal is the event, not the camera. ----
   screenRotDeg: z.number().min(0).max(270).step(90),
   screenFlipY: z.boolean(),
   phoneOffsetY: z.number().min(-400).max(400).step(5),
@@ -126,7 +124,7 @@ export const t2RevealSchema = z.object({
   ctaLogoSize: z.number().min(50).max(180).step(2),
 
   // ---- timing (seconds) ----
-  /** Whole held section: blur, countdown, reveal and the beat after it. */
+  /** Whole held section: veil, countdown, reveal and the beat after it. */
   mainSeconds: z.number().min(3).max(16).step(0.1),
   ctaSeconds: z.number().min(1.5).max(6).step(0.1),
 });
@@ -153,13 +151,11 @@ export const T2Reveal: React.FC<T2RevealProps> = (p) => {
       />
 
       <Sequence durationInFrames={mainDur}>
-        {/* The phone is on screen from the first frame — blurred, not absent.
+        {/* The phone is on screen from the first frame — veiled, not absent.
             Hiding it entirely would waste the interrupt. */}
-        <BlurReveal
+        <PopReveal
           revealFrame={revealFrame}
           revealFrames={p.revealFrames}
-          maxBlur={p.maxBlur}
-          teaseBlur={p.teaseBlur}
           flash={p.revealFlash}
           scalePunch={p.revealPunch}
           dim={p.revealDim}
@@ -181,7 +177,7 @@ export const T2Reveal: React.FC<T2RevealProps> = (p) => {
             offsetY={p.phoneOffsetY}
             focus={p.phoneFocus}
           />
-        </BlurReveal>
+        </PopReveal>
 
         {/* Countdown, then the unlocked label in the same place. */}
         {p.showCountdown ? (
@@ -254,7 +250,7 @@ export const T2Reveal: React.FC<T2RevealProps> = (p) => {
         />
       </Sequence>
 
-      {/* Grain throughout, and one glint across the glass as the blur lifts. */}
+      {/* Grain throughout, and one glint across the glass as the veil lifts. */}
       <Grade
         grain={p.grain}
         sweepAt={revealFrame + 2}
