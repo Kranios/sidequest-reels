@@ -364,5 +364,93 @@ export const T1Reels: React.FC = () => (
         ),
       })}
     />
+    {/* SPOTIFY — the trip has one shared playlist link, so the receipt is who
+        it reaches: the total is the nine members of the demo trip and each
+        row is one of them (configs/fixtures/spotify_demo.json, /members:
+        1 x 9 = 9). Leo is flagged because he is the one who pastes the link.
+        The phone plays app/spotify_demo.mp4 from 5.0 s (frame 150) for
+        4.4 s: the link lands in the field at ~5.2 s, Save at ~6.2 s, and
+        from ~8.0 s the Trip tools row shows "Open", held 1.4 s. */}
+    <Composition
+      id="T1-Receipt-Spotify"
+      component={T1Receipt}
+      schema={t1ReceiptSchema}
+      defaultProps={{
+        appVideo: "app/spotify_demo.mp4",
+        currency: "",
+        total: 9,
+        totalDecimals: 0,
+        thousandsSeparator: ",",
+        stakeLine: "One aux. Nine opinions.",
+        // 1 x 9 = 9
+        rows: [
+          { name: "Ana", amount: 1, flagged: false },
+          { name: "Jo", amount: 1, flagged: false },
+          { name: "Sam", amount: 1, flagged: false },
+          { name: "Marcus", amount: 1, flagged: false },
+          { name: "Leo", amount: 1, flagged: true },
+          { name: "Ines", amount: 1, flagged: false },
+          { name: "Mia", amount: 1, flagged: false },
+          { name: "Ravi", amount: 1, flagged: false },
+          { name: "Ella", amount: 1, flagged: false },
+        ],
+        rowNote: "Leo pasted it once.",
+        caption: "One link. Everyone has the playlist.",
+        launchLine: "Plan together. Travel better.",
+
+        showSafeArea: false,
+        safeTop: 220,
+        safeBottom: 450,
+        safeLeft: 65,
+        safeRight: 120,
+
+        topBandFrac: 0.14,
+        bottomBandFrac: 0.16,
+        bandGutter: 44,
+        phoneFill: 0.95,
+
+        bgIntensity: 0.75,
+        bgSpeed: 0.65,
+        bgBlur: 155,
+        bgVignette: 0.8,
+
+        totalFontSize: 220,
+        runningTotalFontSize: 60,
+        stakeFontSize: 36,
+        // 40 / gap 8, not 44 / 12: nine rows instead of five.
+        rowFontSize: 40,
+        rowGap: 8,
+        rowStagger: 4,
+        captionFontSize: 40,
+
+        screenRotDeg: 0,
+        screenFlipY: false,
+        phoneOffsetY: 0,
+        swingDeg: 12,
+        dollyIn: 0.45,
+        videoStartFrom: 150,
+
+        ctaVariant: "standard",
+        ctaLogoSize: 104,
+
+        totalSeconds: 2.4,
+        rowsSeconds: 4.0,
+        phoneSeconds: 4.4,
+        ctaSeconds: 2.4,
+      }}
+      fps={CANVAS.fps}
+      width={CANVAS.width}
+      height={CANVAS.height}
+      durationInFrames={t1ReceiptDuration(2.4, 4.0, 4.4, 2.4, CANVAS.fps)}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: t1ReceiptDuration(
+          props.totalSeconds,
+          props.rowsSeconds,
+          props.phoneSeconds,
+          props.ctaSeconds,
+          CANVAS.fps
+        ),
+      })}
+    />
   </>
 );

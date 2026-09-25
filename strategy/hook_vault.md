@@ -169,6 +169,49 @@ and T4.
 
 ---
 
+## 2026-09-25 — Spotify batch (theme 6, B-problem)
+
+The trip's shared playlist: one Spotify link, saved on the trip, open to
+everyone on it. The app has NO song search, track list or per-song avatars.
+The feature is the link, and the reels claim nothing more. Same Mallorca trip
+and nine friends as the other batches. Figures come from
+`configs/fixtures/spotify_demo.json` and the `spotify_demo` journey in
+`app/spotify_demo.mp4`: Leo opens Trip tools, pastes a playlist link, saves,
+and the "Spotify playlist" row then shows "Open".
+
+| Reel ID | Driver | Hook (≤ 8 words) | Supporting lines |
+|---|---|---|---|
+| `T1-Receipt-Spotify` | recognition | **9** — "One aux. Nine opinions." | rows: the nine travelers, 1 each (sum = 9) / "Leo pasted it once." / "One link. Everyone has the playlist." |
+| `T2-Reveal-Spotify` | curiosity | "Nobody wants to play DJ. / Share the playlist link. Let the group handle it." | "Saved once. Open for all nine." |
+| `T3-Speedrun-Spotify` | competence | "How to share / the trip playlist." | "One link. Zero chaos." / over the take: "Link pasted. Playlist shared." / "Saved once. Nine people have it." |
+| `T4-Callout-Spotify` | humour | "Stop asking for the Spotify link. / It's already in the trip planner." | "Posted in the group chat. Buried by lunch. Asked for again at the gate." / "Saved once, in the trip." / "Tag the one who never finds it." |
+| `T5-Atlas-Spotify` | aspiration | "Seven nights. One playlist. / Everyone has access." | "Sóller, Mallorca. Soundtrack sorted." / stats: 9 travelers with access · 0 links lost in the chat |
+
+### Where every figure comes from
+
+| Figure | Source |
+|---|---|
+| 9 / "Nine opinions" / "all nine" / "Nine people" | `/members` in the fixture: Ana, Jo, Sam, Marcus, Leo, Ines, Mia, Ravi, Ella |
+| T1 rows | one row per member, 1 each: 9 × 1 = 9. Leo is flagged because he pastes the link in the take |
+| "Seven nights" / "Sóller, Mallorca" | the trip's `startDate`/`endDate` ({today+2} to {today+9}) and `destination` |
+| 0 links lost in the chat | saving is `PATCH /api/trips/{id}/spotify`; nothing is posted to the chat |
+
+T4 is text-only. Its three group-chat lines are narrative, like T2's in the
+Hidden SideQuest batch, and none of them carries a figure.
+
+**Copy changed from the brief before build (approved 2026-09-25):** the
+brief's "Who has the aux?" (T1) and "Tired of playing DJ?" (T2) broke the
+no-rhetorical-questions firewall. They became "One aux. Nine opinions." and
+"Nobody wants to play DJ.". "One link. Everyone adds their tracks." claimed an
+in-app feature that does not exist and became "One link. Everyone has the
+playlist.". "Roadtrip Playlist." did not fit a flight-and-villa trip and
+became "Seven nights. One playlist.".
+
+All five set "Plan together. Travel better."; T2 and T5 are `quiet`, so it
+shows on T1, T3 and T4.
+
+---
+
 ## Retired CTA — do not use again
 
 - "First 50 get lifetime access — free." Retired 2026-09-25 by Oskar. The

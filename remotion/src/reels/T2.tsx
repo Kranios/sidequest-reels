@@ -311,5 +311,78 @@ export const T2Reels: React.FC = () => (
         durationInFrames: t2RevealDuration(props.mainSeconds, props.ctaSeconds, CANVAS.fps),
       })}
     />
+    {/* SPOTIFY — the whole journey plays blurred under the hook, and the blur
+        lifts on the result. In app/spotify_demo.mp4 Leo saves the link at
+        ~6.2 s, the sheet closes, he reopens Trip tools and from ~8.0 s the
+        "Spotify playlist" row carries "Open". revealAtSeconds 7.6 over
+        revealFrames 18 clears the blur across 7.6-8.2 s, as that row lands.
+        Lock and countdown are OFF: a playlist link has no timed unlock. */}
+    <Composition
+      id="T2-Reveal-Spotify"
+      component={T2Reveal}
+      schema={t2RevealSchema}
+      defaultProps={{
+        appVideo: "app/spotify_demo.mp4",
+        hookLine1: "Nobody wants to play DJ.",
+        hookLine2: "Share the playlist link. Let the group handle it.",
+        lockLabel: "",
+        caption: "Saved once. Open for all nine.",
+        revealedLabel: "the playlist",
+        launchLine: "Plan together. Travel better.",
+
+        showCountdown: false,
+        countdownFrom: 30,
+        countdownLabel: "",
+        countdownFormat: "s",
+
+        revealAtSeconds: 7.6,
+        revealFrames: 18,
+        maxBlur: 34,
+        revealDim: 0.44,
+        showLock: false,
+
+        showSafeArea: false,
+        safeTop: 220,
+        safeBottom: 450,
+        safeLeft: 65,
+        safeRight: 120,
+
+        topBandFrac: 0.12,
+        bottomBandFrac: 0.22,
+        bandGutter: 28,
+        phoneFill: 0.95,
+
+        bgIntensity: 0.3,
+        bgSpeed: 0.2,
+        bgBlur: 200,
+        bgVignette: 0.9,
+
+        // The second hook line is 48 characters and wraps to two rows;
+        // 44 keeps the whole hook inside the top band.
+        hookFontSize: 44,
+        captionFontSize: 40,
+        timerFontSize: 54,
+
+        screenRotDeg: 0,
+        screenFlipY: false,
+        phoneOffsetY: 0,
+        swingDeg: 4,
+        dollyIn: 0.2,
+        videoStartFrom: 0,
+
+        ctaVariant: "quiet",
+        ctaLogoSize: 112,
+
+        mainSeconds: 10.6,
+        ctaSeconds: 2.4,
+      }}
+      fps={CANVAS.fps}
+      width={CANVAS.width}
+      height={CANVAS.height}
+      durationInFrames={t2RevealDuration(10.6, 2.4, CANVAS.fps)}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: t2RevealDuration(props.mainSeconds, props.ctaSeconds, CANVAS.fps),
+      })}
+    />
   </>
 );

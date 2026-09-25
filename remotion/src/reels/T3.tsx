@@ -291,5 +291,72 @@ export const T3Reels: React.FC = () => (
         durationInFrames: t3SpeedrunDuration(props, CANVAS.fps),
       })}
     />
+    {/* SPOTIFY — the whole share in one take. app/spotify_demo.mp4 runs
+        11.6 s: Leo opens Trip tools (~2.6 s), taps "Spotify playlist",
+        pastes the link (~5.2 s), saves (~6.2 s) and reopens the tools, where
+        the row shows "Open" from ~8.0 s. videoSeconds 11.5 plays the whole
+        take, so the reel is 13.9 s. */}
+    <Composition
+      id="T3-Speedrun-Spotify"
+      component={T3Speedrun}
+      schema={t3SpeedrunSchema}
+      defaultProps={{
+        appVideo: "app/spotify_demo.mp4",
+        hookLine1: "How to share",
+        hookLine2: "the trip playlist.",
+        hookSubtext: "One link. Zero chaos.",
+        runCaption: "Link pasted. Playlist shared.",
+        caption: "Saved once. Nine people have it.",
+        launchLine: "Plan together. Travel better.",
+
+        showTimer: true,
+        timerLabel: "elapsed",
+        timerFormat: "s.t",
+        timerRate: 1,
+        timerAlign: "end",
+
+        showSafeArea: false,
+        safeTop: 220,
+        safeBottom: 450,
+        safeLeft: 65,
+        safeRight: 120,
+
+        topBandFrac: 0.18,
+        bottomBandFrac: 0.14,
+        bandGutter: 28,
+        phoneFill: 0.95,
+
+        bgIntensity: 1.15,
+        bgSpeed: 1.8,
+        bgBlur: 140,
+        bgVignette: 0.72,
+
+        hookFontSize: 64,
+        runCaptionFontSize: 42,
+        timerFontSize: 48,
+        captionFontSize: 40,
+
+        screenRotDeg: 0,
+        screenFlipY: false,
+        phoneOffsetY: 0,
+        swingDeg: 10,
+        dollyIn: 0.3,
+        videoStartFrom: 0,
+
+        ctaVariant: "urgent",
+        ctaLogoSize: 104,
+
+        hookSeconds: 2.0,
+        videoSeconds: 11.5,
+        ctaSeconds: 2.4,
+      }}
+      fps={CANVAS.fps}
+      width={CANVAS.width}
+      height={CANVAS.height}
+      durationInFrames={t3SpeedrunDuration({ videoSeconds: 11.5, ctaSeconds: 2.4 }, CANVAS.fps)}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: t3SpeedrunDuration(props, CANVAS.fps),
+      })}
+    />
   </>
 );

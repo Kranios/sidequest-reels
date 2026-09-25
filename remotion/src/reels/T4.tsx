@@ -270,5 +270,65 @@ export const T4Reels: React.FC = () => (
         durationInFrames: t4CalloutDuration(props, CANVAS.fps),
       })}
     />
+    {/* SPOTIFY — no phone and no capture, only the copy. The lines are the
+        life of a playlist link in a group chat; the accent line is what the
+        app does: one link, saved on the trip for every member. */}
+    <Composition
+      id="T4-Callout-Spotify"
+      component={T4Callout}
+      schema={t4CalloutSchema}
+      defaultProps={{
+        hookLine1: "Stop asking for the Spotify link.",
+        hookLine2: "It's already in the trip planner.",
+        hookSubtext: "",
+        lines: [
+          { text: "Posted in the group chat.", accent: false },
+          { text: "Buried by lunch.", accent: false },
+          { text: "Asked for again at the gate.", accent: false },
+          { text: "Saved once, in the trip.", accent: true },
+        ],
+        punchline: "Tag the one who never finds it.",
+        kicker: "",
+        launchLine: "Plan together. Travel better.",
+
+        showCounter: false,
+
+        showSafeArea: false,
+        safeTop: 220,
+        safeBottom: 450,
+        safeLeft: 65,
+        safeRight: 120,
+
+        topBandFrac: 0.2,
+        bottomBandFrac: 0.18,
+        bandGutter: 28,
+
+        bgIntensity: 1.2,
+        bgSpeed: 1.1,
+        bgBlur: 130,
+        bgVignette: 0.62,
+        bgPulse: true,
+
+        hookFontSize: 50,
+        lineFontSize: 64,
+        punchFontSize: 70,
+        kickerFontSize: 40,
+
+        ctaVariant: "standard",
+        ctaLogoSize: 104,
+
+        hookSeconds: 1.8,
+        lineSeconds: 1.0,
+        punchSeconds: 1.6,
+        ctaSeconds: 2.4,
+      }}
+      fps={CANVAS.fps}
+      width={CANVAS.width}
+      height={CANVAS.height}
+      durationInFrames={294}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: t4CalloutDuration(props, CANVAS.fps),
+      })}
+    />
   </>
 );

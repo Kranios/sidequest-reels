@@ -58,7 +58,10 @@ batch (capture `app/hidden_sidequest_demo.mp4`, fixture
 `T4-Callout-HiddenSideQuest`, `T5-Atlas-HiddenSideQuest`; and the Itinerary
 batch (capture `app/itinerary_demo.mp4`, fixture `itinerary_demo.json`):
 `T1-Receipt-Itinerary`, `T2-Reveal-Itinerary`, `T3-Speedrun-Itinerary`,
-`T4-Callout-Itinerary`, `T5-Atlas-Itinerary`. `videoStartFrom` is
+`T4-Callout-Itinerary`, `T5-Atlas-Itinerary`; and the Spotify batch
+(capture `app/spotify_demo.mp4`, fixture `spotify_demo.json`):
+`T1-Receipt-Spotify`, `T2-Reveal-Spotify`, `T3-Speedrun-Spotify`,
+`T4-Callout-Spotify`, `T5-Atlas-Spotify`. `videoStartFrom` is
 in frames (30 fps); T1, T2 and T5 allow up to 600, so a phone beat can start
 late in a take. The first fifteen template reels were removed for it;
 they are recoverable from commit `1ff4ffd` and their hooks are in the retired
@@ -209,6 +212,11 @@ repo root.
 - **The mp4 container adds ~0.053 s** to the duration that `qa.py` reads, so
   600 frames measures 20.05 s and fails the 20 s cap. Keep a reel at ≤ 598
   frames.
+- **A single `remotion still` can come out with no phone at all.** The whole
+  3D canvas is empty, not magenta. T3-Speedrun-Spotify frames 196-200 and 204
+  did this on every attempt, while a video render of frames 180-220 had the
+  phone in all 41. It is a timing race in the one-frame still path. Before
+  you call it a bug, check the frame with `render --frames=a-b`.
 - **Check for a magenta frame 0.** On a GPU render the phone screen can come
   out magenta in the first frame, intermittently, because the texture is not
   ready yet. This happened once in 15 reels, and re-rendering fixed it.
