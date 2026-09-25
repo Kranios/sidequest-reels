@@ -2,7 +2,7 @@
  * T3 — THE SPEEDRUN.  Goal: saves.  Tempo: fast.
  * Phone: the tool, in one unbroken take. Capture: one scripted user journey.
  *
- * A real job done start to finish on the phone while a stopwatch runs — here,
+ * A real job done start to finish on the phone — here,
  * logging an expense and splitting it. Competence porn: satisfying,
  * save-worthy, and it demos the product without feeling like a demo.
  *
@@ -14,13 +14,13 @@
  *
  * TIMING. A journey runs 15-20 s and qa.py caps a reel at 20 s, so the hook
  * does not get a beat of its own: it sits in the top band while the capture's
- * opening beat plays and the phone makes its entrance. Then the stopwatch
- * takes the top band — reading the take's real elapsed time — and the run
- * caption takes the bottom one. `videoSeconds` is how much of the capture
+ * opening beat plays and the phone makes its entrance. Then the run caption
+ * takes the bottom band and the top one stays empty: a corner stopwatch was
+ * tried and removed (2026-09-25) because it cluttered the frame. `videoSeconds` is how much of the capture
  * plays: trim the idle hold at the end of a journey, never the journey.
  *
  * WHY IT SCALES: every journey is a new run — a new scenario, a new capture,
- * new props. The clock makes it a format people expect variations of.
+ * new props.
  */
 import React from "react";
 import { z } from "zod";
@@ -33,7 +33,6 @@ import { CTA } from "../components/CTA";
 import { Hook } from "../components/Hook";
 import { Phone } from "../components/Phone";
 import { SafeAreaOverlay } from "../components/SafeAreaOverlay";
-import { Timer } from "../components/Timer";
 import { Band, CaptionText, SupportText } from "../components/Text";
 
 export const t3SpeedrunSchema = z.object({
@@ -49,17 +48,6 @@ export const t3SpeedrunSchema = z.object({
   /** Under the sign-off. */
   caption: z.string(),
   launchLine: z.string(),
-
-  // ---- timer ----
-  showTimer: z.boolean(),
-  timerLabel: z.string(),
-  timerFormat: z.enum(["mm:ss", "s.t", "s"]),
-  /**
-   * Clock seconds per real second. 1 = a real stopwatch; higher compresses a
-   * long job ("a 5-day trip in 30 seconds") into the run.
-   */
-  timerRate: z.number().min(0.1).max(60).step(0.1),
-  timerAlign: z.enum(["start", "center", "end"]),
 
   // ---- safe area (mirrors SAFE_INSETS) ----
   showSafeArea: z.boolean(),
@@ -84,7 +72,6 @@ export const t3SpeedrunSchema = z.object({
   /** The hook lives in the top band, so it is sized for it. */
   hookFontSize: z.number().min(30).max(140).step(2),
   runCaptionFontSize: z.number().min(20).max(90).step(2),
-  timerFontSize: z.number().min(24).max(120).step(2),
   captionFontSize: z.number().min(20).max(90).step(2),
 
   // ---- phone ----
@@ -164,36 +151,8 @@ export const T3Speedrun: React.FC<T3SpeedrunProps> = (p) => {
         ) : null}
       </Sequence>
 
-      {/* The rest of the take: the clock and what is being done. */}
+      {/* The rest of the take: what is being done. */}
       <Sequence from={hookDur} durationInFrames={runDur - hookDur}>
-        {p.showTimer ? (
-          <Band box={bands.top} align="end">
-            <div
-              style={{
-                width: "100%",
-                display: "flex",
-                justifyContent:
-                  p.timerAlign === "start"
-                    ? "flex-start"
-                    : p.timerAlign === "end"
-                    ? "flex-end"
-                    : "center",
-              }}
-            >
-              {/* Starts where the take already is, so it reads real elapsed
-                  time rather than time since the hook left. */}
-              <Timer
-                direction="up"
-                startSeconds={(hookDur / fps) * p.timerRate}
-                rate={p.timerRate}
-                format={p.timerFormat}
-                fontSize={p.timerFontSize}
-                label={p.timerLabel}
-                tick
-              />
-            </div>
-          </Band>
-        ) : null}
         {p.runCaption ? (
           <Band box={bands.bottom} align="start">
             <CaptionText text={p.runCaption} fontSize={p.runCaptionFontSize} delay={4} />

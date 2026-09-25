@@ -74,7 +74,8 @@ derived from the content where the content sets them — add a line to T4's
 ### The five shared pieces
 
 `NumberCounter` (T1, T5) · `KineticList` — stack rows or swap lines (T1, T4) ·
-`BlurReveal` (T2) · `Timer` — counts up or down (T2, T3) · `ScreenSwapper` —
+`BlurReveal` (T2) · `Timer` — counts up or down (T2's countdown; T3's
+stopwatch was removed 2026-09-25 as clutter) · `ScreenSwapper` —
 real hard cuts, one `<Sequence>` per screen (no template uses it since T3
 became one continuous `--scenario` take; kept for a multi-capture reel).
 
@@ -282,6 +283,17 @@ repo root.
   implemented as `<Sequence from={-n}>` in `Phone.tsx`, **not**
   `<Video startFrom>` — `<Video>` only exists on the preview path, so a
   `startFrom` there fixes Studio and silently does nothing to the render.
+- **Photos: trip covers and the hero carousel.** The app already has both.
+  `trip.imageUrl` is the cover, and `buildSlideshowItems`
+  (`components/slideshow-cover.tsx`) crossfades it with every activity's
+  `imageUrl`, sorted by date and time. That only happens while
+  `slideshowEnabled` is on and the activity has no `excludeFromSlideshow`.
+  Each activity with a photo also gets it as its thumbnail in the feed. A
+  fixture with `imageUrl: null` shows grey placeholder tiles.
+  Fixtures point at `https://media.sidequest.demo/<file>`, and
+  `install_media_route` serves those files from `configs/fixtures/media/`
+  (Unsplash photos, credited in `CREDITS.md`). Nothing is fetched from the
+  network during a take.
 - **API mocking.** `record_video.py` answers every `**/api/**` request that is
   not for the app's own origin from the `routes` object of
   `configs/fixtures/*.json` (path → exact response body). `{id}` matches any
@@ -502,6 +514,11 @@ template's psychology is the variable under test.
    - **T4 exception:** no phone and no video prop at all — only the copy
      (`hookLine1/2`, `lines`, `punchline`).
    - `videoStartFrom: 0` — the capture already trims the splash.
+   - T2's reveal: the blur creeps from `maxBlur` to `teaseBlur` across the
+     hold, then snaps in `revealFrames` (8) with `revealFlash` and
+     `revealPunch`. Viewers leave during a flat blur, so reveal by ~3 s. If
+     the result comes late in the take, use `videoStartFrom` to start the
+     take later rather than holding the blur longer.
    - T2's lock and countdown imply a timed unlock. Turn them off
      (`showLock`, `showCountdown`) for any feature that doesn't have one.
 6. **Duration limit: 8–20 s** — `qa.py` fails anything outside it; aim for

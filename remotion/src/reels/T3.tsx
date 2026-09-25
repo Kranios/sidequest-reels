@@ -36,12 +36,6 @@ export const T3Reels: React.FC = () => (
         caption: "Saved: one argument at the airport.",
         launchLine: "First 50 get lifetime access — free.",
 
-        showTimer: true,
-        timerLabel: "elapsed",
-        timerFormat: "s.t",
-        timerRate: 1,
-        timerAlign: "end",
-
         showSafeArea: false,
         safeTop: 220,
         safeBottom: 450,
@@ -60,7 +54,6 @@ export const T3Reels: React.FC = () => (
 
         hookFontSize: 64,
         runCaptionFontSize: 42,
-        timerFontSize: 48,
         captionFontSize: 40,
 
         screenRotDeg: 0,
@@ -103,12 +96,6 @@ export const T3Reels: React.FC = () => (
         caption: "Nobody brings two umbrellas again.",
         launchLine: "First 50 get lifetime access — free.",
 
-        showTimer: true,
-        timerLabel: "elapsed",
-        timerFormat: "s.t",
-        timerRate: 1,
-        timerAlign: "end",
-
         showSafeArea: false,
         safeTop: 220,
         safeBottom: 450,
@@ -127,7 +114,6 @@ export const T3Reels: React.FC = () => (
 
         hookFontSize: 64,
         runCaptionFontSize: 40,
-        timerFontSize: 48,
         captionFontSize: 40,
 
         screenRotDeg: 0,
@@ -172,12 +158,6 @@ export const T3Reels: React.FC = () => (
         caption: "Nobody finds out before 23:30.",
         launchLine: "First 50 get lifetime access — free.",
 
-        showTimer: true,
-        timerLabel: "elapsed",
-        timerFormat: "s.t",
-        timerRate: 1,
-        timerAlign: "end",
-
         showSafeArea: false,
         safeTop: 220,
         safeBottom: 450,
@@ -196,7 +176,6 @@ export const T3Reels: React.FC = () => (
 
         hookFontSize: 64,
         runCaptionFontSize: 42,
-        timerFontSize: 48,
         captionFontSize: 40,
 
         screenRotDeg: 0,

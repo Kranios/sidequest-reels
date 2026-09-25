@@ -6,10 +6,18 @@
  * at all — so the blur holds for most of the shot and the reveal is the last
  * thing that happens, not the first.
  *
+ * But a blur that simply sits there reads as "nothing is happening", and
+ * viewers leave before it lifts. So the hold is not static: the blur EASES
+ * from `maxBlur` down to `teaseBlur` across the whole hold, so the screen is
+ * almost legible just before the reveal and the viewer sees it coming. Then
+ * it SNAPS: an exponential ease-out over `revealFrames` (6-10 reads as a cut,
+ * not a fade), a scale pop on an underdamped spring, and an optional white
+ * flash that decays over 6 frames.
+ *
  * Wraps anything: the 3D phone, a flat capture, a card.
  */
 import React from "react";
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
+import { AbsoluteFill, Easing, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
 import { BRAND } from "../brand";
 import { textStyle } from "../type";
 
@@ -18,11 +26,15 @@ export const BlurReveal: React.FC<{
   revealFrame: number;
   /** How long the lift takes. */
   revealFrames?: number;
-  /** Blur radius while hidden, px. */
+  /** Blur radius at frame 0, px. */
   maxBlur?: number;
+  /** Blur radius reached just before the reveal, px. = maxBlur holds flat. */
+  teaseBlur?: number;
+  /** White flash at the reveal, 0..1. 0 disables. */
+  flash?: number;
   /** Extra darkening while hidden, 0..1. */
   dim?: number;
-  /** Slight push-in as it sharpens; 0 disables. */
+  /** Scale pop at the reveal (overshoots, then settles); 0 disables. */
   scalePunch?: number;
   /** Padlock + label sitting on the blur. Omit the label for just the lock. */
   showLock?: boolean;
@@ -31,8 +43,10 @@ export const BlurReveal: React.FC<{
   children: React.ReactNode;
 }> = ({
   revealFrame,
-  revealFrames = 18,
+  revealFrames = 8,
   maxBlur = 26,
+  teaseBlur,
+  flash = 0,
   dim = 0.35,
   scalePunch = 0.03,
   showLock = true,
@@ -43,16 +57,36 @@ export const BlurReveal: React.FC<{
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Spring so it snaps clear rather than easing politely into focus.
-  const reveal = spring({
+  const tease = teaseBlur ?? maxBlur;
+  // The hold: blur creeps down, faster towards the end, so tension builds.
+  const holdBlur = interpolate(frame, [0, Math.max(revealFrame, 1)], [maxBlur, tease], {
+    easing: Easing.in(Easing.quad),
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  // The snap: most of the lift happens in the first two or three frames.
+  const reveal = interpolate(frame - revealFrame, [0, Math.max(revealFrames, 1)], [0, 1], {
+    easing: Easing.out(Easing.exp),
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  // Pop: underdamped, so the phone overshoots a touch and settles.
+  const pop = spring({
     frame: frame - revealFrame,
     fps,
-    durationInFrames: revealFrames,
-    config: { damping: 200, stiffness: 90 },
+    config: { damping: 9, stiffness: 220, mass: 0.5 },
   });
 
-  const blur = interpolate(reveal, [0, 1], [maxBlur, 0]);
-  const scale = 1 + scalePunch * (1 - reveal);
+  const blur = frame < revealFrame ? holdBlur : tease * (1 - reveal);
+  const scale = 1 + scalePunch * (1 - pop);
+  const flashOpacity =
+    flash > 0 && frame >= revealFrame
+      ? flash *
+        interpolate(frame - revealFrame, [0, 6], [1, 0], {
+          easing: Easing.out(Easing.quad),
+          extrapolateRight: "clamp",
+        })
+      : 0;
   const lockOpacity = interpolate(reveal, [0, 0.35], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
@@ -73,6 +107,17 @@ export const BlurReveal: React.FC<{
         <AbsoluteFill
           style={{
             background: `rgba(10,9,8,${dim * (1 - reveal)})`,
+            pointerEvents: "none",
+          }}
+        />
+      ) : null}
+
+      {flashOpacity > 0.001 ? (
+        <AbsoluteFill
+          style={{
+            background: "#ffffff",
+            opacity: flashOpacity,
+            mixBlendMode: "screen",
             pointerEvents: "none",
           }}
         />

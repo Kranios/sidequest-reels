@@ -58,8 +58,17 @@ export const t2RevealSchema = z.object({
   // ---- the reveal itself ----
   /** Seconds into the reel when the blur starts lifting. */
   revealAtSeconds: z.number().min(0.5).max(12).step(0.1),
+  /** Frames the snap takes: 6-10 reads as a cut, 18+ as a polite fade. */
   revealFrames: z.number().min(4).max(60).step(1),
+  /** Blur at frame 0. */
   maxBlur: z.number().min(0).max(80).step(1),
+  /** Blur just before the reveal: it creeps from maxBlur to this across the
+   *  hold, so the viewer sees progress. = maxBlur holds it flat. */
+  teaseBlur: z.number().min(0).max(80).step(1),
+  /** White flash at the reveal, 0..1. */
+  revealFlash: z.number().min(0).max(1).step(0.05),
+  /** Scale pop at the reveal (underdamped spring). 0 = none. */
+  revealPunch: z.number().min(0).max(0.2).step(0.01),
   revealDim: z.number().min(0).max(1).step(0.02),
   showLock: z.boolean(),
 
@@ -133,6 +142,9 @@ export const T2Reveal: React.FC<T2RevealProps> = (p) => {
           revealFrame={revealFrame}
           revealFrames={p.revealFrames}
           maxBlur={p.maxBlur}
+          teaseBlur={p.teaseBlur}
+          flash={p.revealFlash}
+          scalePunch={p.revealPunch}
           dim={p.revealDim}
           showLock={p.showLock}
           lockLabel={p.lockLabel}
