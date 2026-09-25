@@ -140,11 +140,12 @@ export const T3Reels: React.FC = () => (
     />
 
     {/* HIDDEN SIDEQUEST — plant a secret against the clock. The capture is
-        app/hidden_sidequest_demo.mp4 (20.2 s): Leo names it, slides it
-        hidden, sets the reveal to 23:30, leaves the teaser, saves, and the
-        trip feed shows it sealed from ~16.4 s. videoSeconds 17.6 + the 2.4 s
-        CTA is exactly qa.py's 20.0 s cap, so the sealed card holds ~1.2 s
-        before the CTA (19.5 held it ~3.1 s but ran 21.9 s). */}
+        app/hidden_sidequest_demo.mp4 (production-build take, 21.0 s): Leo
+        names it, slides it hidden, sets the reveal to 23:30, leaves the
+        teaser, saves, and the trip feed shows it sealed from ~17.0 s.
+        videoStartFrom 18 trims 0.6 s of the idle opening, so videoSeconds
+        17.6 plays the take to ~18.2 s and the sealed card holds ~1.2 s;
+        with the 2.4 s CTA the reel is exactly qa.py's 20.0 s cap. */}
     <Composition
       id="T3-Speedrun-HiddenSideQuest"
       component={T3Speedrun}
@@ -183,7 +184,7 @@ export const T3Reels: React.FC = () => (
         phoneOffsetY: 0,
         swingDeg: 10,
         dollyIn: 0.3,
-        videoStartFrom: 0,
+        videoStartFrom: 18,
 
         ctaVariant: "urgent",
         ctaLogoSize: 104,
@@ -201,7 +202,7 @@ export const T3Reels: React.FC = () => (
       })}
     />
     {/* ITINERARY — the whole fix in one take. app/itinerary_demo.mp4
-        (re-recorded 2026-09-25 with photos) runs 18.4 s: Leo drags the
+        (production-build take) runs 18.8 s: Leo drags the
         20:30 dinner to the end of day 1 (drops at ~5.8 s), opens Add
         activity, types "Beach Club", picks Food, moves it to day 2 at 14:00
         and saves; the finished feed is on screen from ~14.0 s and he swipes
@@ -266,11 +267,10 @@ export const T3Reels: React.FC = () => (
       })}
     />
     {/* SPOTIFY — the whole share in one take. app/spotify_demo.mp4
-        (re-recorded 2026-09-25 with photos) runs 11.1 s: Leo opens Trip
-        tools (~2.2 s), taps "Spotify playlist", pastes the link (~4.8 s),
-        saves (~5.8 s) and reopens the tools, where the row shows "Open"
-        from ~7.4 s. videoSeconds 11.1 plays the whole take, so the reel is
-        13.5 s. */}
+        (production-build take, 9.4 s): Leo opens Trip tools (~1.9 s), taps
+        "Spotify playlist", pastes the link (~4.2 s), saves (~5.0 s) and
+        reopens the tools, where the row shows "Open" from ~6.8 s.
+        videoSeconds 9.4 plays the whole take, so the reel is 11.8 s. */}
     <Composition
       id="T3-Speedrun-Spotify"
       component={T3Speedrun}
@@ -315,13 +315,13 @@ export const T3Reels: React.FC = () => (
         ctaLogoSize: 104,
 
         hookSeconds: 2.0,
-        videoSeconds: 11.1,
+        videoSeconds: 9.4,
         ctaSeconds: 2.4,
       }}
       fps={CANVAS.fps}
       width={CANVAS.width}
       height={CANVAS.height}
-      durationInFrames={t3SpeedrunDuration({ videoSeconds: 11.1, ctaSeconds: 2.4 }, CANVAS.fps)}
+      durationInFrames={t3SpeedrunDuration({ videoSeconds: 9.4, ctaSeconds: 2.4 }, CANVAS.fps)}
       calculateMetadata={({ props }) => ({
         durationInFrames: t3SpeedrunDuration(props, CANVAS.fps),
       })}

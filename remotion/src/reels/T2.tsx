@@ -169,13 +169,13 @@ export const T2Reels: React.FC = () => (
         hook is twelve words and lands word by word by ~2.8 s, so the blur
         waits until 3.8 s: a full second to read it (at 56 px "23:30." fell
         onto a line of its own — 48 keeps it on the second line). The phone
-        plays app/hidden_sidequest_demo.mp4 from 6.4 s (frame 192): sharp at
-        4.4 s on the reveal schedule still reading 18:00; Leo's finger lands
-        and types "23:" by 5.0 s and "23:30" by 5.3 s (checked on rendered
-        stills) — the hook's "23:30" pays off on screen. Then the
+        plays app/hidden_sidequest_demo.mp4 (production-build take, 21.0 s)
+        from 7.4 s (frame 222): sharp by ~4.0 s on the reveal schedule still
+        reading 18:00; Leo types "23:" by take 12.4 s (reel 5.0 s) and
+        "23:30" by 12.5 s, so the hook's "23:30" pays off on screen. Then the
         teaser "Swimsuits. No questions." (the caption's one clue), the save,
-        and the sealed card from reel ~10.0 s. mainSeconds 13.2 ends at take
-        19.6 s, inside the 20.2 s capture. */}
+        and the sealed card from take ~17.0 s (reel ~9.6 s). mainSeconds 13.2
+        ends at take 20.6 s, inside the 21.0 s capture. */}
     <Composition
       id="T2-Reveal-HiddenSideQuest"
       component={T2Reveal}
@@ -228,7 +228,7 @@ export const T2Reels: React.FC = () => (
         phoneOffsetY: 0,
         swingDeg: 4,
         dollyIn: 0.2,
-        videoStartFrom: 192,
+        videoStartFrom: 222,
 
         ctaVariant: "quiet",
         ctaLogoSize: 112,
@@ -245,8 +245,8 @@ export const T2Reels: React.FC = () => (
       })}
     />
     {/* ITINERARY — day 1, filed in the wrong order, blurred under the hook.
-        The blur lifts on the drop. app/itinerary_demo.mp4 (re-recorded
-        2026-09-25, 18.4 s) starts 0.8 s in (videoStartFrom 24), so the drop
+        The blur lifts on the drop. app/itinerary_demo.mp4 (production-build
+        take, 18.8 s) starts 0.8 s in (videoStartFrom 24), so the drop
         at ~5.8 s of the take lands at ~5.0 s of the reel and the list is
         chronological by ~5.2 s: revealAtSeconds 5.0 snaps the blur clear as
         the row lands. Lock and countdown are OFF: the itinerary has no timed
@@ -324,10 +324,11 @@ export const T2Reels: React.FC = () => (
       })}
     />
     {/* SPOTIFY — the whole journey plays blurred under the hook, and the blur
-        lifts on the result. In app/spotify_demo.mp4 (re-recorded 2026-09-25,
-        11.1 s) Leo saves the link at ~5.8 s, the sheet closes, he reopens
-        Trip tools and from ~7.4 s the "Spotify playlist" row carries
-        "Open". revealAtSeconds 7.0 snaps the blur clear as that row lands.
+        lifts on the result. In app/spotify_demo.mp4 (production-build take,
+        9.4 s) Leo saves the link at ~5.0 s, the sheet closes, he reopens
+        Trip tools and from ~6.8 s the "Spotify playlist" row carries
+        "Open". revealAtSeconds 6.5 snaps the blur clear as that row lands,
+        and mainSeconds 9.4 ends with the take.
         Lock and countdown are OFF: a playlist link has no timed unlock. */}
     <Composition
       id="T2-Reveal-Spotify"
@@ -347,7 +348,7 @@ export const T2Reels: React.FC = () => (
         countdownLabel: "",
         countdownFormat: "s",
 
-        revealAtSeconds: 7.0,
+        revealAtSeconds: 6.5,
         revealFrames: 8,
         maxBlur: 34,
         teaseBlur: 12,
@@ -388,13 +389,13 @@ export const T2Reels: React.FC = () => (
         ctaVariant: "quiet",
         ctaLogoSize: 112,
 
-        mainSeconds: 10.6,
+        mainSeconds: 9.4,
         ctaSeconds: 2.4,
       }}
       fps={CANVAS.fps}
       width={CANVAS.width}
       height={CANVAS.height}
-      durationInFrames={t2RevealDuration(10.6, 2.4, CANVAS.fps)}
+      durationInFrames={t2RevealDuration(9.4, 2.4, CANVAS.fps)}
       calculateMetadata={({ props }) => ({
         durationInFrames: t2RevealDuration(props.mainSeconds, props.ctaSeconds, CANVAS.fps),
       })}

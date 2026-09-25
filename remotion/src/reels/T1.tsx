@@ -193,9 +193,11 @@ export const T1Reels: React.FC = () => (
         plan; the rows are who knows it, and they add up to it: Leo 1, the
         other eight 0 — he made the trip's only hidden SideQuest
         (configs/fixtures/hidden_sidequest_demo.json + the journey). The
-        phone plays app/hidden_sidequest_demo.mp4 from 14.0 s (frame 420):
-        the teaser, the save, and from ~16.4 s the sealed card reading
-        "Reveals in 2d 5h 56m" — the rowNote rounds it down, never up. */}
+        phone plays app/hidden_sidequest_demo.mp4 (production-build take,
+        21.0 s) from 14.6 s (frame 438): the teaser, the save, and from
+        ~17.0 s the sealed card reading "Reveals in 2d 7h 56m" — the
+        rowNote rounds it down, never up. The countdown runs from the
+        moment of recording: re-record and read it off the new take. */}
     <Composition
       id="T1-Receipt-HiddenSideQuest"
       component={T1Receipt}
@@ -219,7 +221,7 @@ export const T1Reels: React.FC = () => (
           { name: "Ravi", amount: 0, flagged: false },
           { name: "Ella", amount: 0, flagged: false },
         ],
-        rowNote: "Reveals in 2 days, 5 hours.",
+        rowNote: "Reveals in 2 days, 7 hours.",
         caption: "The other eight get a countdown.",
         launchLine: "First 50 get lifetime access — free.",
 
@@ -252,7 +254,7 @@ export const T1Reels: React.FC = () => (
         phoneOffsetY: 0,
         swingDeg: 12,
         dollyIn: 0.45,
-        videoStartFrom: 420,
+        videoStartFrom: 438,
 
         ctaVariant: "standard",
         ctaLogoSize: 104,
@@ -282,7 +284,7 @@ export const T1Reels: React.FC = () => (
         + 1 + 1 = 9 (configs/fixtures/itinerary_demo.json plus the
         itinerary_demo journey). Day 1 is the flagged row — it is the day
         that was filed in the wrong order. The phone plays
-        app/itinerary_demo.mp4 (re-recorded 2026-09-25 with photos, 18.4 s)
+        app/itinerary_demo.mp4 (production-build take, 18.8 s)
         from 2.4 s (frame 72) for 4.2 s: day 1 filed out of order, the carry
         from ~5.0 s, the drop at ~5.8 s and the list chronological from
         ~6.0 s, ending at 6.6 s: the form starts sliding in at ~6.8 s, so
@@ -367,10 +369,10 @@ export const T1Reels: React.FC = () => (
         it reaches: the total is the nine members of the demo trip and each
         row is one of them (configs/fixtures/spotify_demo.json, /members:
         1 x 9 = 9). Leo is flagged because he is the one who pastes the link.
-        The phone plays app/spotify_demo.mp4 (re-recorded 2026-09-25 with
-        photos, 11.1 s) from 4.6 s (frame 138) for 4.4 s: the link lands in
-        the field at ~4.8 s, Save at ~5.8 s, and from ~7.4 s the Trip tools
-        row shows "Open", held 1.6 s. */}
+        The phone plays app/spotify_demo.mp4 (production-build take, 9.4 s)
+        from 4.0 s (frame 120) for 4.4 s: the link lands in the field at
+        ~4.2 s, Save at ~5.0 s, and from ~6.8 s the Trip tools row shows
+        "Open", held 1.6 s. */}
     <Composition
       id="T1-Receipt-Spotify"
       component={T1Receipt}
@@ -428,7 +430,7 @@ export const T1Reels: React.FC = () => (
         phoneOffsetY: 0,
         swingDeg: 12,
         dollyIn: 0.45,
-        videoStartFrom: 138,
+        videoStartFrom: 120,
 
         ctaVariant: "standard",
         ctaLogoSize: 104,

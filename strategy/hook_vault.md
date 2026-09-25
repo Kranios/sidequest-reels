@@ -99,7 +99,7 @@ Cliff Jump", slides it hidden, sets the reveal to 23:30, leaves the teaser
 
 | Reel ID | Driver | Hook (≤ 8 words) | Supporting lines |
 |---|---|---|---|
-| `T1-Receipt-HiddenSideQuest` | recognition | **1** — "One secret plan." | rows: who knows it (Leo 1, the other eight 0) / "Reveals in 2 days, 5 hours." / "The other eight get a countdown." |
+| `T1-Receipt-HiddenSideQuest` | recognition | **1** — "One secret plan." | rows: who knows it (Leo 1, the other eight 0) / "Reveals in 2 days, 7 hours." / "The other eight get a countdown." |
 | `T2-Reveal-HiddenSideQuest` | curiosity | "They think it's a normal dinner. / Nobody knows what happens at 23:30." | lock "Hidden until reveal" / "The group gets one clue: swimsuits." |
 | `T3-Speedrun-HiddenSideQuest` | competence | "How to lock / a secret SideQuest." | "Hidden until reveal." / over the take: "Named. Hidden. 23:30. Saved." / "Nobody finds out before 23:30." |
 | `T4-Callout-HiddenSideQuest` | humour | "Don't tell the group chat / where you're going." | "Someone screenshots it. Someone guesses in one. Someone tells their partner. Surprise over by lunch." / "Lock it in SideQuest instead." |
@@ -110,7 +110,7 @@ Cliff Jump", slides it hidden, sets the reveal to 23:30, leaves the teaser
 | Figure | Source |
 |---|---|
 | 1 secret plan · Leo 1, the others 0 | the journey creates the trip's only hidden SideQuest, as Leo; nine members |
-| 2 days, 5 hours | the sealed row in the take: "Reveals in 2d 5h 56m" — counted from the moment of recording, so a re-record changes it; read it off the new take |
+| 2 days, 7 hours | the sealed row in the production-build take of 2026-09-25: "Reveals in 2d 7h 56m" (it was 2d 5h 56m in the first take) — counted from the moment of recording, so a re-record changes it; read it off the new take |
 | 23:30 | the reveal time Leo sets |
 | eight · 8 friends in the dark | nine members minus Leo, who made it |
 | one clue: swimsuits · 1 clue given | the teaser "Swimsuits. No questions." |

@@ -323,7 +323,28 @@ repo root.
   garbage. This was a real bug.
 
 ### App capture
-- App runs locally: `cd D:\sidequest-mobile && npx expo start --web` (port 8081).
+- **Capture against a PRODUCTION build, never the dev server.** The app
+  gates unreleased features on `__DEV__` (`constants/feature-flags.ts`:
+  `ENABLE_GLUNO_ASSISTANT = __DEV__`). `npx expo start --web` is a dev
+  build, so it draws the **Gluno** mascot (the blue globe character next to
+  the gear in every trip header). Every trip/demo take recorded on the dev
+  server before 2026-09-25 had it. Run a second, production-mode server
+  and point the capture at it:
+  ```powershell
+  cd D:\sidequest-mobile
+  $env:EXPO_PUBLIC_SUPABASE_URL='https://placeholder.supabase.co'
+  $env:EXPO_PUBLIC_SUPABASE_ANON_KEY='placeholder'
+  $env:EXPO_PUBLIC_API_URL='http://localhost:5079'; $env:CI='1'
+  npx expo start --web --port 8082 --no-dev --minify
+  ```
+  ```bash
+  SQ_APP_URL=http://localhost:8082 python capture/record_video.py ...
+  ```
+  After a take, look at the trip header: "Mallorca" and the gear only. The
+  production build is also faster, so re-timing reels after a re-record is
+  expected. It additionally calls `/api/trips`, a heartbeat and
+  travel-stats; those 404 harmlessly.
+- The dev server: `cd D:\sidequest-mobile && npx expo start --web` (port 8081).
   Needs `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` set.
   For capture, placeholders work (`https://placeholder.supabase.co` /
   `placeholder`), plus `EXPO_PUBLIC_API_URL=http://localhost:5079` — a dead
@@ -466,8 +487,8 @@ repo root.
   time 18:00 → 23:30 (on web the form's second `HH:MM` field), types the
   teaser "Swimsuits. No questions." (the field caps at 35) and saves. The app
   opens the saved SideQuest; Leo taps Back and the trip feed shows it sealed
-  on day 1: "Hidden sidequest · Reveals in 2d 5h 56m". 20.2 s; the sealed
-  card is on screen from ~17.0 s. The countdown runs from the moment of
+  on day 1: "Hidden sidequest · Reveals in 2d 7h 56m" (production-build
+  take of 2026-09-25). 21.0 s; the sealed card is on screen from ~17.0 s. The countdown runs from the moment of
   recording, so reel copy quotes it from the take, never from the fixture.
   No cover photo, so the card shows the SideQuest compass under the lock —
   the app blurs only a cover image.
@@ -498,8 +519,8 @@ repo root.
   app looks, not a capture fault.
 - **`--scenario itinerary_demo`** (route `trip/demo`, fixture
   `itinerary_demo.json`: the same Mallorca trip and nine friends, Leo signed
-  in, the trip upcoming). The take runs 18.4 s (re-recorded 2026-09-25
-  with photos; the drop lands at ~5.8 s). Leo:
+  in, the trip upcoming). The take runs 18.8 s (production build,
+  2026-09-25; the list is in order at ~6.0 s). Leo:
   1. swipes day 1 up and drags "Dinner, Sóller old town" (20:30) below
      "Villa Sóller check-in" (16:00);
   2. opens Add activity and types "Beach Club";
@@ -527,8 +548,8 @@ repo root.
   `spotify_demo.json`: the itinerary trip with day 1 in time order and
   `spotifyUrl: null`, Leo signed in). Leo opens Trip tools, taps "Spotify
   playlist", pastes a playlist link and saves. He then reopens the tools,
-  where the row now shows "Open". The take runs 11.1 s ("Open" from
-  ~7.4 s, re-recorded 2026-09-25 with photos). The tools sheet
+  where the row now shows "Open". The take runs 9.4 s ("Open" from
+  ~6.8 s; production build, 2026-09-25). The tools sheet
   closes for ~0.5 s before the Spotify sheet opens; the app does that.
   ```bash
   python capture/record_video.py trip/demo spotify_demo --scenario spotify_demo
@@ -625,6 +646,12 @@ template's psychology is the variable under test.
 1. **Pick a shipped feature** from `strategy/feature_map.md`. Never Gluno —
    it is `__DEV__` until it ships.
 2. **Mock data — a fixture, not a login.**
+   - **No unreleased features, ever.** Nothing in development (Gluno, or
+     anything else behind a flag or `__DEV__`) may appear in a fixture, in
+     reel copy or in a captured frame. The app's current RELEASE UI is the
+     law: if a production build doesn't show it, the reel doesn't either.
+     Capture against the production build (see App capture); the dev
+     server shows Gluno.
    - Read the screen in the app source (read-only, rule 10) for the
      `/api/**` calls it makes and the types they return (`lib/types.ts`).
    - Write `configs/fixtures/<feature>_demo.json` with a `routes` object:
