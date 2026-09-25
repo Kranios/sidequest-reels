@@ -188,7 +188,15 @@ repo root.
   that is free when the render starts. A T3 take filled ~2.8 GB and got the
   job killed.
 - Render phone reels **one at a time** at `--concurrency=1`. `PHONE_DPR`
-  stays 2; there is no need to lower it now.
+  stays 2; there is no need to lower it now. `remotion.config.ts` now sets
+  `Config.setConcurrency(1)`: Remotion's default is half the logical cores
+  (8 here), which means 8 WebGL tabs, and that made the PC unusable.
+- **Batch renders: `remotion/render.ps1 <id> [<id> …] [-OutDir] [-Crf]`.**
+  It bundles once and passes `--concurrency=1 --gl=angle` explicitly. It
+  runs at BelowNormal priority and re-lowers Chrome's GPU process, which
+  raises itself to AboveNormal. It kills leftovers between reels and picks
+  the CRF per template (T2 4, T5 8). The lower priority does not slow the
+  render (0.28 vs 0.25 s/frame measured). T1 took 62 s this way.
 - For stills, **bundle once** (`npx remotion bundle src/index.ts
   --out-dir=<dir>`) and pass the bundle dir to `npx remotion still`, because
   every `still src/index.ts …` re-bundles.
