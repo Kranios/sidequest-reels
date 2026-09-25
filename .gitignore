@@ -22,3 +22,7 @@ repomix-output.xml
 
 # Remotion bundles built for stills (npx remotion bundle --out-dir=...)
 .bundle-*/
+
+# Local startup scripts
+letsgo.ps1
+Startcommand.txt
