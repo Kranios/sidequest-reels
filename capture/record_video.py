@@ -51,9 +51,9 @@ names out of the DOM. For a scenario the script also:
   - applies the journey's writes to an in-memory copy of the fixture, so what
     the demo saves comes back when the app reloads: an expense POST (balances
     recomputed to the cent), packing-list POST / PATCH / DELETE (add, tick,
-    rename, assign, delete), an activity POST (and opening it by id), and
-    the itinerary's drag-to-reorder (PATCH reorder / move). The fixture
-    file is never modified.
+    rename, assign, delete), an activity POST (and opening it by id), the
+    itinerary's drag-to-reorder (PATCH reorder / move), and the trip's
+    shared Spotify link (PATCH spotify). The fixture file is never modified.
   - loads only the scenario's own fixture (see SCENARIOS) unless --fixture
     says otherwise.
 The positional `seconds` (scroll duration) is ignored by scenarios.
@@ -72,6 +72,10 @@ The positional `seconds` (scroll duration) is ignored by scenarios.
                     below the 16:00 check-in (human_drag), adds "Beach
                     Club" (Food) at 14:00 on day 2, saves, and comes back
                     to the feed with both days in order.
+  spotify_demo      Route trip/demo: Leo opens Trip tools, taps "Spotify
+                    playlist", pastes a public playlist link and saves;
+                    reopening the tools shows the row with "Open". The app
+                    shares ONE playlist link per trip — no song search.
 
 FOUR THINGS THIS APP DOES THAT BREAK NAIVE CAPTURE
 --------------------------------------------------
@@ -469,6 +473,24 @@ def _activities_apply(state, method, path, body, user):
     return None
 
 
+TRIP = "/api/trips/{id}"
+# The trip's one shared playlist link. The app has no song search or track
+# list: it saves a pasted public Spotify link on the trip and gets the trip
+# back. Nothing ever reaches Spotify itself.
+TRIP_SPOTIFY = _route_regex("/api/trips/{id}/spotify")
+
+
+def _spotify_apply(state, method, path, body):
+    """PATCH /api/trips/<id>/spotify: {spotifyUrl} sets the link,
+    {clearSpotifyUrl: true} removes it. Returns (status, the updated trip),
+    or None when the request is not that."""
+    if method != "PATCH" or not TRIP_SPOTIFY.match(path):
+        return None
+    trip = state[TRIP]
+    trip["spotifyUrl"] = None if body.get("clearSpotifyUrl") else body.get("spotifyUrl")
+    return 200, trip
+
+
 async def install_api_mocks(page, routes, user=None):
     """Answer **/api/** from the fixtures. Returns (served, missed) for the log.
 
@@ -477,7 +499,8 @@ async def install_api_mocks(page, routes, user=None):
     profile sync returns them, POSTs to the expenses route are applied, and so
     are packing-list writes (add, tick, rename, assign, delete), activity
     creates (and opening one by id) and the itinerary's drag-to-reorder
-    (PATCH reorder within a day, PATCH move to another day). When two
+    (PATCH reorder within a day, PATCH move to another day), and the trip's
+    shared Spotify link (PATCH spotify). When two
     fixtures define the same route, the first loaded wins — for GETs and for
     the in-memory copy alike."""
     app_host = urlparse(APP_URL).netloc
@@ -488,6 +511,7 @@ async def install_api_mocks(page, routes, user=None):
     can_post = user is not None and all(k in state for k in (EXPENSES, BALANCES, MEMBERS))
     can_pack = user is not None and PACKING in state
     can_act = user is not None and ACTIVITIES in state
+    can_spotify = user is not None and TRIP in state
 
     async def fulfill_json(route, body, status=200):
         await route.fulfill(status=status, content_type="application/json",
@@ -533,6 +557,14 @@ async def install_api_mocks(page, routes, user=None):
             result = _activities_apply(state, req.method, url.path, body, user)
             if result is not None:
                 key = f"{req.method} activities"
+                served[key] = served.get(key, 0) + 1
+                await fulfill_json(route, result[1], status=result[0])
+                return
+        if can_spotify:
+            body = req.post_data_json if req.post_data else {}
+            result = _spotify_apply(state, req.method, url.path, body)
+            if result is not None:
+                key = f"{req.method} spotify"
                 served[key] = served.get(key, 0) + 1
                 await fulfill_json(route, result[1], status=result[0])
                 return
@@ -1232,6 +1264,47 @@ async def _itinerary_journey(page):
     await page.wait_for_timeout(IT_FINAL_HOLD_MS)
 
 
+SP_PLAYLIST_URL = "https://open.spotify.com/playlist/4vKq8mHs2TnY1pQe7dLwXc"
+
+
+async def scenario_spotify_demo(page):
+    """One playlist for the whole car: open Trip tools, paste the group's
+    Spotify link, save — and open the tools again, where the row now plays
+    it. Runs at SQ_TEMPO."""
+    with tempo(**SQ_TEMPO):
+        await _spotify_journey(page)
+
+
+async def _spotify_journey(page):
+    await page.wait_for_timeout(OPENING_BEAT_MS)
+    # The tools launcher is an icon-only bubble; its accessibility label is
+    # the text to aim at.
+    tools = page.get_by_role("button", name="Open trip tools")
+    await human_click(page, tools)
+    await page.wait_for_timeout(SQ_STEP_PAUSE_MS)  # the sheet slides up
+    await human_click(page, page.get_by_text("Spotify playlist", exact=True))
+    await page.wait_for_timeout(SQ_STEP_PAUSE_MS)
+
+    # The sheet says "Paste a public Spotify playlist...", so Leo pastes:
+    # tap the field, then the link lands in one go, as a paste does.
+    field = page.get_by_placeholder("https://open.spotify.com/...")
+    await human_click(page, field)
+    await page.wait_for_timeout(300)
+    await page.keyboard.insert_text(SP_PLAYLIST_URL)
+    await page.wait_for_timeout(SQ_STEP_PAUSE_MS)
+    await human_click(page, page.get_by_text("Save link", exact=True))
+
+    # Saved: the sheet closes onto the trip. Back into the tools, where the
+    # Spotify row now carries "Open".
+    await page.get_by_text("Spotify for this event", exact=True).wait_for(state="hidden")
+    await page.wait_for_timeout(SQ_STEP_PAUSE_MS)
+    await human_click(page, tools)
+    await page.get_by_text("Open", exact=True).filter(visible=True).first.wait_for(state="visible")
+    await page.wait_for_timeout(400)
+    await lift_finger(page)
+    await page.wait_for_timeout(SQ_FINAL_HOLD_MS)
+
+
 # name -> (the journey, the fixture member it runs as, its fixture, and an
 # optional prelude run before the cut). A scenario loads only its own fixture
 # unless --fixture says otherwise, so two fixtures that share a route (both
@@ -1242,6 +1315,7 @@ SCENARIOS = {
     "hidden_sidequest_demo": (scenario_hidden_sidequest_demo, "u5",
                               "hidden_sidequest_demo.json", open_new_sidequest),
     "itinerary_demo": (scenario_itinerary_demo, "u5", "itinerary_demo.json", None),
+    "spotify_demo": (scenario_spotify_demo, "u5", "spotify_demo.json", None),
 }
 
 

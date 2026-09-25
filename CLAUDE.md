@@ -438,6 +438,22 @@ repo root.
   python capture/record_video.py trip/demo itinerary_demo --scenario itinerary_demo \
       --selector "text=Dinner, Sóller old town"
   ```
+- **Spotify is ONE shared playlist link per trip — nothing more.** There is no
+  in-app song search, no track list and no per-song avatars. The feature is
+  the "Spotify playlist" row in Trip tools (the grid bubble, a11y label "Open
+  trip tools"). It opens "Spotify for this event", where you paste a public
+  link and press "Save link": `PATCH /api/trips/{id}/spotify`
+  `{spotifyUrl}` returns the trip. After that the row shows "▶ Open". Never
+  script a song-picking journey; it would be fake UI (rules 1 and 3).
+- **`--scenario spotify_demo`** (route `trip/demo`, fixture
+  `spotify_demo.json`: the itinerary trip with day 1 in time order and
+  `spotifyUrl: null`, Leo signed in). Leo opens Trip tools, taps "Spotify
+  playlist", pastes a playlist link and saves. He then reopens the tools,
+  where the row now shows "Open". The take runs 11.6 s. The tools sheet
+  closes for ~0.5 s before the Spotify sheet opens; the app does that.
+  ```bash
+  python capture/record_video.py trip/demo spotify_demo --scenario spotify_demo
+  ```
 - **Relative dates: `{today±N}`.** The Add activity form refuses dates in the
   past and a reveal that has already passed, so a fixture for an upcoming
   trip can't hold fixed dates — it would break a week later. Any string in a
