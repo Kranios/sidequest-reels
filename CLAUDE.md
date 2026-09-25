@@ -239,6 +239,10 @@ repo root.
   - T1, T3 and T4 pass at CRF 10–16.
   - T5 needs CRF 8 (it measured 3.7–3.8 Mbps at CRF 10).
   - T2 needs CRF 4 (3.3 Mbps at CRF 10, 3.7 at CRF 8, 4.5 at CRF 4).
+  - With the film grain (Grade.tsx, 0.04), measured on T2-Reveal-Spotify
+    (2026-09-25): 4.91 Mbps at CRF 4, a pass, where the same reel without
+    grain gave 3.8 at CRF 4 and 4.18 at CRF 2. At CRF 8 it gave 3.84, a
+    fail. The grain buys about two CRF steps, not more, so T2 stays at CRF 4.
 - **The mp4 container adds ~0.053 s** to the duration that `qa.py` reads, so
   600 frames measures 20.05 s and fails the 20 s cap. Keep a reel at ≤ 598
   frames.
