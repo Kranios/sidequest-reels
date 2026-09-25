@@ -1,14 +1,12 @@
 /**
- * Dim -> lit, with a pop. T2's reveal.
+ * The accents on T2's reveal: a small scale pop, a subtle bloom, and the lock
+ * fading out. The reveal itself is the MACRO-DROP in the camera (Phone.tsx
+ * `macro`): the shot opens locked in at ~4x on one detail of the UI and
+ * whips out to the full phone. So this layer stays quiet.
  *
- * The phone is sharp from the first frame: no blur, ever (removed on
- * 2026-09-25; blur turned the app's UI to mush instead of building
- * anticipation, and the UI is what we are selling). What is withheld is the
- * LIGHT: the phone sits under a dark veil (`dim`) with the lock on it, and at
- * the reveal the veil lifts over `revealFrames` on an exponential ease-out
- * (6-10 frames reads as a cut, not a fade), the phone pops in scale on an
- * underdamped spring, and an optional white bloom on the phone decays over
- * 6 frames.
+ * No blur and no dimming, ever: the app's UI is sharp and at full brightness
+ * from the first frame (blur removed 2026-09-25 for mushing the UI; the dark
+ * veil went with the macro-drop the same day).
  *
  * Wraps anything: the 3D phone, a flat capture, a card.
  */
@@ -18,17 +16,15 @@ import { BRAND } from "../brand";
 import { textStyle } from "../type";
 
 export const PopReveal: React.FC<{
-  /** Frame the veil starts lifting. */
+  /** Frame of the reveal (the camera whip starts here). */
   revealFrame: number;
-  /** How long the lift takes. */
+  /** How long the lock takes to go. */
   revealFrames?: number;
   /** White flash at the reveal, 0..1. 0 disables. */
   flash?: number;
-  /** The veil over the phone until the reveal, 0..1. */
-  dim?: number;
   /** Scale pop at the reveal (overshoots, then settles); 0 disables. */
   scalePunch?: number;
-  /** Padlock + label on the veiled phone. Omit the label for just the lock. */
+  /** Padlock + label on the phone until the reveal. Omit the label for just the lock. */
   showLock?: boolean;
   lockLabel?: string;
   lockOffsetY?: number;
@@ -37,7 +33,6 @@ export const PopReveal: React.FC<{
   revealFrame,
   revealFrames = 8,
   flash = 0,
-  dim = 0.35,
   scalePunch = 0.03,
   showLock = true,
   lockLabel,
@@ -81,15 +76,6 @@ export const PopReveal: React.FC<{
       >
         {children}
       </AbsoluteFill>
-
-      {dim > 0 ? (
-        <AbsoluteFill
-          style={{
-            background: `rgba(10,9,8,${dim * (1 - reveal)})`,
-            pointerEvents: "none",
-          }}
-        />
-      ) : null}
 
       {flashOpacity > 0.001 ? (
         <AbsoluteFill

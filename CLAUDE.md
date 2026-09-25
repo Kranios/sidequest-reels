@@ -80,7 +80,8 @@ derived from the content where the content sets them — add a line to T4's
 ### The five shared pieces
 
 `NumberCounter` (T1, T5) · `KineticList` — stack rows or swap lines (T1, T4) ·
-`PopReveal` (T2; it was BlurReveal) · `Timer` — counts up or down (T2's countdown; T3's
+`PopReveal` (T2's pop, bloom and lock; the reveal itself is the camera's
+`macro`) · `Timer` — counts up or down (T2's countdown; T3's
 stopwatch was removed 2026-09-25 as clutter) · `ScreenSwapper` —
 real hard cuts, one `<Sequence>` per screen (no template uses it since T3
 became one continuous `--scenario` take; kept for a multi-capture reel).
@@ -683,13 +684,24 @@ template's psychology is the variable under test.
    - **T4 exception:** no phone and no video prop at all — only the copy
      (`hookLine1/2`, `lines`, `punchline`).
    - `videoStartFrom: 0` — the capture already trims the splash.
-   - T2's reveal has NO BLUR (removed 2026-09-25: it made the UI mushy
-     instead of building anticipation). The phone is sharp from frame one
-     under a dark veil (`revealDim`) with the lock. At the reveal the veil
-     lifts in `revealFrames` (8), the phone pops (`revealPunch`) and a bloom
-     flashes (`revealFlash`). Viewers leave during a long hold, so reveal by
-     ~3 s. If the result comes late in the take, start the take later with
-     `videoStartFrom` rather than holding longer.
+   - T2's reveal is the **MACRO-DROP** (2026-09-25). The shot opens locked in
+     at `macroZoom` (3.75) on `macroFocus` {u, v}, a detail of the live UI,
+     sharp and at full brightness. At `revealAtSeconds` the camera whips out
+     to the whole phone in `revealFrames` (12) on `Easing.out(Easing.exp)`:
+     half-way out in ~2 frames, settled in ~6. It lives in the 3D camera
+     (`Phone.tsx` `macro`), so the 4x crop renders sharp; a CSS scale of the
+     canvas would magnify its pixels. `revealFlash` (0.15) and
+     `revealPunch` (0.03) are only accents.
+     - No blur and no dimming, ever: both were tried and removed the same day.
+     - The white hook would vanish on the white UI, so a dark gradient sits
+       behind the bottom text band during the hold (`TextPlate`) and fades
+       with the whip. It covers the text band only, not the UI.
+     - Pick `macroFocus` where the take's action happens during the hold
+       (the Save button, the dragged row, the reveal time), because the
+       camera stays locked there while the UI changes under it.
+     - Viewers leave during a long hold, so reveal by ~3 s where the take
+       allows it; start the take later with `videoStartFrom` rather than
+       holding longer.
    - T2's lock and countdown imply a timed unlock. Turn them off
      (`showLock`, `showCountdown`) for any feature that doesn't have one.
 6. **Duration limit: 8–20 s** — `qa.py` fails anything outside it; aim for

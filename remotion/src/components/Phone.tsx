@@ -311,6 +311,22 @@ type PhoneProps = {
   bandFill?: number;
   /** Focus moments, in capture time. See PhoneFocus. */
   focus?: PhoneFocus[];
+  /**
+   * MACRO: the camera starts locked in on one point of the glass (u, v) at
+   * `zoom`, then whips out to the framed shot at `releaseAt` (a frame of the
+   * Phone's own timeline) over `releaseFrames` on an exponential ease-out.
+   * T2's reveal. Rendered in 3D, so the UI stays sharp at 4x; a CSS scale of
+   * the canvas would magnify its pixels.
+   */
+  macro?: PhoneMacro;
+};
+
+export type PhoneMacro = {
+  u: number;
+  v: number;
+  zoom: number;
+  releaseAt: number;
+  releaseFrames: number;
 };
 
 /** The strongest focus moment at this frame: where, how close, how much. */
@@ -577,6 +593,7 @@ export const Phone: React.FC<PhoneProps> = ({
   videoStartFrom = 10,
   entry = true,
   focus,
+  macro,
   ...props
 }) => {
   const frame = useCurrentFrame();
@@ -587,7 +604,10 @@ export const Phone: React.FC<PhoneProps> = ({
     easing: Easing.inOut(Easing.sin),
   });
   const entryProgress = entry ? spring({ frame, fps, config: ENTRY_SPRING }) : 1;
-  const focusState = focusAt(focus, frame + Math.max(0, Math.round(videoStartFrom)), fps);
+  const moment = focusAt(focus, frame + Math.max(0, Math.round(videoStartFrom)), fps);
+  const macroState = macroAt(macro, frame);
+  const focusState =
+    macroState && (!moment || macroState.w >= moment.w) ? macroState : moment;
 
   return (
     <Sequence from={-Math.max(0, Math.round(videoStartFrom))} layout="none">
@@ -599,6 +619,19 @@ export const Phone: React.FC<PhoneProps> = ({
       />
     </Sequence>
   );
+};
+
+/** The macro lock: full weight until releaseAt, then a whip out to 0. */
+const macroAt = (macro: PhoneMacro | undefined, frame: number): FocusState | null => {
+  if (!macro) return null;
+  const w =
+    1 -
+    interpolate(frame - macro.releaseAt, [0, Math.max(macro.releaseFrames, 1)], [0, 1], {
+      easing: Easing.out(Easing.exp),
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    });
+  return w > 0.0005 ? { u: macro.u, v: macro.v, zoom: macro.zoom, w } : null;
 };
 
 /** Weight of each focus moment at capture frame `takeFrame`; the strongest wins. */
