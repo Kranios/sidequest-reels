@@ -19,3 +19,6 @@ repomix-output.xml
 # secrets
 .env
 .env.*
+
+# Remotion bundles built for stills (npx remotion bundle --out-dir=...)
+.bundle-*/
