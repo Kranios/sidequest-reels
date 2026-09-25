@@ -246,16 +246,32 @@ repo root.
 - **The mp4 container adds ~0.053 s** to the duration that `qa.py` reads, so
   600 frames measures 20.05 s and fails the 20 s cap. Keep a reel at ≤ 598
   frames.
-- **A single `remotion still` can come out with no phone at all.** The whole
-  3D canvas is empty, not magenta. T3-Speedrun-Spotify frames 196-200 and 204
-  did this on every attempt, while a video render of frames 180-220 had the
-  phone in all 41. It is a timing race in the one-frame still path. Before
-  you call it a bug, check the frame with `render --frames=a-b`.
-- **Check for a magenta frame 0.** On a GPU render the phone screen can come
-  out magenta in the first frame, intermittently, because the texture is not
-  ready yet. This happened once in 15 reels, and re-rendering fixed it.
-  `qa.py` does not catch it, so scan every frame for pixels with R>180, G<90,
-  B>180.
+- **Texture cache: no magenta frames, no empty canvas** (`useRetainedTexture`
+  in `Phone.tsx`, 2026-09-25). `useOffthreadVideoTexture` loads every
+  frame's picture asynchronously and returns null until the first one has
+  arrived. Before this fix a render could screenshot that in-between state
+  in two ways:
+  - a magenta screen (T3-Speedrun-Spotify frame 0, then frame 2, on
+    consecutive renders);
+  - an EMPTY canvas with no phone at all. The magenta scan never caught
+    this one: the "clean" re-render of T3-Speedrun-Spotify had an empty
+    frame 0, and single `remotion still` frames came out phoneless (frames
+    196-204 of the same reel).
+
+  Two guards now:
+  - The last texture that arrived is kept and shown while a newer one
+    loads. It holds one reference, drops it on unmount and on a source
+    change, and never disposes of anything itself: the hook owns disposal,
+    and three.js re-uploads a disposed texture whose image is still there.
+  - Until the first texture has arrived and the canvas has drawn it (two
+    rAFs), a render-only `delayRender` holds the screenshot. A video that
+    never loads now fails the render with a named timeout instead of
+    shipping magenta.
+
+  Verified: three full renders had no magenta, and a re-render matches the
+  old one within 0.13/255 on every frame except frame 0, which now has its
+  phone. The formerly empty stills now have the phone. Magenta still shows
+  in Studio, where it is the signal for a video that never arrived.
 - **A killed Remotion render does not clean up after itself on Windows.** It
   leaves `chrome-headless-shell.exe`, `remotion.exe` and `ffmpeg.exe` behind,
   several GB each, and the next attempt then dies faster than the last. They

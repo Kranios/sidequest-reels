@@ -62,8 +62,10 @@
  * the background, and the phone makes a sprung entrance (tilted 45deg on two
  * axes, slightly zoomed) before settling into its framed position.
  */
-import React, { useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  continueRender,
+  delayRender,
   useCurrentFrame,
   useVideoConfig,
   Easing,
@@ -652,6 +654,7 @@ const PhoneCanvas: React.FC<
     ? useOffthreadVideoTexture({ src: videoSrc, toneMapped: false })
     : useVideoTexture(videoRef);
   /* eslint-enable react-hooks/rules-of-hooks */
+  const screenTexture = useRetainedTexture(texture, videoSrc, isRendering);
 
   // The 3D canvas is ALWAYS the full frame — never shrunk to the safe box — so
   // the phone can't be clipped by the viewport at any `radius`; its size is a
@@ -693,7 +696,7 @@ const PhoneCanvas: React.FC<
       ) : null}
       <ThreeCanvas width={width} height={height} style={canvasStyle} dpr={PHONE_DPR}>
         <PhoneModel
-          texture={texture}
+          texture={screenTexture}
           progress={progress}
           entryProgress={entryProgress}
           swingDeg={swingDeg}
@@ -706,6 +709,80 @@ const PhoneCanvas: React.FC<
       </ThreeCanvas>
     </>
   );
+};
+
+/**
+ * NO MAGENTA FRAMES. useOffthreadVideoTexture() loads each frame's picture
+ * asynchronously and hands back null until the first one has arrived (again
+ * after a remount). The screen material shows magenta for null (the "video
+ * never arrived" signal), and a render could screenshot that in-between
+ * state. It happened on frame 0 and frame 2 of T3-Speedrun-Spotify on
+ * 2026-09-25, on consecutive renders. Two guards:
+ *
+ *  1. Keep the last texture that did arrive and show it while a newer one is
+ *     loading. At worst one frame repeats the previous picture, which is
+ *     invisible in motion, where magenta is not. The hook owns every texture
+ *     and disposes of each one when the next frame's is requested; three.js
+ *     re-uploads a disposed texture whose image is still there, so showing
+ *     it again is safe. This cache never disposes of anything itself (that
+ *     would be a double dispose). It holds ONE reference and drops it on
+ *     unmount and whenever the video source changes, so nothing leaks.
+ *  2. Before ANY texture has arrived, a render-only delayRender holds the
+ *     screenshot. It is released two animation frames after the first
+ *     texture, once the canvas has actually drawn it. If the video can
+ *     never load, the render now times out with a named error instead of
+ *     shipping a magenta phone.
+ *
+ * In Studio (not rendering) neither guard applies, so a genuinely missing
+ * video still shows magenta there.
+ */
+const useRetainedTexture = (
+  texture: THREE.Texture | null,
+  videoSrc: string,
+  isRendering: boolean
+): THREE.Texture | null => {
+  const last = useRef<{ src: string; texture: THREE.Texture } | null>(null);
+  if (texture) last.current = { src: videoSrc, texture };
+  else if (last.current && last.current.src !== videoSrc) last.current = null;
+
+  // Drop the reference on unmount (and when the source changes).
+  useEffect(
+    () => () => {
+      last.current = null;
+    },
+    [videoSrc]
+  );
+
+  const [firstFrame] = useState(() =>
+    isRendering ? delayRender(`Phone: waiting for the first frame of ${videoSrc}`) : null
+  );
+  // Each step at most once: scheduled, then continued.
+  const scheduled = useRef(false);
+  const continued = useRef(false);
+  const release = () => {
+    if (firstFrame === null || continued.current) return;
+    continued.current = true;
+    continueRender(firstFrame);
+  };
+  const hasTexture = texture !== null || last.current !== null;
+  useEffect(() => {
+    if (firstFrame === null || scheduled.current || !hasTexture) return;
+    scheduled.current = true;
+    // Two rAFs: one for react-three-fiber to commit the new material, one
+    // for the canvas to draw it.
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(release);
+    });
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+      release(); // never leave the handle open on unmount
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstFrame, hasTexture]);
+
+  return texture ?? (last.current?.src === videoSrc ? last.current.texture : null);
 };
 
 useGLTF.preload(staticFile("iphone17pro.glb"));
