@@ -12,7 +12,7 @@ Render one or more reels without taking the machine hostage.
 - One reel per process, and between reels it kills whatever a finished or
   failed render left behind under node_modules, so RAM starts clean for the
   next one. Studio's esbuild.exe is not touched.
-- CRF per template, from the QA bitrate floor (CLAUDE.md): T2 4, T5 8,
+- CRF per template, from the QA bitrate floor (CLAUDE.md): T2 8, T5 8,
   otherwise the config's 16. -Crf overrides it for every id.
 #>
 [CmdletBinding(PositionalBinding = $false)]
@@ -25,7 +25,7 @@ param(
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
-$TemplateCrf = @{ "T2" = 4; "T5" = 8 }
+$TemplateCrf = @{ "T2" = 8; "T5" = 8 }
 $Leftovers = 'chrome-headless-shell.exe', 'remotion.exe', 'ffmpeg.exe', 'ffprobe.exe'
 
 function Stop-Leftovers {
