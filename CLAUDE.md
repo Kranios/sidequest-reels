@@ -229,7 +229,7 @@ repo root.
   It bundles once and passes `--concurrency=1 --gl=angle` explicitly. It
   runs at BelowNormal priority and re-lowers Chrome's GPU process, which
   raises itself to AboveNormal. It kills leftovers between reels and picks
-  the CRF per template (T2 8, T5 8). The lower priority does not slow the
+  the CRF per template (T2 12, T5 8). The lower priority does not slow the
   render (0.28 vs 0.25 s/frame measured). T1 took 62 s this way.
 - For stills, **bundle once** (`npx remotion bundle src/index.ts
   --out-dir=<dir>`) and pass the bundle dir to `npx remotion still`, because
@@ -246,9 +246,13 @@ repo root.
     fail. The grain buys about two CRF steps, not more, so T2 stays at CRF 4.
   - After the blur was removed from T2 (2026-09-25), measured on
     T2-Reveal-Spotify: CRF 4 gave 7.03 Mbps / 10.4 MB, CRF 10 4.92 / 7.3 MB
-    and CRF 16 3.13 / 4.6 MB (a fail). T2 now renders at **CRF 8**. At CRF 8
-    Itinerary is 6.15 Mbps, Spotify 5.59 and HiddenSideQuest (the darkest)
-    4.92, all with margin over the 4.0 floor.
+    and CRF 16 3.13 / 4.6 MB (a fail). That set T2 to CRF 8.
+  - The MACRO-DROP (a frame full of moving UI) raised T2's bitrate: at CRF 8
+    it measured 9.31 (Itinerary), 10.01 (Spotify) and 5.82 (HiddenSideQuest)
+    Mbps, 11-15 MB. T2 now renders at **CRF 12**: 6.88 / 7.40 / 4.43 Mbps,
+    8.7-11.0 MB, all passing. HiddenSideQuest has the shortest macro hold
+    and the thinnest margin (0.43 Mbps). Re-check it if its hold gets
+    shorter.
 - **The mp4 container adds ~0.053 s** to the duration that `qa.py` reads, so
   600 frames measures 20.05 s and fails the 20 s cap. Keep a reel at ≤ 598
   frames.
