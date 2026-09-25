@@ -55,7 +55,13 @@ Registered reels — the Cost Split A/B test: `T1-Receipt-CostSplit`,
 batch (capture `app/hidden_sidequest_demo.mp4`, fixture
 `hidden_sidequest_demo.json`): `T1-Receipt-HiddenSideQuest`,
 `T2-Reveal-HiddenSideQuest`, `T3-Speedrun-HiddenSideQuest`,
-`T4-Callout-HiddenSideQuest`, `T5-Atlas-HiddenSideQuest`. `videoStartFrom` is
+`T4-Callout-HiddenSideQuest`, `T5-Atlas-HiddenSideQuest`; and the Itinerary
+batch (capture `app/itinerary_demo.mp4`, fixture `itinerary_demo.json`):
+`T1-Receipt-Itinerary`, `T2-Reveal-Itinerary`, `T3-Speedrun-Itinerary`,
+`T4-Callout-Itinerary`, `T5-Atlas-Itinerary`; and the Spotify batch
+(capture `app/spotify_demo.mp4`, fixture `spotify_demo.json`):
+`T1-Receipt-Spotify`, `T2-Reveal-Spotify`, `T3-Speedrun-Spotify`,
+`T4-Callout-Spotify`, `T5-Atlas-Spotify`. `videoStartFrom` is
 in frames (30 fps); T1, T2 and T5 allow up to 600, so a phone beat can start
 late in a take. The first fifteen template reels were removed for it;
 they are recoverable from commit `1ff4ffd` and their hooks are in the retired
@@ -236,6 +242,11 @@ repo root.
 - **The mp4 container adds ~0.053 s** to the duration that `qa.py` reads, so
   600 frames measures 20.05 s and fails the 20 s cap. Keep a reel at ≤ 598
   frames.
+- **A single `remotion still` can come out with no phone at all.** The whole
+  3D canvas is empty, not magenta. T3-Speedrun-Spotify frames 196-200 and 204
+  did this on every attempt, while a video render of frames 180-220 had the
+  phone in all 41. It is a timing race in the one-frame still path. Before
+  you call it a bug, check the frame with `render --frames=a-b`.
 - **Check for a magenta frame 0.** On a GPU render the phone screen can come
   out magenta in the first frame, intermittently, because the texture is not
   ready yet. This happened once in 15 reels, and re-rendering fixed it.
@@ -272,6 +283,22 @@ repo root.
   Geometry from the real logo export: fontSize 100, tracking −5.6, dot r=11,
   gap 6. Mirrored in `lib/brand.py` and `remotion/src/brand.ts` — keep in sync.
 - Font: Raleway Black (900). Background `#0A0908`.
+- **The CTA line. "First 50 get lifetime access — free." is retired — do not
+  use it on any reel, ever again.** The standard sign-off is now
+  **"Plan together. Travel better."**, and it is the default in
+  `remotion/src/brand.ts` (`BRAND.launchLine`), which is what `<CTA>` falls
+  back to when a reel passes no `launchLine`. A reel may pass a variant that
+  suits its own copy — the line is a positioning statement, not a fixed
+  string — but it may not go back to an offer or a scarcity claim. Note the
+  old line survives in three places on purpose: the fifteen Cost Split /
+  Packing List / Hidden SideQuest reels and `Root.tsx`'s two pre-template
+  reels, which are already rendered and approved, and `compose/compose.py`,
+  which is legacy. Sweep those only when Oskar asks. `strategy/feature_map.md`
+  still records the launch offer itself as a fact about the product; that is
+  not a CTA and stays.
+- `ctaVariant: "quiet"` (T2, T5) never draws the launch line at all —
+  `showLaunch = variant !== "quiet"` in `components/CTA.tsx`. Setting
+  `launchLine` on a quiet reel is harmless but changes nothing on screen.
 - Read config files with **explicit UTF-8** on Windows, or em-dashes render as
   garbage. This was a real bug.
 
@@ -394,6 +421,13 @@ repo root.
   Activities: a POST to `/api/trips/{id}/activities` returns what the
   backend gives the creator (`isHiddenForViewer` false; `isRevealed` false
   while hidden, so the feed seals it), and a GET by id opens it.
+  Itinerary drags: the trip feed orders each day by `sortIndex`, not by time.
+  `PATCH /activities/reorder` (`{date, activityIds}`) stamps `sortIndex`
+  0..n-1 in the order it is sent. `PATCH /activities/{aid}/move` does the
+  same and also changes the activity's date; a hotel stay keeps its number
+  of nights. Fixture: `itinerary_demo.json`, where day 1 files the 20:30
+  dinner before the 11:00 beach. `python capture/test_dnd.py` checks the
+  drag end to end.
 - **`--scenario packing_list_demo`** (`trip/demo/packing-list`, fixture
   `packing_list_demo.json`: the same Mallorca trip and nine friends, Leo
   signed in). Leo ticks off "Sunscreen SPF 50" and "Snorkel masks ×4", taps
@@ -425,6 +459,58 @@ repo root.
   ancestor ≥ 44 px tall and ≥ 60 % of the screen wide (the track), presses
   the thumb half a track-height in from the left end, pulls it to the right
   end over 0.65 s and lets go. RN Web's PanResponder takes mouse drags.
+- **Drag-to-reorder: `human_drag(page, source, target, hold_time=500)`.**
+  The itinerary's `DraggableDayList` is a gesture-handler Pan with
+  `activateAfterLongPress(350)`, so a drag has to press, hold still and only
+  then move. The helper:
+  - finds both rows from their text, with the same climb as `human_slide`;
+  - glides to the source row's centre and holds for `hold_time` ms, while
+    the dot swells and darkens;
+  - carries the row along a gentle bow, 18 paced steps over 0.8 s;
+  - lets go on the target row's far edge, past its midpoint and short of
+    the next row's, so the row lands just beyond the target. The dot lifts
+    off with a ring.
+
+  Keep both rows clear of the list's auto-scroll edges (150 px from the top
+  of the viewport, 140 px from the bottom), or the list scrolls under the
+  drag. During the carry the other rows don't reflow, and the carried row
+  has no background, so its text crosses the rows it passes. That is how the
+  app looks, not a capture fault.
+- **`--scenario itinerary_demo`** (route `trip/demo`, fixture
+  `itinerary_demo.json`: the same Mallorca trip and nine friends, Leo signed
+  in, the trip upcoming). The take runs 17.6 s. Leo:
+  1. swipes day 1 up and drags "Dinner, Sóller old town" (20:30) below
+     "Villa Sóller check-in" (16:00);
+  2. opens Add activity and types "Beach Club";
+  3. picks "Food". There is no restaurant or bar category, and Food is one
+     of the three chips shown before "Show more";
+  4. changes the date to day 2 and the time to 14:00. The web date field's
+     placeholder is `ÅÅÅÅ-MM-DD` in every locale;
+  5. saves, taps Back from the saved activity and swipes to day 2.
+
+  A new activity lands LAST in its day, because the app sends no
+  `sortIndex`. That is why the club goes on day 2, after the 10:00 boat
+  day, and not on the day that was just put in order.
+  ```bash
+  python capture/record_video.py trip/demo itinerary_demo --scenario itinerary_demo \
+      --selector "text=Dinner, Sóller old town"
+  ```
+- **Spotify is ONE shared playlist link per trip — nothing more.** There is no
+  in-app song search, no track list and no per-song avatars. The feature is
+  the "Spotify playlist" row in Trip tools (the grid bubble, a11y label "Open
+  trip tools"). It opens "Spotify for this event", where you paste a public
+  link and press "Save link": `PATCH /api/trips/{id}/spotify`
+  `{spotifyUrl}` returns the trip. After that the row shows "▶ Open". Never
+  script a song-picking journey; it would be fake UI (rules 1 and 3).
+- **`--scenario spotify_demo`** (route `trip/demo`, fixture
+  `spotify_demo.json`: the itinerary trip with day 1 in time order and
+  `spotifyUrl: null`, Leo signed in). Leo opens Trip tools, taps "Spotify
+  playlist", pastes a playlist link and saves. He then reopens the tools,
+  where the row now shows "Open". The take runs 11.6 s. The tools sheet
+  closes for ~0.5 s before the Spotify sheet opens; the app does that.
+  ```bash
+  python capture/record_video.py trip/demo spotify_demo --scenario spotify_demo
+  ```
 - **Relative dates: `{today±N}`.** The Add activity form refuses dates in the
   past and a reveal that has already passed, so a fixture for an upcoming
   trip can't hold fixed dates — it would break a week later. Any string in a

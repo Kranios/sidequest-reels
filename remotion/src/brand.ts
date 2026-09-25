@@ -16,7 +16,7 @@ export const BRAND = {
   wordmark: "SideQuest",
   handle: "@sideqtravel",
   url: "sidequesttravel.app",
-  launchLine: "First 50 get lifetime access — free.",
+  launchLine: "Plan together. Travel better.",
 
   // Logo geometry at a 100px font size; scale proportionally.
   logoFontSize: 100,

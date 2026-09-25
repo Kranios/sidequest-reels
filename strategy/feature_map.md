@@ -18,7 +18,7 @@ we never market a feature that doesn't exist or misrepresent one.
 - Shared calendar — `(tabs)/calendar.tsx`
 - Trip functions hub / tools — `trip/[id]/functions.tsx`
 - Travelers, invites, roles — `invite/[code].tsx`, `share/[shareCode].tsx`
-- Spotify (per landing page)
+- Spotify: one shared playlist link per trip (Trip tools -> "Spotify playlist", PATCH `/api/trips/{id}/spotify`). No in-app song search or track list.
 
 ## In development — DO NOT market until live
 - **Gluno (AI planner assistant)** — flagged `__DEV__` / `ENABLE_GLUNO_ASSISTANT`.

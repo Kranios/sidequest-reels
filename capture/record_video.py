@@ -51,8 +51,9 @@ names out of the DOM. For a scenario the script also:
   - applies the journey's writes to an in-memory copy of the fixture, so what
     the demo saves comes back when the app reloads: an expense POST (balances
     recomputed to the cent), packing-list POST / PATCH / DELETE (add, tick,
-    rename, assign, delete), an activity POST (and opening it by id). The
-    fixture file is never modified.
+    rename, assign, delete), an activity POST (and opening it by id), the
+    itinerary's drag-to-reorder (PATCH reorder / move), and the trip's
+    shared Spotify link (PATCH spotify). The fixture file is never modified.
   - loads only the scenario's own fixture (see SCENARIOS) unless --fixture
     says otherwise.
 The positional `seconds` (scroll duration) is ignored by scenarios.
@@ -67,6 +68,14 @@ The positional `seconds` (scroll duration) is ignored by scenarios.
                     it into a hidden SideQuest, sets the reveal to 23:30,
                     leaves a teaser and saves; back on the trip it sits
                     sealed in its day, counting down to the reveal.
+  itinerary_demo    Route trip/demo: Leo drags the misplaced 20:30 dinner
+                    below the 16:00 check-in (human_drag), adds "Beach
+                    Club" (Food) at 14:00 on day 2, saves, and comes back
+                    to the feed with both days in order.
+  spotify_demo      Route trip/demo: Leo opens Trip tools, taps "Spotify
+                    playlist", pastes a public playlist link and saves;
+                    reopening the tools shows the row with "Open". The app
+                    shares ONE playlist link per trip — no song search.
 
 FOUR THINGS THIS APP DOES THAT BREAK NAIVE CAPTURE
 --------------------------------------------------
@@ -398,13 +407,42 @@ def _packing_apply(state, method, path, body, user):
 ACTIVITIES = "/api/trips/{id}/activities"
 ACTIVITIES_LIST = _route_regex(ACTIVITIES)
 ACTIVITY_ONE = _route_regex("/api/trips/{id}/activities/{aid}")
+# The itinerary's drag list. A drop inside a day sends the day's whole new
+# order; a drop under another day's header moves the activity there and sends
+# that day's order. The feed sorts a day by sortIndex, so stamping 0..n-1 in
+# the sent order is the entire reorder.
+ACTIVITY_REORDER = _route_regex("/api/trips/{id}/activities/reorder")
+ACTIVITY_MOVE = _route_regex("/api/trips/{id}/activities/{aid}/move")
+
+
+def _order_day(acts, ids):
+    """Give `ids` sortIndex 0..n-1 in the order sent and return that day."""
+    by_id = {a["id"]: a for a in acts}
+    for i, aid in enumerate(ids):
+        if aid in by_id:
+            by_id[aid]["sortIndex"] = i
+    return [by_id[aid] for aid in ids if aid in by_id]
 
 
 def _activities_apply(state, method, path, body, user):
     """Serve or apply what the static fixture can't: opening an activity by
-    id, and creating one. Returns (status, response body), or None when the
-    request is neither. /api/trips/<id>/activities/<aid>: aid is segment 5."""
+    id, creating one, and the itinerary's drag-to-reorder (PATCH reorder, and
+    PATCH move for a drop on another day). Returns (status, response body),
+    or None when the request is none of these.
+    /api/trips/<id>/activities/<aid>: aid is segment 5."""
     acts = state[ACTIVITIES]
+    if method == "PATCH" and ACTIVITY_REORDER.match(path):
+        return 200, _order_day(acts, body["activityIds"])
+    if method == "PATCH" and ACTIVITY_MOVE.match(path):
+        aid = path.rstrip("/").split("/")[5]
+        moved = next((a for a in acts if a["id"] == aid), None)
+        if moved is None:
+            return 404, {"error": "no such activity"}
+        if moved.get("endDate"):  # a hotel stay moves whole: same number of nights
+            shift = datetime.fromisoformat(body["date"][:10]) - datetime.fromisoformat(moved["date"][:10])
+            moved["endDate"] = (datetime.fromisoformat(moved["endDate"][:10]) + shift).date().isoformat()
+        moved["date"] = body["date"]
+        return 200, _order_day(acts, body["activityIds"])
     if method == "GET" and ACTIVITY_ONE.match(path):
         aid = path.rstrip("/").split("/")[5]
         found = next((a for a in acts if a["id"] == aid), None)
@@ -457,14 +495,34 @@ async def install_media_route(page):
     await page.route(f"{MEDIA_HOST}/**", handler)
 
 
+TRIP = "/api/trips/{id}"
+# The trip's one shared playlist link. The app has no song search or track
+# list: it saves a pasted public Spotify link on the trip and gets the trip
+# back. Nothing ever reaches Spotify itself.
+TRIP_SPOTIFY = _route_regex("/api/trips/{id}/spotify")
+
+
+def _spotify_apply(state, method, path, body):
+    """PATCH /api/trips/<id>/spotify: {spotifyUrl} sets the link,
+    {clearSpotifyUrl: true} removes it. Returns (status, the updated trip),
+    or None when the request is not that."""
+    if method != "PATCH" or not TRIP_SPOTIFY.match(path):
+        return None
+    trip = state[TRIP]
+    trip["spotifyUrl"] = None if body.get("clearSpotifyUrl") else body.get("spotifyUrl")
+    return 200, trip
+
+
 async def install_api_mocks(page, routes, user=None):
     """Answer **/api/** from the fixtures. Returns (served, missed) for the log.
 
     Bodies are served from a deep copy, so a scenario's writes can change what
     later GETs see without touching the fixture on disk. With a `user`, the
     profile sync returns them, POSTs to the expenses route are applied, and so
-    are packing-list writes (add, tick, rename, assign, delete) and activity
-    creates (and opening one by id). When two
+    are packing-list writes (add, tick, rename, assign, delete), activity
+    creates (and opening one by id) and the itinerary's drag-to-reorder
+    (PATCH reorder within a day, PATCH move to another day), and the trip's
+    shared Spotify link (PATCH spotify). When two
     fixtures define the same route, the first loaded wins — for GETs and for
     the in-memory copy alike."""
     app_host = urlparse(APP_URL).netloc
@@ -475,6 +533,7 @@ async def install_api_mocks(page, routes, user=None):
     can_post = user is not None and all(k in state for k in (EXPENSES, BALANCES, MEMBERS))
     can_pack = user is not None and PACKING in state
     can_act = user is not None and ACTIVITIES in state
+    can_spotify = user is not None and TRIP in state
 
     async def fulfill_json(route, body, status=200):
         await route.fulfill(status=status, content_type="application/json",
@@ -520,6 +579,14 @@ async def install_api_mocks(page, routes, user=None):
             result = _activities_apply(state, req.method, url.path, body, user)
             if result is not None:
                 key = f"{req.method} activities"
+                served[key] = served.get(key, 0) + 1
+                await fulfill_json(route, result[1], status=result[0])
+                return
+        if can_spotify:
+            body = req.post_data_json if req.post_data else {}
+            result = _spotify_apply(state, req.method, url.path, body)
+            if result is not None:
+                key = f"{req.method} spotify"
                 served[key] = served.get(key, 0) + 1
                 await fulfill_json(route, result[1], status=result[0])
                 return
@@ -632,6 +699,20 @@ PHANTOM_TOUCH_JS = r"""
       from { transform: scale(1);   opacity: 1; }
       to   { transform: scale(1.5); opacity: 0; }
     }
+    /* A press that is held (a drag's pick-up) swells and darkens while the
+       button stays down... */
+    #phantom-touch.phantom-held {
+      transform: scale(1.3);
+      background: rgba(0, 0, 0, 0.5);
+    }
+    /* ...and lifts off with a ring of its own when it lets go. */
+    #phantom-touch.phantom-lift {
+      animation: phantom-lift 300ms ease-out;
+    }
+    @keyframes phantom-lift {
+      from { transform: scale(1.3); opacity: 1; }
+      to   { transform: scale(1.8); opacity: 0; }
+    }
   `;
   const mount = () => {
     if (document.getElementById('phantom-touch')) return;
@@ -647,11 +728,24 @@ PHANTOM_TOUCH_JS = r"""
       dot.style.top = e.clientY + 'px';
       dot.style.opacity = '1';
     }, true);
+    let downAt = 0;
     document.addEventListener('mousedown', () => {
-      dot.classList.remove('phantom-click');
+      downAt = performance.now();
+      dot.classList.remove('phantom-click', 'phantom-lift');
       void dot.offsetWidth;  // restart the animation on back-to-back taps
-      dot.classList.add('phantom-click');
+      dot.classList.add('phantom-click', 'phantom-held');
       setTimeout(() => dot.classList.remove('phantom-click'), 300);
+    }, true);
+    // A tap comes back up within a frame or two and looks exactly as it did
+    // before; a press held for more than a quarter second (a drag) lifts off
+    // with its own ring.
+    document.addEventListener('mouseup', () => {
+      dot.classList.remove('phantom-held');
+      if (performance.now() - downAt < 250) return;
+      dot.classList.remove('phantom-click');
+      void dot.offsetWidth;
+      dot.classList.add('phantom-lift');
+      setTimeout(() => dot.classList.remove('phantom-lift'), 300);
     }, true);
   };
   if (document.readyState === 'loading') {
@@ -923,6 +1017,56 @@ async def human_slide(page, label_locator):
     _MOUSE[id(page)] = (x1, y)
 
 
+# A drag-to-reorder list (the itinerary's DraggableDayList) picks a row up
+# only once a press has been held still for its long-press time (350 ms in
+# the app). The row then follows the finger, and on release it drops where
+# its centre ends up among the other rows' midpoints. So human_drag presses
+# the source row's centre, holds, carries it along a gentle curve, and lets
+# go on the far edge of the target row: past the target's midpoint and short
+# of the next row's, so the row lands just beyond the target in the
+# direction of travel. Rows are found from their text with the same climb
+# as a slide track (_TRACK_JS). The bow is gentler than a glide's, because
+# the row itself only moves vertically.
+HUMAN_DRAG_STEPS = 18
+HUMAN_DRAG_MS = 800             # the carry: unhurried, so a viewer can follow the row
+HUMAN_DRAG_ARC = (0.03, 0.07)   # sideways bow of the carry, as a share of its length
+HUMAN_DRAG_SETTLE_MS = 150      # a beat on the drop line before letting go
+
+
+async def human_drag(page, source_loc, target_loc, hold_time=500):
+    """Press source_loc's row, hold it for hold_time ms so the list picks it
+    up, carry it along a curve to target_loc's row and let go just beyond it:
+    below it when dragging down, above it when dragging up. The phantom dot
+    swells while held and lifts off with a ring when it lets go."""
+    await _bring_into_view(page, source_loc)
+    src = await source_loc.evaluate(_TRACK_JS)
+    dst = await target_loc.evaluate(_TRACK_JS)
+    if src is None or dst is None:
+        raise RuntimeError(f"human_drag: no row around {source_loc if src is None else target_loc}")
+    text = await source_loc.bounding_box()
+    x0 = text["x"] + min(text["width"] / 2, 80)  # on the title, where a thumb would press
+    y0 = src["y"] + src["height"] / 2             # the row's centre, so the row tracks the pointer
+    x1 = x0
+    y1 = dst["y"] + dst["height"] if dst["y"] > src["y"] else dst["y"]
+
+    await _glide_to(page, x0, y0)
+    await page.wait_for_timeout(HUMAN_CLICK_PAUSE_MS)
+    await page.mouse.down()
+    await page.wait_for_timeout(hold_time)  # held still: the list picks the row up
+
+    bow = abs(y1 - y0) * _PATH_RNG.uniform(*HUMAN_DRAG_ARC) * _PATH_RNG.choice((-1, 1))
+    cx, cy = (x0 + x1) / 2 + bow, (y0 + y1) / 2
+    t0 = time.monotonic()
+    for i in range(1, HUMAN_DRAG_STEPS + 1):
+        u = _smoothstep(i / HUMAN_DRAG_STEPS)  # eased at both ends: lift, carry, set down
+        await page.mouse.move((1 - u) ** 2 * x0 + 2 * (1 - u) * u * cx + u * u * x1,
+                               (1 - u) ** 2 * y0 + 2 * (1 - u) * u * cy + u * u * y1)
+        await _pace(page, t0, HUMAN_DRAG_MS / 1000 * i / HUMAN_DRAG_STEPS)
+    await page.wait_for_timeout(HUMAN_DRAG_SETTLE_MS)
+    await page.mouse.up()
+    _MOUSE[id(page)] = (x1, y1)
+
+
 # ------------------------------------------------------------ scenarios
 # Every locator is text the app itself renders (the capture pins en-US), so a
 # scenario survives any restyle that keeps the words.
@@ -1070,6 +1214,119 @@ async def _hidden_sidequest_journey(page):
     await page.wait_for_timeout(SQ_FINAL_HOLD_MS)
 
 
+# The itinerary journey: fix a day by dragging, then add a place to the trip.
+# Day 1 of itinerary_demo.json files the 20:30 dinner before the beach. Leo
+# drags the dinner below the 16:00 check-in, then adds a 14:00 Beach Club on
+# day 2. A new activity lands last in its day, and day 2 holds only the 10:00
+# boat day, so the club follows it in order. The take ends on the feed with
+# both days in order. It runs at the SideQuest take's tight pacing, to land
+# near 15 s.
+IT_STEP_PAUSE_MS = 350
+IT_DETAIL_BEAT_MS = 500
+IT_FINAL_HOLD_MS = 1500
+
+
+async def scenario_itinerary_demo(page):
+    """Put a day in order and add to it: drag the misplaced dinner to the end
+    of day 1, add a Beach Club at 14:00 on day 2, save, and come back to the
+    feed with both days in order. Runs at SQ_TEMPO."""
+    with tempo(**SQ_TEMPO):
+        await _itinerary_journey(page)
+
+
+async def _itinerary_journey(page):
+    await page.wait_for_timeout(STEP_PAUSE_MS)
+    # Day 1 opens low on the first screen. One swipe lifts it, which keeps
+    # the drag clear of the list's auto-scroll edges (150 px at the top, 140
+    # px at the bottom).
+    dinner = page.get_by_text("Dinner, Sóller old town", exact=True)
+    await human_scroll(page, await _scroll_delta_for(dinner, at=0.4))
+    await page.wait_for_timeout(300)
+    await human_drag(page, dinner, page.get_by_text("Villa Sóller check-in", exact=True))
+    await page.wait_for_timeout(IT_STEP_PAUSE_MS)
+
+    # A new place: the floating "Add activity" button opens the form.
+    await human_click(page, page.get_by_text("Add activity", exact=True).first)
+    title = page.get_by_placeholder("What's the activity called?")
+    await title.wait_for(state="visible")
+    await human_type(page, title, "Beach Club")
+    # The app has no restaurant or bar category. "Food" is the nearest, and
+    # it is one of the three chips shown before "Show more". The chip may
+    # carry its emoji.
+    await human_click(page, page.get_by_text(re.compile(r"^\W*Food$")).filter(visible=True).first)
+    await page.wait_for_timeout(IT_STEP_PAUSE_MS)
+
+    # When: day 2 (the fixture's {today+3}) at 14:00. On web both fields are
+    # text inputs. The date's placeholder is Swedish in every locale, and the
+    # activity's time is the form's first "HH:MM".
+    date_field = page.get_by_placeholder("ÅÅÅÅ-MM-DD")
+    await human_scroll(page, await _scroll_delta_for(date_field, at=0.35))
+    await human_type(page, date_field, (date.today() + timedelta(days=3)).isoformat(), replace=True)
+    await human_type(page, page.get_by_placeholder("HH:MM").first, "14:00")
+    await page.wait_for_timeout(IT_STEP_PAUSE_MS)
+
+    # The submit is the last "Add activity" (the title and the trip's button
+    # come first). human_click swipes it into view if it is below the fold.
+    await human_click(page, page.get_by_text("Add activity", exact=True).last)
+
+    # Saved: the app opens the new activity. A beat on it, then Back, the
+    # arrow first in the header row beside "SideQuest".
+    header = page.get_by_text("SideQuest", exact=True).filter(visible=True).first
+    await header.wait_for(state="visible")
+    await page.wait_for_timeout(IT_DETAIL_BEAT_MS)
+    await human_click_row_control(page, header, "first")
+
+    # The trip: a short swipe down to day 2, so the fixed day 1 and the new
+    # Beach Club share the screen.
+    club = page.get_by_text("Beach Club", exact=True).filter(visible=True).first
+    await club.wait_for(state="visible")
+    await human_scroll(page, await _scroll_delta_for(club, at=0.62))
+    await page.wait_for_timeout(300)
+    await lift_finger(page)
+    await page.wait_for_timeout(IT_FINAL_HOLD_MS)
+
+
+SP_PLAYLIST_URL = "https://open.spotify.com/playlist/4vKq8mHs2TnY1pQe7dLwXc"
+
+
+async def scenario_spotify_demo(page):
+    """One playlist for the whole car: open Trip tools, paste the group's
+    Spotify link, save — and open the tools again, where the row now plays
+    it. Runs at SQ_TEMPO."""
+    with tempo(**SQ_TEMPO):
+        await _spotify_journey(page)
+
+
+async def _spotify_journey(page):
+    await page.wait_for_timeout(OPENING_BEAT_MS)
+    # The tools launcher is an icon-only bubble; its accessibility label is
+    # the text to aim at.
+    tools = page.get_by_role("button", name="Open trip tools")
+    await human_click(page, tools)
+    await page.wait_for_timeout(SQ_STEP_PAUSE_MS)  # the sheet slides up
+    await human_click(page, page.get_by_text("Spotify playlist", exact=True))
+    await page.wait_for_timeout(SQ_STEP_PAUSE_MS)
+
+    # The sheet says "Paste a public Spotify playlist...", so Leo pastes:
+    # tap the field, then the link lands in one go, as a paste does.
+    field = page.get_by_placeholder("https://open.spotify.com/...")
+    await human_click(page, field)
+    await page.wait_for_timeout(300)
+    await page.keyboard.insert_text(SP_PLAYLIST_URL)
+    await page.wait_for_timeout(SQ_STEP_PAUSE_MS)
+    await human_click(page, page.get_by_text("Save link", exact=True))
+
+    # Saved: the sheet closes onto the trip. Back into the tools, where the
+    # Spotify row now carries "Open".
+    await page.get_by_text("Spotify for this event", exact=True).wait_for(state="hidden")
+    await page.wait_for_timeout(SQ_STEP_PAUSE_MS)
+    await human_click(page, tools)
+    await page.get_by_text("Open", exact=True).filter(visible=True).first.wait_for(state="visible")
+    await page.wait_for_timeout(400)
+    await lift_finger(page)
+    await page.wait_for_timeout(SQ_FINAL_HOLD_MS)
+
+
 # name -> (the journey, the fixture member it runs as, its fixture, and an
 # optional prelude run before the cut). A scenario loads only its own fixture
 # unless --fixture says otherwise, so two fixtures that share a route (both
@@ -1079,6 +1336,8 @@ SCENARIOS = {
     "packing_list_demo": (scenario_packing_list_demo, "u5", "packing_list_demo.json", None),
     "hidden_sidequest_demo": (scenario_hidden_sidequest_demo, "u5",
                               "hidden_sidequest_demo.json", open_new_sidequest),
+    "itinerary_demo": (scenario_itinerary_demo, "u5", "itinerary_demo.json", None),
+    "spotify_demo": (scenario_spotify_demo, "u5", "spotify_demo.json", None),
 }
 
 

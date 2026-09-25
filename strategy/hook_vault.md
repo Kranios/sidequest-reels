@@ -124,6 +124,104 @@ not fixture figures. T3 runs exactly 20.0 s, qa.py's cap (videoSeconds
 
 ---
 
+## 2026-09-25 — Itinerary batch (theme 5, B-problem)
+
+The shared itinerary: a day filed in the wrong order, dragged into place, and
+a new activity added. Same Mallorca trip and nine friends as the other three
+batches. Figures come from `configs/fixtures/itinerary_demo.json` as it stands
+at the end of the `itinerary_demo` journey in `app/itinerary_demo.mp4` (Leo
+drags the 20:30 dinner to the end of day 1, then adds "Beach Club" to day 2 at
+14:00).
+
+| Reel ID | Driver | Hook (≤ 8 words) | Supporting lines |
+|---|---|---|---|
+| `T1-Receipt-Itinerary` | recognition | **9** — "Group chat chaos." | rows: plans per day (sum = 9) / "Day 1 had four plans and no order." / "Sorted in 15 seconds." |
+| `T2-Reveal-Itinerary` | curiosity | "They couldn't agree on the schedule. / So we just dragged it into place." | "Day 1 in order. Nobody sent a message." |
+| `T3-Speedrun-Itinerary` | competence | "How to fix / a messy trip schedule." | "Drag, drop, add." / over the take: "Day 1 reordered. Beach Club added." / "One take. No group chat." |
+| `T4-Callout-Itinerary` | humour | "Stop fighting over the itinerary. / Build it together instead." | "Beach at 11:00, says Mia. Dinner at 20:30, says Leo. Filed in that exact order." / "Fixed with one drag." / "Tag the schedule police." |
+| `T5-Atlas-Itinerary` | aspiration | "Day 1 Chaos. / Itinerary locked and loaded." | "Eight days, in order." / stats: 4 plans on day one · 0 messages to agree them |
+
+### Where every figure comes from
+
+| Figure | Source |
+|---|---|
+| 9 plans | the trip's activities after the journey: 8 in the fixture + "Beach Club" |
+| T1 rows | activities per day after the journey: day 1 = 4 · day 2 = 2 (boat + Beach Club) · day 3 = 1 · day 4 = 1 · day 7 = 1 = 9 |
+| "four plans and no order" / "4 plans on day one" | day 1 holds Flight 07:40, Dinner 20:30, Beach 11:00, check-in 16:00 at sortIndex 0-3 — filed by drag order, not by time. The journey's Beach Club goes to day 2, so day 1 keeps its four for the whole take |
+| 11:00 / Mia · 20:30 / Leo | the Beach, Cala Deià and Dinner, Sóller old town rows and their `ownerName` |
+| "Sorted in 15 seconds." | the journey from the first press to the finished feed: the drop lands at ~4.9 s and the Beach Club is in the feed by ~14.0 s of a 17.6 s take |
+| "Eight days, in order." | Sep 16 – Sep 23, the trip's `startDate`/`endDate` — eight days, seven nights |
+| 0 messages / "Nobody sent a message." | the reorder is a `PATCH /activities/reorder`; nothing goes through the chat |
+
+T4 is text-only — it has no video prop at all — but its three deadpan lines are
+still the fixture's day 1, not invented ones. T5's two stats are the pair that
+hold for its whole beat.
+
+T5's hook opened as "Mallorca Day 1." and was changed to "Day 1 Chaos." before
+render: the original first line was word-for-word the one already used by
+`T5-Atlas-HiddenSideQuest`, and a hook is never reused (rule 6). "Day 1 Chaos."
+also sets up the same reel's "Itinerary locked and loaded." as a before/after.
+
+**This is the first batch on the new CTA.** All five carry
+"Plan together. Travel better."; T2 and T5 are `ctaVariant: "quiet"`, which
+draws no launch line, so it is set on them for consistency and shows on T1, T3
+and T4.
+
+---
+
+## 2026-09-25 — Spotify batch (theme 6, B-problem)
+
+The trip's shared playlist: one Spotify link, saved on the trip, open to
+everyone on it. The app has NO song search, track list or per-song avatars.
+The feature is the link, and the reels claim nothing more. Same Mallorca trip
+and nine friends as the other batches. Figures come from
+`configs/fixtures/spotify_demo.json` and the `spotify_demo` journey in
+`app/spotify_demo.mp4`: Leo opens Trip tools, pastes a playlist link, saves,
+and the "Spotify playlist" row then shows "Open".
+
+| Reel ID | Driver | Hook (≤ 8 words) | Supporting lines |
+|---|---|---|---|
+| `T1-Receipt-Spotify` | recognition | **9** — "One aux. Nine opinions." | rows: the nine travelers, 1 each (sum = 9) / "Leo pasted it once." / "One link. Everyone has the playlist." |
+| `T2-Reveal-Spotify` | curiosity | "Nobody wants to play DJ. / Share the playlist link. Let the group handle it." | "Saved once. Open for all nine." |
+| `T3-Speedrun-Spotify` | competence | "How to share / the trip playlist." | "One link. Zero chaos." / over the take: "Link pasted. Playlist shared." / "Saved once. Nine people have it." |
+| `T4-Callout-Spotify` | humour | "Stop asking for the Spotify link. / It's already in the trip planner." | "Posted in the group chat. Buried by lunch. Asked for again at the gate." / "Saved once, in the trip." / "Tag the one who never finds it." |
+| `T5-Atlas-Spotify` | aspiration | "Seven nights. One playlist. / Everyone has access." | "Sóller, Mallorca. Soundtrack sorted." / stats: 9 travelers with access · 0 links lost in the chat |
+
+### Where every figure comes from
+
+| Figure | Source |
+|---|---|
+| 9 / "Nine opinions" / "all nine" / "Nine people" | `/members` in the fixture: Ana, Jo, Sam, Marcus, Leo, Ines, Mia, Ravi, Ella |
+| T1 rows | one row per member, 1 each: 9 × 1 = 9. Leo is flagged because he pastes the link in the take |
+| "Seven nights" / "Sóller, Mallorca" | the trip's `startDate`/`endDate` ({today+2} to {today+9}) and `destination` |
+| 0 links lost in the chat | saving is `PATCH /api/trips/{id}/spotify`; nothing is posted to the chat |
+
+T4 is text-only. Its three group-chat lines are narrative, like T2's in the
+Hidden SideQuest batch, and none of them carries a figure.
+
+**Copy changed from the brief before build (approved 2026-09-25):** the
+brief's "Who has the aux?" (T1) and "Tired of playing DJ?" (T2) broke the
+no-rhetorical-questions firewall. They became "One aux. Nine opinions." and
+"Nobody wants to play DJ.". "One link. Everyone adds their tracks." claimed an
+in-app feature that does not exist and became "One link. Everyone has the
+playlist.". "Roadtrip Playlist." did not fit a flight-and-villa trip and
+became "Seven nights. One playlist.".
+
+All five set "Plan together. Travel better."; T2 and T5 are `quiet`, so it
+shows on T1, T3 and T4.
+
+---
+
+## Retired CTA — do not use again
+
+- "First 50 get lifetime access — free." Retired 2026-09-25 by Oskar. The
+  standard sign-off is now **"Plan together. Travel better."** (the default in
+  `remotion/src/brand.ts`), or a variant that fits the reel's own copy. No
+  offer lines, no scarcity claims. See the Brand section of CLAUDE.md for
+  which already-rendered reels still carry the old line and why.
+
+---
+
 ## Retired — used before 2026-09-12
 
 The first template reels (removed from `src/reels/` for this test; recoverable

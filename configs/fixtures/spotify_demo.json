@@ -1,0 +1,41 @@
+{
+  "_about": "Spotify demo: the same Mallorca trip (Villa Sóller, 7 nights) and nine friends as the other demos, with Leo (u5) signed in and the trip upcoming (dates relative to the day of recording). The app's Spotify feature is ONE shared playlist link per trip (Trip tools -> 'Spotify playlist' -> paste a public link -> 'Save link', a PATCH /api/trips/{id}/spotify). There is no in-app song search or per-song list, so none is mocked. Day 1 is in time order (the itinerary demo files its dinner first on purpose; here it is last). The trip starts with spotifyUrl null, so the tools row has no 'Open' until Leo saves the link; the mock writes it to an in-memory copy, never to this file.",
+  "routes": {
+    "/api/trips/{id}": {
+      "id": "demo", "title": "Mallorca", "description": null,
+      "destination": "Sóller, Mallorca", "destinationLatitude": 39.7667, "destinationLongitude": 2.715, "destinationPlaceId": null,
+      "startDate": "{today+2}", "endDate": "{today+9}",
+      "imageUrl": null, "spotifyUrl": null,
+      "ownerId": "u1", "ownerIds": ["u1"],
+      "visibility": "public", "revealAt": null, "isRevealed": true, "teaser": null,
+      "inviteCode": "SOLLER9", "countries": ["ES"], "shareCode": null,
+      "membersCanEdit": true, "slideshowEnabled": true
+    },
+    "/api/trips/{id}/members": [
+      { "id": "u1", "name": "Ana", "avatarUrl": null, "isOwner": true, "joinedAt": "2026-05-02T18:00:00Z" },
+      { "id": "u2", "name": "Jo", "avatarUrl": null, "isOwner": false, "joinedAt": "2026-05-03T18:00:00Z" },
+      { "id": "u3", "name": "Sam", "avatarUrl": null, "isOwner": false, "joinedAt": "2026-05-04T18:00:00Z" },
+      { "id": "u4", "name": "Marcus", "avatarUrl": null, "isOwner": false, "joinedAt": "2026-05-05T18:00:00Z" },
+      { "id": "u5", "name": "Leo", "avatarUrl": null, "isOwner": false, "joinedAt": "2026-05-06T18:00:00Z" },
+      { "id": "u6", "name": "Ines", "avatarUrl": null, "isOwner": false, "joinedAt": "2026-05-07T18:00:00Z" },
+      { "id": "u7", "name": "Mia", "avatarUrl": null, "isOwner": false, "joinedAt": "2026-05-08T18:00:00Z" },
+      { "id": "u8", "name": "Ravi", "avatarUrl": null, "isOwner": false, "joinedAt": "2026-05-09T18:00:00Z" },
+      { "id": "u9", "name": "Ella", "avatarUrl": null, "isOwner": false, "joinedAt": "2026-05-10T18:00:00Z" }
+    ],
+    "/api/trips/{id}/invites": [],
+    "/api/trips/{id}/activities": [
+      { "id": "act-01", "tripId": "demo", "date": "{today+2}", "title": "Flight to Palma", "description": null, "time": "07:40", "endDate": null, "endTime": null, "sortIndex": 0, "category": "flight", "customCategoryLabel": null, "imageUrl": null, "excludeFromSlideshow": false, "spotifyUrl": null, "visibility": "public", "revealAt": null, "isRevealed": true, "teaser": null, "teaserOffsetMinutes": null, "isHiddenForViewer": false, "teaserVisible": false, "canEdit": true, "isHidden": false, "ownerId": "u2", "ownerName": "Jo", "ownerAvatarUrl": null, "assignedToUserId": null, "assignedToName": null, "createdAt": "{today-30}T18:00:00Z", "commentCount": 0 },
+      { "id": "act-02", "tripId": "demo", "date": "{today+2}", "title": "Dinner, Sóller old town", "description": null, "time": "20:30", "endDate": null, "endTime": null, "sortIndex": 3, "category": "food", "customCategoryLabel": null, "imageUrl": null, "excludeFromSlideshow": false, "spotifyUrl": null, "visibility": "public", "revealAt": null, "isRevealed": true, "teaser": null, "teaserOffsetMinutes": null, "isHiddenForViewer": false, "teaserVisible": false, "canEdit": true, "isHidden": false, "ownerId": "u5", "ownerName": "Leo", "ownerAvatarUrl": null, "assignedToUserId": null, "assignedToName": null, "createdAt": "{today-12}T18:00:00Z", "commentCount": 0 },
+      { "id": "act-03", "tripId": "demo", "date": "{today+2}", "title": "Beach, Cala Deià", "description": null, "time": "11:00", "endDate": null, "endTime": null, "sortIndex": 1, "category": "sight", "customCategoryLabel": null, "imageUrl": null, "excludeFromSlideshow": false, "spotifyUrl": null, "visibility": "public", "revealAt": null, "isRevealed": true, "teaser": null, "teaserOffsetMinutes": null, "isHiddenForViewer": false, "teaserVisible": false, "canEdit": true, "isHidden": false, "ownerId": "u7", "ownerName": "Mia", "ownerAvatarUrl": null, "assignedToUserId": null, "assignedToName": null, "createdAt": "{today-9}T18:00:00Z", "commentCount": 0 },
+      { "id": "act-04", "tripId": "demo", "date": "{today+2}", "title": "Villa Sóller check-in", "description": null, "time": "16:00", "endDate": null, "endTime": null, "sortIndex": 2, "category": "hotel", "customCategoryLabel": null, "imageUrl": null, "excludeFromSlideshow": false, "spotifyUrl": null, "visibility": "public", "revealAt": null, "isRevealed": true, "teaser": null, "teaserOffsetMinutes": null, "isHiddenForViewer": false, "teaserVisible": false, "canEdit": true, "isHidden": false, "ownerId": "u1", "ownerName": "Ana", "ownerAvatarUrl": null, "assignedToUserId": null, "assignedToName": null, "createdAt": "{today-30}T18:05:00Z", "commentCount": 0 },
+      { "id": "act-05", "tripId": "demo", "date": "{today+3}", "title": "Boat day, Port de Sóller", "description": null, "time": "10:00", "endDate": null, "endTime": null, "sortIndex": 0, "category": "sight", "customCategoryLabel": null, "imageUrl": null, "excludeFromSlideshow": false, "spotifyUrl": null, "visibility": "public", "revealAt": null, "isRevealed": true, "teaser": null, "teaserOffsetMinutes": null, "isHiddenForViewer": false, "teaserVisible": false, "canEdit": true, "isHidden": false, "ownerId": "u4", "ownerName": "Marcus", "ownerAvatarUrl": null, "assignedToUserId": null, "assignedToName": null, "createdAt": "{today-21}T18:00:00Z", "commentCount": 0 },
+      { "id": "act-06", "tripId": "demo", "date": "{today+4}", "title": "Wine tasting, Binissalem", "description": null, "time": "17:00", "endDate": null, "endTime": null, "sortIndex": 0, "category": "food", "customCategoryLabel": null, "imageUrl": null, "excludeFromSlideshow": false, "spotifyUrl": null, "visibility": "public", "revealAt": null, "isRevealed": true, "teaser": null, "teaserOffsetMinutes": null, "isHiddenForViewer": false, "teaserVisible": false, "canEdit": true, "isHidden": false, "ownerId": "u1", "ownerName": "Ana", "ownerAvatarUrl": null, "assignedToUserId": null, "assignedToName": null, "createdAt": "{today-20}T18:00:00Z", "commentCount": 0 },
+      { "id": "act-07", "tripId": "demo", "date": "{today+5}", "title": "Deià coast walk", "description": null, "time": "09:00", "endDate": null, "endTime": null, "sortIndex": 0, "category": "sight", "customCategoryLabel": null, "imageUrl": null, "excludeFromSlideshow": false, "spotifyUrl": null, "visibility": "public", "revealAt": null, "isRevealed": true, "teaser": null, "teaserOffsetMinutes": null, "isHiddenForViewer": false, "teaserVisible": false, "canEdit": true, "isHidden": false, "ownerId": "u3", "ownerName": "Sam", "ownerAvatarUrl": null, "assignedToUserId": null, "assignedToName": null, "createdAt": "{today-14}T18:00:00Z", "commentCount": 0 },
+      { "id": "act-08", "tripId": "demo", "date": "{today+8}", "title": "Farewell dinner", "description": null, "time": "20:30", "endDate": null, "endTime": null, "sortIndex": 0, "category": "food", "customCategoryLabel": null, "imageUrl": null, "excludeFromSlideshow": false, "spotifyUrl": null, "visibility": "public", "revealAt": null, "isRevealed": true, "teaser": null, "teaserOffsetMinutes": null, "isHiddenForViewer": false, "teaserVisible": false, "canEdit": true, "isHidden": false, "ownerId": "u6", "ownerName": "Ines", "ownerAvatarUrl": null, "assignedToUserId": null, "assignedToName": null, "createdAt": "{today-10}T18:00:00Z", "commentCount": 0 }
+    ],
+    "/api/trips/{id}/activities/{aid}/comments": [],
+    "/api/trips/{id}/chat": [],
+    "/api/trips/{id}/day-locations": [],
+    "/api/users/blocked-ids": []
+  }
+}
