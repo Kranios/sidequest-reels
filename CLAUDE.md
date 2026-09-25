@@ -482,7 +482,8 @@ repo root.
   app looks, not a capture fault.
 - **`--scenario itinerary_demo`** (route `trip/demo`, fixture
   `itinerary_demo.json`: the same Mallorca trip and nine friends, Leo signed
-  in, the trip upcoming). The take runs 17.6 s. Leo:
+  in, the trip upcoming). The take runs 18.4 s (re-recorded 2026-09-25
+  with photos; the drop lands at ~5.8 s). Leo:
   1. swipes day 1 up and drags "Dinner, Sóller old town" (20:30) below
      "Villa Sóller check-in" (16:00);
   2. opens Add activity and types "Beach Club";
@@ -510,7 +511,8 @@ repo root.
   `spotify_demo.json`: the itinerary trip with day 1 in time order and
   `spotifyUrl: null`, Leo signed in). Leo opens Trip tools, taps "Spotify
   playlist", pastes a playlist link and saves. He then reopens the tools,
-  where the row now shows "Open". The take runs 11.6 s. The tools sheet
+  where the row now shows "Open". The take runs 11.1 s ("Open" from
+  ~7.4 s, re-recorded 2026-09-25 with photos). The tools sheet
   closes for ~0.5 s before the Spotify sheet opens; the app does that.
   ```bash
   python capture/record_video.py trip/demo spotify_demo --scenario spotify_demo

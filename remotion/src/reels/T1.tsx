@@ -282,12 +282,10 @@ export const T1Reels: React.FC = () => (
         + 1 + 1 = 9 (configs/fixtures/itinerary_demo.json plus the
         itinerary_demo journey). Day 1 is the flagged row — it is the day
         that was filed in the wrong order. The phone plays
-        app/itinerary_demo.mp4 from 2.0 s (frame 60) for 4.2 s, which is the
-        whole argument in one beat: day 1 filed out of order, the carry from
-        ~4.2 s, the drop at ~4.9 s, and the list chronological from 5.19 s —
-        ending at 6.2 s, just as the Add activity form would open. Starting
-        here also lets the phone's entrance spring settle (~1.3 s) before the
-        drag begins. */}
+        app/itinerary_demo.mp4 (re-recorded 2026-09-25 with photos, 18.4 s)
+        from 2.8 s (frame 84) for 4.2 s: day 1 filed out of order, the carry
+        from ~5.0 s, the drop at ~5.8 s and the list chronological from
+        ~6.0 s, ending at 7.0 s just as the Add activity form opens. */}
     <Composition
       id="T1-Receipt-Itinerary"
       component={T1Receipt}
@@ -340,7 +338,7 @@ export const T1Reels: React.FC = () => (
         phoneOffsetY: 0,
         swingDeg: 12,
         dollyIn: 0.45,
-        videoStartFrom: 60,
+        videoStartFrom: 84,
 
         ctaVariant: "standard",
         ctaLogoSize: 104,
@@ -368,9 +366,10 @@ export const T1Reels: React.FC = () => (
         it reaches: the total is the nine members of the demo trip and each
         row is one of them (configs/fixtures/spotify_demo.json, /members:
         1 x 9 = 9). Leo is flagged because he is the one who pastes the link.
-        The phone plays app/spotify_demo.mp4 from 5.0 s (frame 150) for
-        4.4 s: the link lands in the field at ~5.2 s, Save at ~6.2 s, and
-        from ~8.0 s the Trip tools row shows "Open", held 1.4 s. */}
+        The phone plays app/spotify_demo.mp4 (re-recorded 2026-09-25 with
+        photos, 11.1 s) from 4.6 s (frame 138) for 4.4 s: the link lands in
+        the field at ~4.8 s, Save at ~5.8 s, and from ~7.4 s the Trip tools
+        row shows "Open", held 1.6 s. */}
     <Composition
       id="T1-Receipt-Spotify"
       component={T1Receipt}
@@ -428,7 +427,7 @@ export const T1Reels: React.FC = () => (
         phoneOffsetY: 0,
         swingDeg: 12,
         dollyIn: 0.45,
-        videoStartFrom: 150,
+        videoStartFrom: 138,
 
         ctaVariant: "standard",
         ctaLogoSize: 104,

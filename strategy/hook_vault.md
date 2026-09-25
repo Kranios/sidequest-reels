@@ -149,7 +149,7 @@ drags the 20:30 dinner to the end of day 1, then adds "Beach Club" to day 2 at
 | T1 rows | activities per day after the journey: day 1 = 4 · day 2 = 2 (boat + Beach Club) · day 3 = 1 · day 4 = 1 · day 7 = 1 = 9 |
 | "four plans and no order" / "4 plans on day one" | day 1 holds Flight 07:40, Dinner 20:30, Beach 11:00, check-in 16:00 at sortIndex 0-3 — filed by drag order, not by time. The journey's Beach Club goes to day 2, so day 1 keeps its four for the whole take |
 | 11:00 / Mia · 20:30 / Leo | the Beach, Cala Deià and Dinner, Sóller old town rows and their `ownerName` |
-| "Sorted in 15 seconds." | the journey from the first press to the finished feed: the drop lands at ~4.9 s and the Beach Club is in the feed by ~14.0 s of a 17.6 s take |
+| "Sorted in 15 seconds." | the journey from the first press to the finished feed: the press is at ~5.0 s and the Beach Club is in the feed by ~14.0 s of the 18.4 s take re-recorded on 2026-09-25 (it was ~4.9 s and ~14.0 s of 17.6 s before) |
 | "Eight days, in order." | Sep 16 – Sep 23, the trip's `startDate`/`endDate` — eight days, seven nights |
 | 0 messages / "Nobody sent a message." | the reorder is a `PATCH /activities/reorder`; nothing goes through the chat |
 

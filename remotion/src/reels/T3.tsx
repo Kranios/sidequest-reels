@@ -200,11 +200,13 @@ export const T3Reels: React.FC = () => (
         durationInFrames: t3SpeedrunDuration(props, CANVAS.fps),
       })}
     />
-    {/* ITINERARY — the whole fix in one take. app/itinerary_demo.mp4 runs
-        17.6 s: Leo drags the 20:30 dinner to the end of day 1 (drops at
-        ~4.9 s), opens Add activity, types "Beach Club", picks Food, moves it
-        to day 2 at 14:00 and saves; the finished feed is on screen from
-        ~14.0 s. videoSeconds 17.5 plays effectively the whole take, so the
+    {/* ITINERARY — the whole fix in one take. app/itinerary_demo.mp4
+        (re-recorded 2026-09-25 with photos) runs 18.4 s: Leo drags the
+        20:30 dinner to the end of day 1 (drops at ~5.8 s), opens Add
+        activity, types "Beach Club", picks Food, moves it to day 2 at 14:00
+        and saves; the finished feed is on screen from ~14.0 s and he swipes
+        to day 2 by ~16 s. videoStartFrom 24 trims the first 0.8 s of the
+        opening beat, so videoSeconds 17.5 plays the take to ~18.3 s and the
         reel is 19.9 s = 597 frames — one frame under the 598 the mp4
         container allows before qa.py reads it as over 20 s. Do not raise it.
         Re-record the journey and these times move. */}
@@ -246,7 +248,7 @@ export const T3Reels: React.FC = () => (
         phoneOffsetY: 0,
         swingDeg: 10,
         dollyIn: 0.3,
-        videoStartFrom: 0,
+        videoStartFrom: 24,
 
         ctaVariant: "urgent",
         ctaLogoSize: 104,
@@ -263,11 +265,12 @@ export const T3Reels: React.FC = () => (
         durationInFrames: t3SpeedrunDuration(props, CANVAS.fps),
       })}
     />
-    {/* SPOTIFY — the whole share in one take. app/spotify_demo.mp4 runs
-        11.6 s: Leo opens Trip tools (~2.6 s), taps "Spotify playlist",
-        pastes the link (~5.2 s), saves (~6.2 s) and reopens the tools, where
-        the row shows "Open" from ~8.0 s. videoSeconds 11.5 plays the whole
-        take, so the reel is 13.9 s. */}
+    {/* SPOTIFY — the whole share in one take. app/spotify_demo.mp4
+        (re-recorded 2026-09-25 with photos) runs 11.1 s: Leo opens Trip
+        tools (~2.2 s), taps "Spotify playlist", pastes the link (~4.8 s),
+        saves (~5.8 s) and reopens the tools, where the row shows "Open"
+        from ~7.4 s. videoSeconds 11.1 plays the whole take, so the reel is
+        13.5 s. */}
     <Composition
       id="T3-Speedrun-Spotify"
       component={T3Speedrun}
@@ -312,13 +315,13 @@ export const T3Reels: React.FC = () => (
         ctaLogoSize: 104,
 
         hookSeconds: 2.0,
-        videoSeconds: 11.5,
+        videoSeconds: 11.1,
         ctaSeconds: 2.4,
       }}
       fps={CANVAS.fps}
       width={CANVAS.width}
       height={CANVAS.height}
-      durationInFrames={t3SpeedrunDuration({ videoSeconds: 11.5, ctaSeconds: 2.4 }, CANVAS.fps)}
+      durationInFrames={t3SpeedrunDuration({ videoSeconds: 11.1, ctaSeconds: 2.4 }, CANVAS.fps)}
       calculateMetadata={({ props }) => ({
         durationInFrames: t3SpeedrunDuration(props, CANVAS.fps),
       })}

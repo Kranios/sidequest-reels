@@ -245,13 +245,14 @@ export const T5Reels: React.FC = () => (
         ),
       })}
     />
-    {/* ITINERARY — the finished week as an object. videoStartFrom 390
-        (13.0 s) opens app/itinerary_demo.mp4 on the feed after the save, so
-        the itinerary drifting past is the ordered one, and the take still
-        has 4.6 s of motion left to run. The two stats are the ones that hold
-        for the whole beat: day 1 keeps its four plans throughout (the
-        journey's Beach Club lands on day 2), and the count of messages it
-        took to agree them stays zero. */}
+    {/* ITINERARY — the finished week as an object. videoStartFrom 420
+        (14.0 s) opens app/itinerary_demo.mp4 (re-recorded 2026-09-25, 18.4 s)
+        on the feed right after Back, so the itinerary drifting past is the
+        ordered one, with its photos, and the take has 4.4 s of motion left
+        to run. The two stats are the ones that hold for the whole beat:
+        day 1 keeps its four plans throughout (the journey's Beach Club lands
+        on day 2), and the count of messages it took to agree them stays
+        zero. */}
     <Composition
       id="T5-Atlas-Itinerary"
       component={T5Atlas}
@@ -302,7 +303,7 @@ export const T5Reels: React.FC = () => (
         phoneOffsetY: 0,
         swingDeg: 5,
         dollyIn: 0.25,
-        videoStartFrom: 390,
+        videoStartFrom: 420,
 
         ctaVariant: "quiet",
         ctaLogoSize: 112,
@@ -325,13 +326,13 @@ export const T5Reels: React.FC = () => (
         ),
       })}
     />
-    {/* SPOTIFY — the shared playlist as an object. videoStartFrom 186
-        (6.2 s) opens app/spotify_demo.mp4 on the save: the sheet closes, Leo
-        reopens Trip tools and the "Spotify playlist" row carries "Open" from
-        ~8.0 s to the end of the take (11.6 s); past it the phone holds the
-        last frame. Stats: the nine members the link reaches (/members), and
-        zero links in the chat -- saving is a PATCH on the trip, nothing is
-        posted to the chat. */}
+    {/* SPOTIFY — the shared playlist as an object. videoStartFrom 174
+        (5.8 s) opens app/spotify_demo.mp4 (re-recorded 2026-09-25, 11.1 s)
+        on the save: the sheet closes, Leo reopens Trip tools and the
+        "Spotify playlist" row carries "Open" from ~7.4 s to the end of the
+        take; past it the phone holds the last frame. Stats: the nine
+        members the link reaches (/members), and zero links in the chat --
+        saving is a PATCH on the trip, nothing is posted to the chat. */}
     <Composition
       id="T5-Atlas-Spotify"
       component={T5Atlas}
@@ -380,7 +381,7 @@ export const T5Reels: React.FC = () => (
         phoneOffsetY: 0,
         swingDeg: 5,
         dollyIn: 0.25,
-        videoStartFrom: 186,
+        videoStartFrom: 174,
 
         ctaVariant: "quiet",
         ctaLogoSize: 112,

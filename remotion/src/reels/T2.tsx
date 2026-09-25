@@ -245,13 +245,13 @@ export const T2Reels: React.FC = () => (
       })}
     />
     {/* ITINERARY — day 1, filed in the wrong order, blurred under the hook.
-        The blur lifts on the drop: in app/itinerary_demo.mp4 Leo presses the
-        20:30 dinner at ~4.2 s, carries it down, lets go at ~4.9 s and the
-        list settles chronological at 5.19 s — so revealAtSeconds 5.0 over
-        revealFrames 18 clears the blur across 5.0-5.6 s, exactly as the row
-        lands. Lock and countdown are OFF: the itinerary has no timed unlock,
-        and implying one would misrepresent the feature (same call as the
-        Cost Split and Packing List reels). The blur is editorial. */}
+        The blur lifts on the drop. app/itinerary_demo.mp4 (re-recorded
+        2026-09-25, 18.4 s) starts 0.8 s in (videoStartFrom 24), so the drop
+        at ~5.8 s of the take lands at ~5.0 s of the reel and the list is
+        chronological by ~5.2 s: revealAtSeconds 5.0 snaps the blur clear as
+        the row lands. Lock and countdown are OFF: the itinerary has no timed
+        unlock, and implying one would misrepresent the feature (same call as
+        the Cost Split and Packing List reels). The blur is editorial. */}
     <Composition
       id="T2-Reveal-Itinerary"
       component={T2Reveal}
@@ -307,7 +307,7 @@ export const T2Reels: React.FC = () => (
         phoneOffsetY: 0,
         swingDeg: 4,
         dollyIn: 0.2,
-        videoStartFrom: 0,
+        videoStartFrom: 24,
 
         ctaVariant: "quiet",
         ctaLogoSize: 112,
@@ -324,10 +324,10 @@ export const T2Reels: React.FC = () => (
       })}
     />
     {/* SPOTIFY — the whole journey plays blurred under the hook, and the blur
-        lifts on the result. In app/spotify_demo.mp4 Leo saves the link at
-        ~6.2 s, the sheet closes, he reopens Trip tools and from ~8.0 s the
-        "Spotify playlist" row carries "Open". revealAtSeconds 7.6 over
-        revealFrames 18 clears the blur across 7.6-8.2 s, as that row lands.
+        lifts on the result. In app/spotify_demo.mp4 (re-recorded 2026-09-25,
+        11.1 s) Leo saves the link at ~5.8 s, the sheet closes, he reopens
+        Trip tools and from ~7.4 s the "Spotify playlist" row carries
+        "Open". revealAtSeconds 7.0 snaps the blur clear as that row lands.
         Lock and countdown are OFF: a playlist link has no timed unlock. */}
     <Composition
       id="T2-Reveal-Spotify"
@@ -347,7 +347,7 @@ export const T2Reels: React.FC = () => (
         countdownLabel: "",
         countdownFormat: "s",
 
-        revealAtSeconds: 7.6,
+        revealAtSeconds: 7.0,
         revealFrames: 8,
         maxBlur: 34,
         teaseBlur: 12,
