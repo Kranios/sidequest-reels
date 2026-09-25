@@ -435,6 +435,28 @@ def _activities_apply(state, method, path, body, user):
     return None
 
 
+# Photos a fixture points at (a trip's cover, an activity's imageUrl) live in
+# configs/fixtures/media/ and are served under this made-up host, so a take
+# never depends on the network or on a third-party CDN staying up. The .demo
+# TLD is reserved-looking and never resolves; only this route answers it.
+MEDIA_HOST = "https://media.sidequest.demo"
+MEDIA_DIR = FIXTURE_DIR / "media"
+
+
+async def install_media_route(page):
+    async def handler(route):
+        name = Path(urlparse(route.request.url).path).name
+        path = MEDIA_DIR / name
+        if path.is_file():
+            await route.fulfill(status=200, path=str(path),
+                                headers={"Cache-Control": "max-age=3600"})
+        else:
+            print(f"media: missing {name}")
+            await route.fulfill(status=404, body="")
+
+    await page.route(f"{MEDIA_HOST}/**", handler)
+
+
 async def install_api_mocks(page, routes, user=None):
     """Answer **/api/** from the fixtures. Returns (served, missed) for the log.
 
@@ -1091,6 +1113,7 @@ async def record(route, name, seconds=6.0, warmup_ms=DEFAULT_WARMUP_MS,
 
     await emulate_safe_area(ctx, page, *safe_area)
     served, missed = await install_api_mocks(page, api_routes, user)
+    await install_media_route(page)
     if journey:
         await inject_phantom_touch(page)
         await seed_demo_session(page, user)

@@ -38,8 +38,11 @@ export const T2Reels: React.FC = () => (
         countdownFormat: "s",
 
         revealAtSeconds: 3.0,
-        revealFrames: 18,
+        revealFrames: 8,
         maxBlur: 34,
+        teaseBlur: 12,
+        revealFlash: 0.35,
+        revealPunch: 0.06,
         revealDim: 0.44,
         showLock: false,
 
@@ -110,8 +113,11 @@ export const T2Reels: React.FC = () => (
         countdownFormat: "s",
 
         revealAtSeconds: 3.0,
-        revealFrames: 18,
+        revealFrames: 8,
         maxBlur: 34,
+        teaseBlur: 12,
+        revealFlash: 0.35,
+        revealPunch: 0.06,
         revealDim: 0.44,
         showLock: false,
 
@@ -189,8 +195,11 @@ export const T2Reels: React.FC = () => (
         countdownFormat: "s",
 
         revealAtSeconds: 3.8,
-        revealFrames: 18,
+        revealFrames: 8,
         maxBlur: 34,
+        teaseBlur: 12,
+        revealFlash: 0.35,
+        revealPunch: 0.06,
         revealDim: 0.44,
         showLock: true,
 

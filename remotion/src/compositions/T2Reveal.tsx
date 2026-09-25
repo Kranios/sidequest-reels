@@ -30,9 +30,10 @@ import { AnimatedBackground } from "../components/AnimatedBackground";
 import { BlurReveal } from "../components/BlurReveal";
 import { CTA } from "../components/CTA";
 import { Phone } from "../components/Phone";
+import { Grade } from "../components/Grade";
 import { SafeAreaOverlay } from "../components/SafeAreaOverlay";
 import { Timer } from "../components/Timer";
-import { Band, CaptionText, HookText } from "../components/Text";
+import { Band, CaptionText, HookText, exitBefore } from "../components/Text";
 
 export const t2RevealSchema = z.object({
   // ---- content ----
@@ -47,6 +48,22 @@ export const t2RevealSchema = z.object({
   /** Small line above the phone after the reveal, e.g. "UNLOCKED". */
   revealedLabel: z.string(),
   launchLine: z.string(),
+  /** Words to turn pink and pop when they land (Text.tsx). Optional. */
+  accentWords: z.array(z.string()).optional(),
+  /** Film grain opacity (Grade.tsx). Optional; 0.04 by default. */
+  grain: z.number().min(0).max(0.2).optional(),
+  /** Camera focus moments, in CAPTURE seconds (see PhoneFocus). Optional. */
+  phoneFocus: z
+    .array(
+      z.object({
+        at: z.number().min(0).max(60),
+        u: z.number().min(0).max(1),
+        v: z.number().min(0).max(1),
+        zoom: z.number().min(1).max(4),
+        hold: z.number().min(0.2).max(20),
+      })
+    )
+    .optional(),
 
   // ---- countdown ----
   showCountdown: z.boolean(),
@@ -58,8 +75,17 @@ export const t2RevealSchema = z.object({
   // ---- the reveal itself ----
   /** Seconds into the reel when the blur starts lifting. */
   revealAtSeconds: z.number().min(0.5).max(12).step(0.1),
+  /** Frames the snap takes: 6-10 reads as a cut, 18+ as a polite fade. */
   revealFrames: z.number().min(4).max(60).step(1),
+  /** Blur at frame 0. */
   maxBlur: z.number().min(0).max(80).step(1),
+  /** Blur just before the reveal: it creeps from maxBlur to this across the
+   *  hold, so the viewer sees progress. = maxBlur holds it flat. */
+  teaseBlur: z.number().min(0).max(80).step(1),
+  /** White flash at the reveal, 0..1. */
+  revealFlash: z.number().min(0).max(1).step(0.05),
+  /** Scale pop at the reveal (underdamped spring). 0 = none. */
+  revealPunch: z.number().min(0).max(0.2).step(0.01),
   revealDim: z.number().min(0).max(1).step(0.02),
   showLock: z.boolean(),
 
@@ -133,6 +159,9 @@ export const T2Reveal: React.FC<T2RevealProps> = (p) => {
           revealFrame={revealFrame}
           revealFrames={p.revealFrames}
           maxBlur={p.maxBlur}
+          teaseBlur={p.teaseBlur}
+          flash={p.revealFlash}
+          scalePunch={p.revealPunch}
           dim={p.revealDim}
           showLock={p.showLock}
           lockLabel={p.lockLabel}
@@ -150,6 +179,7 @@ export const T2Reveal: React.FC<T2RevealProps> = (p) => {
             screenFlipY={p.screenFlipY}
             insets={insets}
             offsetY={p.phoneOffsetY}
+            focus={p.phoneFocus}
           />
         </BlurReveal>
 
@@ -196,13 +226,20 @@ export const T2Reveal: React.FC<T2RevealProps> = (p) => {
               ]}
               fontSize={p.hookFontSize}
               wordStagger={6}
+              accentWords={p.accentWords}
+              exitAt={exitBefore(revealFrame, p.hookLine1, p.hookLine2)}
             />
           </Band>
         </Sequence>
 
         <Sequence from={revealFrame}>
           <Band box={bands.bottom} align="start">
-            <CaptionText text={p.caption} fontSize={p.captionFontSize} delay={6} />
+            <CaptionText
+              text={p.caption}
+              fontSize={p.captionFontSize}
+              delay={6}
+              exitAt={exitBefore(mainDur - revealFrame, p.caption)}
+            />
           </Band>
         </Sequence>
       </Sequence>
@@ -216,6 +253,14 @@ export const T2Reveal: React.FC<T2RevealProps> = (p) => {
           background="transparent"
         />
       </Sequence>
+
+      {/* Grain throughout, and one glint across the glass as the blur lifts. */}
+      <Grade
+        grain={p.grain}
+        sweepAt={revealFrame + 2}
+        sweepBand={bands.stage}
+        sweepFill={p.phoneFill}
+      />
 
       {p.showSafeArea ? <SafeAreaOverlay insets={insets} /> : null}
     </AbsoluteFill>
