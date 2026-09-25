@@ -254,7 +254,7 @@ export const T2Reels: React.FC = () => (
         lockLabel: "",
         caption: "Day 1 in order. Nobody sent a message.",
         revealedLabel: "day one",
-        launchLine: "",
+        launchLine: "Plan together. Travel better.",
 
         showCountdown: false,
         countdownFrom: 30,

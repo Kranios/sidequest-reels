@@ -237,6 +237,22 @@ repo root.
   Geometry from the real logo export: fontSize 100, tracking −5.6, dot r=11,
   gap 6. Mirrored in `lib/brand.py` and `remotion/src/brand.ts` — keep in sync.
 - Font: Raleway Black (900). Background `#0A0908`.
+- **The CTA line. "First 50 get lifetime access — free." is retired — do not
+  use it on any reel, ever again.** The standard sign-off is now
+  **"Plan together. Travel better."**, and it is the default in
+  `remotion/src/brand.ts` (`BRAND.launchLine`), which is what `<CTA>` falls
+  back to when a reel passes no `launchLine`. A reel may pass a variant that
+  suits its own copy — the line is a positioning statement, not a fixed
+  string — but it may not go back to an offer or a scarcity claim. Note the
+  old line survives in three places on purpose: the fifteen Cost Split /
+  Packing List / Hidden SideQuest reels and `Root.tsx`'s two pre-template
+  reels, which are already rendered and approved, and `compose/compose.py`,
+  which is legacy. Sweep those only when Oskar asks. `strategy/feature_map.md`
+  still records the launch offer itself as a fact about the product; that is
+  not a CTA and stays.
+- `ctaVariant: "quiet"` (T2, T5) never draws the launch line at all —
+  `showLaunch = variant !== "quiet"` in `components/CTA.tsx`. Setting
+  `launchLine` on a quiet reel is harmless but changes nothing on screen.
 - Read config files with **explicit UTF-8** on Windows, or em-dashes render as
   garbage. This was a real bug.
 

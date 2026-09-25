@@ -227,7 +227,7 @@ export const T4Reels: React.FC = () => (
         ],
         punchline: "Tag the schedule police.",
         kicker: "",
-        launchLine: "First 50 get lifetime access — free.",
+        launchLine: "Plan together. Travel better.",
 
         showCounter: false,
 

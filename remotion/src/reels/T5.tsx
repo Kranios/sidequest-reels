@@ -259,7 +259,7 @@ export const T5Reels: React.FC = () => (
       defaultProps={{
         appVideo: "app/itinerary_demo.mp4",
 
-        hookLine1: "Mallorca Day 1.",
+        hookLine1: "Day 1 Chaos.",
         hookLine2: "Itinerary locked and loaded.",
         hookSubtext: "",
         caption: "Eight days, in order.",
@@ -306,7 +306,7 @@ export const T5Reels: React.FC = () => (
 
         ctaVariant: "quiet",
         ctaLogoSize: 112,
-        launchLine: "",
+        launchLine: "Plan together. Travel better.",
 
         introSeconds: 2.4,
         globeSeconds: 6.0,

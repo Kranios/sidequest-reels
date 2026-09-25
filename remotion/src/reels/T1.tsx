@@ -309,7 +309,7 @@ export const T1Reels: React.FC = () => (
         ],
         rowNote: "Day 1 had four plans and no order.",
         caption: "Sorted in 15 seconds.",
-        launchLine: "First 50 get lifetime access — free.",
+        launchLine: "Plan together. Travel better.",
 
         showSafeArea: false,
         safeTop: 220,

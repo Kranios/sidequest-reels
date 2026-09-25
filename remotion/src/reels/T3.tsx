@@ -240,7 +240,7 @@ export const T3Reels: React.FC = () => (
         hookSubtext: "Drag, drop, add.",
         runCaption: "Day 1 reordered. Beach Club added.",
         caption: "One take. No group chat.",
-        launchLine: "First 50 get lifetime access — free.",
+        launchLine: "Plan together. Travel better.",
 
         showTimer: true,
         timerLabel: "elapsed",

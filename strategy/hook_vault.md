@@ -139,7 +139,7 @@ drags the 20:30 dinner to the end of day 1, then adds "Beach Club" to day 2 at
 | `T2-Reveal-Itinerary` | curiosity | "They couldn't agree on the schedule. / So we just dragged it into place." | "Day 1 in order. Nobody sent a message." |
 | `T3-Speedrun-Itinerary` | competence | "How to fix / a messy trip schedule." | "Drag, drop, add." / over the take: "Day 1 reordered. Beach Club added." / "One take. No group chat." |
 | `T4-Callout-Itinerary` | humour | "Stop fighting over the itinerary. / Build it together instead." | "Beach at 11:00, says Mia. Dinner at 20:30, says Leo. Filed in that exact order." / "Fixed with one drag." / "Tag the schedule police." |
-| `T5-Atlas-Itinerary` | aspiration | "Mallorca Day 1. / Itinerary locked and loaded." | "Eight days, in order." / stats: 4 plans on day one · 0 messages to agree them |
+| `T5-Atlas-Itinerary` | aspiration | "Day 1 Chaos. / Itinerary locked and loaded." | "Eight days, in order." / stats: 4 plans on day one · 0 messages to agree them |
 
 ### Where every figure comes from
 
@@ -156,6 +156,26 @@ drags the 20:30 dinner to the end of day 1, then adds "Beach Club" to day 2 at
 T4 is text-only — it has no video prop at all — but its three deadpan lines are
 still the fixture's day 1, not invented ones. T5's two stats are the pair that
 hold for its whole beat.
+
+T5's hook opened as "Mallorca Day 1." and was changed to "Day 1 Chaos." before
+render: the original first line was word-for-word the one already used by
+`T5-Atlas-HiddenSideQuest`, and a hook is never reused (rule 6). "Day 1 Chaos."
+also sets up the same reel's "Itinerary locked and loaded." as a before/after.
+
+**This is the first batch on the new CTA.** All five carry
+"Plan together. Travel better."; T2 and T5 are `ctaVariant: "quiet"`, which
+draws no launch line, so it is set on them for consistency and shows on T1, T3
+and T4.
+
+---
+
+## Retired CTA — do not use again
+
+- "First 50 get lifetime access — free." Retired 2026-09-25 by Oskar. The
+  standard sign-off is now **"Plan together. Travel better."** (the default in
+  `remotion/src/brand.ts`), or a variant that fits the reel's own copy. No
+  offer lines, no scarcity claims. See the Brand section of CLAUDE.md for
+  which already-rendered reels still carry the old line and why.
 
 ---
 
